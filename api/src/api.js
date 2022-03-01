@@ -1,0 +1,151 @@
+function getApiSchema (data) {
+    return {
+        type: 'object',
+        properties: {},
+        if: {
+            properties: {
+                code: {type:'integer', enum: [1]}
+            }
+        }, then: {
+            properties: {
+                code: {type: 'integer'},
+                data: data
+            }
+        }, else: {
+            properties: {
+                code: {type: 'integer'},
+                error: {type: 'string'}
+            }
+        }
+    }
+}
+
+async function api (fastify, options) {
+    fastify.register(require('./error'))
+    const knex = require('knex')({
+        client: 'mysql2',
+        connection: {
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+        },
+        debug: process.env.DEBUG === "1",
+        asyncStackTraces: process.env.DEBUG === "1",
+    })
+    fastify.addHook('onClose', async (instance, done) => {
+        await knex.destroy();
+        done();
+    })
+
+    /*
+    获取所有校区`area`
+     */
+    fastify.get('/area', { schema: { response: { 200: getApiSchema({
+                    type: 'array',
+                    items: {type: 'string'}
+                }) } } }, async (request, reply) => {
+        try {
+            const areas = (await knex('se_room').groupBy('area').select('area')).map(area => area.area)
+
+            return {code: 1, data: areas}
+        } catch (error) {
+            return fastify.se_error.ApiErrorReturn(error)
+        }
+    })
+
+    /*
+    获取指定校区`area`的所有宿舍楼`building`
+     */
+    fastify.get('/area/:name', {schema: { response: { 200: getApiSchema({
+                    type: 'array',
+                    items: {type: 'string'}
+                }) } } }, async (request, reply) => {
+        try {
+            const {name: area} = request.params
+
+            const buildings = (await knex('se_room').where('area', area).groupBy('building').select('building')).map(building => building.building)
+            if (buildings.length === 0)
+                throw new fastify.seError('非法输入', 101, `area="${area}" not in database`)
+
+            return {code: 1, data: buildings}
+        } catch (error) {
+            return fastify.se_error.ApiErrorReturn(error)
+        }
+    })
+
+    /*
+    获取指定宿舍楼`building`的所有寝室`room`
+     */
+    fastify.get('/building/:name', {schema: { response: { 200: getApiSchema({
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: {type: 'integer'},
+                            room: {type: 'string'},
+                        }
+                    }
+                }) } } }, async (request, reply) => {
+        try {
+            const {name: building} = request.params
+
+            const rooms = (await knex('se_room').where('building', building).select('id', 'room'))
+            if (rooms.length === 0)
+                throw new fastify.seError('非法输入', 101, `building="${building}" not in database`)
+
+            return {code: 1, data: rooms}
+        } catch (error) {
+            return fastify.se_error.ApiErrorReturn(error)
+        }
+    })
+
+    /*
+    获取指定寝室`room`
+     */
+    fastify.get('/room/:id', { schema: { response: { 200: getApiSchema({
+                    type: 'object',
+                    properties: {
+                        roomInfo: {
+                            type: 'object',
+                            properties: {
+                                area: {type: 'string'},
+                                building: {type: 'string'},
+                                room: {type: 'string'},
+                            }
+                        },
+                        roomLog: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    rem: {type: 'number'},
+                                    log_time: {type: 'string', format: 'date-time'},
+                                }
+                            }
+                        }
+                    },
+                    default: null
+                }) } } }, async (request, reply) => {
+        try {
+            const {id: idStr} = request.params
+            const id = parseInt(idStr)
+            if (id.toString() !== idStr)
+                throw new fastify.seError('非法输入', 101, `${id} !== "${idStr}"`)
+            if (id <= 0)
+                throw new fastify.seError('非法输入', 101, `${id} <= 0`)
+
+            const roomInfo = (await knex('se_room').where('id', id).select('area', 'building', 'room'))[0]
+            if (roomInfo === undefined)
+                throw new fastify.seError('非法输入', 101, `id=${id} not in database`)
+            const roomLog = await knex('se_log').where('room', id).orderBy('log_time').select('rem', 'log_time')
+
+            return {code: 1, data: {roomInfo, roomLog}}
+        } catch (error) {
+            return fastify.se_error.ApiErrorReturn(error)
+        }
+    })
+
+}
+module.exports = api
