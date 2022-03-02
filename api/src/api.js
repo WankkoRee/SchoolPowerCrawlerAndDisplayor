@@ -120,7 +120,7 @@ async function api (fastify, options) {
                             items: {
                                 type: 'object',
                                 properties: {
-                                    rem: {type: 'number'},
+                                    power: {type: 'number'},
                                     log_time: {type: 'string', format: 'date-time'},
                                 }
                             }
@@ -139,7 +139,7 @@ async function api (fastify, options) {
             const roomInfo = (await knex('se_room').where('id', id).select('area', 'building', 'room'))[0]
             if (roomInfo === undefined)
                 throw new fastify.seError('非法输入', 101, `id=${id} not in database`)
-            const roomLog = await knex('se_log').where('room', id).orderBy('log_time').select('rem', 'log_time')
+            const roomLog = await knex('se_log').where('room', id).orderBy('log_time').select('power', 'log_time')
 
             return {code: 1, data: {roomInfo, roomLog}}
         } catch (error) {

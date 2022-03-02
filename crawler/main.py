@@ -81,11 +81,11 @@ def main():
                 raise e
             ret = ret.json()
             ####
-            for roomIdAndRem in ret['data']:
-                roomName = roomIdAndRem['title']
-                roomId, _, rem = roomIdAndRem['value'].partition(",")
-                data[areaName][buildingName][roomName] = rem
-                print(areaName, buildingName, roomName, rem)
+            for roomIdAndPower in ret['data']:
+                roomName = roomIdAndPower['title']
+                roomId, _, power = roomIdAndPower['value'].partition(",")
+                data[areaName][buildingName][roomName] = power
+                print(areaName, buildingName, roomName, power)
                 ####
                 cur.execute("select id from se_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
                 roomData = cur.fetchall()
@@ -94,7 +94,7 @@ def main():
                     cur.execute("select id from se_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
                     roomData = cur.fetchall()
                 dbId, = roomData
-                cur.execute("insert into se_log(room, rem, log_time) values(%s, %s, CURRENT_TIMESTAMP)", (dbId, rem))
+                cur.execute("insert into se_log(room, power, log_time) values(%s, %s, CURRENT_TIMESTAMP)", (dbId, power))
     ####
     conn.commit()
     cur.close()

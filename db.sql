@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS `se_log`;
 CREATE TABLE `se_log`  (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `room` int(10) UNSIGNED NOT NULL,
-  `rem` decimal(10, 2) NOT NULL,
+  `power` decimal(10, 2) NOT NULL,
   `log_time` datetime NOT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `room`(`room`) USING BTREE,

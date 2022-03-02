@@ -1,4 +1,4 @@
-# School Electricity Crawler & Displayor [校园电费爬]
+# School Power Crawler & Displayor [校园电费爬]
 
 一个学校电费的爬虫项目，用于爬取并展示本学校各个宿舍各个时间的电费情况，了解用电规律。
 
