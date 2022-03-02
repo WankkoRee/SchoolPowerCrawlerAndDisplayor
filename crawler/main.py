@@ -87,15 +87,15 @@ def main():
                 data[areaName][buildingName][roomName] = power
                 print(areaName, buildingName, roomName, power)
                 ####
-                cur.execute("select id from se_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
+                cur.execute("select id from sp_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
                 roomData = cur.fetchall()
                 if len(roomData) == 0:
-                    cur.execute("insert into se_room(area, building, room, create_time) values(%s, %s, %s, CURRENT_TIMESTAMP)", (areaName, buildingName, roomName))
-                    cur.execute("select id from se_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
+                    cur.execute("insert into sp_room(area, building, room, create_time) values(%s, %s, %s, CURRENT_TIMESTAMP)", (areaName, buildingName, roomName))
+                    cur.execute("select id from sp_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
                     roomData = cur.fetchall()
                 dbId, = roomData
-                cur.execute("update se_room set power = %s, update_time = CURRENT_TIMESTAMP where id = %s", (power, dbId))
-                cur.execute("insert into se_log(room, power, log_time) values(%s, %s, CURRENT_TIMESTAMP)", (dbId, power))
+                cur.execute("update sp_room set power = %s, update_time = CURRENT_TIMESTAMP where id = %s", (power, dbId))
+                cur.execute("insert into sp_log(room, power, log_time) values(%s, %s, CURRENT_TIMESTAMP)", (dbId, power))
     ####
     conn.commit()
     cur.close()
