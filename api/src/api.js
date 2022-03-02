@@ -113,6 +113,8 @@ async function api (fastify, options) {
                                 area: {type: 'string'},
                                 building: {type: 'string'},
                                 room: {type: 'string'},
+                                power: {type: 'number'},
+                                update_time: {type: 'string', format: 'date-time'},
                             }
                         },
                         roomLog: {
@@ -136,7 +138,7 @@ async function api (fastify, options) {
             if (id <= 0)
                 throw new fastify.seError('非法输入', 101, `${id} <= 0`)
 
-            const roomInfo = (await knex('se_room').where('id', id).select('area', 'building', 'room'))[0]
+            const roomInfo = (await knex('se_room').where('id', id).select('area', 'building', 'room', 'power', 'update_time'))[0]
             if (roomInfo === undefined)
                 throw new fastify.seError('非法输入', 101, `id=${id} not in database`)
             const roomLog = await knex('se_log').where('room', id).orderBy('log_time').select('power', 'log_time')
