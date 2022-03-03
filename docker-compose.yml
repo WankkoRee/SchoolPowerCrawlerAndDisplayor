@@ -1,0 +1,21 @@
+version: "3"
+services:
+  school_power_api:
+    container_name: school_power_api
+    image: "node:17.4.0-slim"
+    expose:
+      - "3000"
+    volumes:
+      - "./api:/home/school_power_api"
+    working_dir: "/home/school_power_api"
+    command: /bin/bash -c "npm install && npm run start"
+  school_power_db:
+    container_name: school_power_db
+    image: "mariadb:10.5.3"
+    expose:
+      - "3306"
+    volumes:
+      - ./db/data:/var/lib/mysql
+      - ./db/initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"

@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS school_power;
+
+USE school_power;
+
 SET NAMES utf8mb4;
 
 -- ----------------------------

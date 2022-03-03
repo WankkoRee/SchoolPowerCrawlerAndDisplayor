@@ -1,17 +1,11 @@
 from requests import Session
 import pymysql
 
-from util import AES_ECB_PKCS7
+from config import host, schoolId, aesEcbPkcs7, username, password, db_host, db_username, db_password, db_name
 
 
 def main():
-    host = "https://dk.nynu.edu.cn"  # 按需更改
-    schoolId = 4  # 按需更改
-    aesEcbPkcs7 = AES_ECB_PKCS7(bytes.fromhex("31323334353637383930414243444546"))  # 按需更改
-
-    username = ""  # 肯定要改
-    password = ""  # 肯定要改
-    conn = pymysql.connect(host='', user='', passwd="", db='')  # 肯定要改
+    conn = pymysql.connect(host=db_host, user=db_username, passwd=db_password, db=db_name)
     cur = conn.cursor()
     ss = Session()
     data = {}
