@@ -8,7 +8,7 @@ fastify.register(require('./src/api'), {prefix: '/api'})
 
 const start = async () => {
     try {
-        await fastify.listen(process.env.PORT, '127.0.0.1')
+        await fastify.listen(process.env.PORT, '::')
         console.log(fastify.routes)
     } catch (err) {
         fastify.log.error(err)
