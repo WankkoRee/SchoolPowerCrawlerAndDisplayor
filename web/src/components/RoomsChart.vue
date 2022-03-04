@@ -31,7 +31,6 @@ export default {
     ResizeObserver,
   },
   setup(props) {
-    console.log("setup")
     const generateSeries = () => {
       return props.roomsName.map((roomName, i) => { return {roomName, roomLog: props.roomsLog[i]} }).map((room) => { return {
         name: room.roomName,
@@ -91,12 +90,10 @@ export default {
     }
 
     watch(() => props.theme, (theme) => {
-      console.log("watch props.theme")
       initChart(theme === "🌙" ? 'dark' : 'vintage')
     })
 
     watch(() => JSON.stringify([props.roomsName, props.roomsLog]), () => {
-      console.log("watch props.rooms")
       // roomsLogChart.value.clear()
       options.legend.data = props.roomsName
       options.series = generateSeries()
@@ -104,7 +101,6 @@ export default {
     })
 
     onMounted(() => {
-      console.log("onMounted")
       initChart(props.theme === "🌙" ? 'dark' : 'vintage')
     })
 

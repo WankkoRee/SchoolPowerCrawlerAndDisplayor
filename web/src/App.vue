@@ -224,7 +224,6 @@ export default {
         if (eachLog[range].log_time - range < 0 || log.log_time - range < eachLog[range].log_time - range)
           eachLog[range] = log
       })
-      console.log(eachLog)
 
       const everyLog = []
       for (let i = 0; i < Object.keys(eachLog).length - 1; i++) {
@@ -235,7 +234,6 @@ export default {
           log_time: new Date(range),
         })
       }
-      console.log(everyLog)
       return everyLog
     }
 
