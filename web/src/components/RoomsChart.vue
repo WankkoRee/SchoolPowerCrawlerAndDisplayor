@@ -34,7 +34,7 @@ export default {
     const generateSeries = () => {
       return props.roomsName.map((roomName, i) => { return {roomName, roomLog: props.roomsLog[i]} }).map((room) => { return {
         name: room.roomName,
-        data: room.roomLog.map(log => [new Date(log.log_time), log.power]).sort((a, b) => a[0].getTime() - b[0].getTime()),
+        data: room.roomLog.map(log => [log.log_time, log.power]),
         type: 'line',
         smooth: true,
         animationDuration: 500,

@@ -177,6 +177,33 @@ export default {
       rooms.value.splice(0, rooms.value.length) // rooms.value.clear()
       rooms.value.push(...areas)
     })
+
+    /*
+    计算rangeMs内的每everyMs用电量
+    @param {Array} [roomLog] - 电量日志;
+    @param {Integer} [rangeMs] - 计算周期;
+    @param {Integer} [everyMs] - 计算基数;
+     */
+    function calcAvgUsed(roomLog, rangeMs, everyMs) {
+      if (rangeMs == null)
+        rangeMs = 1000 * 3600 * 24 * 7 // 取7天内用电情况
+      if (everyMs == null)
+        everyMs = 1000 * 3600 * 24 // 计算每1天的平均用电情况
+
+      let oldest = {log_time: new Date()}
+      let latest = {log_time: new Date(0)}
+
+      const now = new Date()
+      roomLog.forEach(log => {
+        if (log.log_time - latest.log_time >= 0)
+          latest = log
+        const diff = now - log.log_time
+        if (diff - rangeMs <= 0 && diff > now - oldest.log_time)
+          oldest = log
+      })
+      return (oldest.power - latest.power) / ((latest.log_time - oldest.log_time) / everyMs)
+    }
+
     async function showRooms(roomsId) {
       const deleted = roomsSelected.value.filter(roomId => !roomsId.includes(roomId))
       const added = roomsId.filter(roomId => !roomsSelected.value.includes(roomId))
@@ -189,8 +216,10 @@ export default {
             roomsData[roomId] = {
               roomInfo: roomReq.data.data.roomInfo,
               roomName: `${roomReq.data.data.roomInfo.area} の ${roomReq.data.data.roomInfo.building} の ${roomReq.data.data.roomInfo.room}`,
-              roomLog: roomReq.data.data.roomLog
+              roomLog: roomReq.data.data.roomLog.map(log => { return {power: log.power, log_time: new Date(log.log_time)} }).sort((a, b) => a.log_time.getTime() - b.log_time.getTime())
             }
+            roomsData[roomId].roomInfo.avgUsed = calcAvgUsed(roomsData[roomId].roomLog, 1000 * 3600 * 24 * 7, 1000 * 3600 * 24)
+            roomsData[roomId].roomInfo.update_time = new Date(roomsData[roomId].roomInfo.update_time)
           }
         }
       }
