@@ -75,6 +75,7 @@ export default {
         bottom: '3%',
         containLabel: true
       },
+      backgroundColor: 'rgba(255,255,255,0)' // 透明
     }
 
     const roomsLogChart = shallowRef(null)
