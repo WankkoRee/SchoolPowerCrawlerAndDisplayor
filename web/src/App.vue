@@ -57,9 +57,8 @@
           </n-grid>
           <div>
             <RoomsChart chartName="历史电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
-          </div>
-          <div>
-            <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomUsed)" />
+            <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomDailyUsed)" />
+            <RoomsChart chartName="每小时用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomHourlyUsed)" />
           </div>
         </n-space>
       </n-layout>
@@ -253,7 +252,8 @@ export default {
             }
             roomsData[roomId].roomInfo.avgUsed = calcAvgUsed(roomsData[roomId].roomLog, 1000 * 3600 * 24 * 7, 1000 * 3600 * 24)
             roomsData[roomId].roomInfo.update_time = new Date(roomsData[roomId].roomInfo.update_time)
-            roomsData[roomId].roomUsed = calcTotalUsed(roomsData[roomId].roomLog)
+            roomsData[roomId].roomDailyUsed = calcTotalUsed(roomsData[roomId].roomLog, 1000 * 3600 * 24)
+            roomsData[roomId].roomHourlyUsed = calcTotalUsed(roomsData[roomId].roomLog, 1000 * 3600)
           }
         }
       }
