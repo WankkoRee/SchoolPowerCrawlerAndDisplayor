@@ -11,13 +11,15 @@
           <n-grid-item span="6">
             <n-space align="center" justify="center" style="width: 100%; height: 100%; margin-top: 0; margin-bottom: 0;" item-style="width: 100%">
               <n-cascader
-                  v-model:value="roomSelect"
                   placeholder="请选择要查询的寝室"
                   :options="rooms"
+                  multiple
                   check-strategy="child"
                   clearable
                   remote
                   separator=" の "
+                  max-tag-count="responsive"
+                  v-model:value="roomsSelect"
                   @load="handleRoomsLoad"
                   @update:value="handleRoomsSelect"
               />
@@ -47,7 +49,16 @@
         </n-grid>
       </n-layout-header>
       <n-layout position="absolute" style="top: 64px; bottom: 64px;" content-style="padding: 8px;">
-        <RoomStatic v-if="roomStaticShow" :roomInfo="roomInfo" :roomLog="roomLog"/>
+        <n-space vertical>
+          <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
+            <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
+              <RoomStatic :roomInfo="roomsData[roomId].roomInfo" />
+            </n-grid-item>
+          </n-grid>
+          <div>
+            <RoomsChart :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
+          </div>
+        </n-space>
       </n-layout>
       <n-layout-footer position="absolute" style="height: 64px; padding: 8px" bordered>
         <n-space align="center" justify="space-around" style="height: 100%; margin-top: 0; margin-bottom: 0;">
@@ -75,7 +86,8 @@ import {
 } from 'naive-ui'
 import axios from "axios"
 
-import RoomStatic from "./components/RoomStatic"
+import RoomStatic from "@/components/RoomStatic"
+import RoomsChart from "@/components/RoomsChart"
 
 export default {
   name: 'App',
@@ -83,7 +95,7 @@ export default {
   },
   components: {
     NConfigProvider, NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader,
-    RoomStatic,
+    RoomStatic, RoomsChart,
   },
   setup(props) {
     console.log(props)
@@ -111,8 +123,10 @@ export default {
       themeSwitch.value = "🌙"
     }
     // 寝室
-    const roomSelect = ref(null)
     const rooms = ref([])
+    const roomsSelect = ref([])
+    const roomsSelected = ref([])
+    const roomsData = {}
     async function getAreas() {
       const areasReq = await axios.get("./api/area")
       const areas = []
@@ -160,21 +174,28 @@ export default {
     }
     onBeforeMount(async () => {
       const areas = await getAreas()
+      rooms.value.splice(0, rooms.value.length) // rooms.value.clear()
       rooms.value.push(...areas)
     })
-    async function showRoom(roomId) {
-      roomStaticShow.value = false
-      const roomReq = await axios.get(`./api/room/${roomId}`)
-      if (checkRequest(roomReq)) {
-        roomInfo.value = roomReq.data.data.roomInfo
-        roomLog.value = roomReq.data.data.roomLog
-        roomStaticShow.value = true
+    async function showRooms(roomsId) {
+      const deleted = roomsSelected.value.filter(roomId => !roomsId.includes(roomId))
+      const added = roomsId.filter(roomId => !roomsSelected.value.includes(roomId))
+
+      roomsSelected.value = roomsSelected.value.filter(roomId => !deleted.includes(roomId)) // delete取消选中的寝室
+      for (const roomId of added) {
+        if (Object.keys(roomsData).indexOf(roomId) === -1) {
+          const roomReq = await axios.get(`./api/room/${roomId}`)
+          if (checkRequest(roomReq)) {
+            roomsData[roomId] = {
+              roomInfo: roomReq.data.data.roomInfo,
+              roomName: `${roomReq.data.data.roomInfo.area} の ${roomReq.data.data.roomInfo.building} の ${roomReq.data.data.roomInfo.room}`,
+              roomLog: roomReq.data.data.roomLog
+            }
+          }
+        }
       }
+      roomsSelected.value.push(...added) // add新选中的寝室
     }
-    // 组件传参
-    const roomStaticShow = ref(false)
-    const roomInfo = ref({})
-    const roomLog = ref([])
 
     return {
       title: process.env.VUE_APP_TITLE,
@@ -189,7 +210,6 @@ export default {
       },
       zhCN, dateZhCN,
 
-      roomSelect,
       rooms,
       async handleRoomsLoad(option) {
         if (option.depth === 1) {
@@ -199,12 +219,18 @@ export default {
         }
       },
       async handleRoomsSelect(value) {
-        await showRoom(value)
+        if (value.length > 8) {
+          roomsSelect.value.splice(0, roomsSelect.value.length) // roomsSelect.value.clear()
+          roomsSelect.value.push(...roomsSelected.value)
+          // TODO: log
+          return
+        }
+        await showRooms(value)
       },
 
-      roomStaticShow,
-      roomInfo,
-      roomLog,
+      roomsSelect,
+      roomsSelected,
+      roomsData,
     }
   },
 }
