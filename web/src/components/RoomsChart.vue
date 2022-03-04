@@ -1,6 +1,6 @@
 <template>
   <n-card hoverable>
-    <div id="roomsLogChart" style="height: 320px;">
+    <div :id="chartName" style="height: 320px;">
       <ResizeObserver @notify="handleResize" :showTrigger="true"/>
     </div>
   </n-card>
@@ -24,6 +24,7 @@ export default {
     theme: String,
     roomsName: Array,
     roomsLog: Array,
+    chartName: String,
   },
   components: {
     NCard,
@@ -42,7 +43,7 @@ export default {
     }
     const options = {
       title: {
-        text: '历史电量'
+        text: props.chartName
       },
       tooltip: {
         trigger: 'axis',
@@ -83,7 +84,7 @@ export default {
     const initChart = (theme) => {
       if (roomsLogChart.value)
         echarts.dispose(roomsLogChart.value)
-      roomsLogChart.value = echarts.init(document.getElementById("roomsLogChart"), theme)
+      roomsLogChart.value = echarts.init(document.getElementById(props.chartName), theme)
       options.legend.data = props.roomsName
       options.series = generateSeries()
       roomsLogChart.value.setOption(options)

@@ -56,7 +56,10 @@
             </n-grid-item>
           </n-grid>
           <div>
-            <RoomsChart :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
+            <RoomsChart chartName="历史电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
+          </div>
+          <div>
+            <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomUsed)" />
           </div>
         </n-space>
       </n-layout>
@@ -181,8 +184,8 @@ export default {
     /*
     计算rangeMs内的每everyMs用电量
     @param {Array} [roomLog] - 电量日志;
-    @param {Integer} [rangeMs] - 计算周期;
-    @param {Integer} [everyMs] - 计算基数;
+    @param {Integer} [rangeMs] - 计算周期，单位为毫秒;
+    @param {Integer} [everyMs] - 计算基数，单位为毫秒;
      */
     function calcAvgUsed(roomLog, rangeMs, everyMs) {
       if (rangeMs == null)
@@ -201,7 +204,39 @@ export default {
         if (diff - rangeMs <= 0 && diff > now - oldest.log_time)
           oldest = log
       })
-      return (oldest.power - latest.power) / ((latest.log_time - oldest.log_time) / everyMs)
+      return -(latest.power - oldest.power) / ((latest.log_time - oldest.log_time) / everyMs)
+    }
+
+    function calcTotalUsed(roomLog, everyMs) {
+      if (everyMs == null)
+        everyMs = 1000 * 3600 * 24 // 计算每1天的用电情况
+
+      const timezone = new Date().getTimezoneOffset() * 60 * 1000
+
+      const eachLog = {}
+
+      roomLog.forEach(log => {
+        const range = log.log_time - (log.log_time - timezone) % everyMs
+        if (!Object.keys(eachLog).includes(range.toString()))
+          eachLog[range] = {log_time: new Date()}
+        eachLog[range+everyMs] = log
+
+        if (eachLog[range].log_time - range < 0 || log.log_time - range < eachLog[range].log_time - range)
+          eachLog[range] = log
+      })
+      console.log(eachLog)
+
+      const everyLog = []
+      for (let i = 0; i < Object.keys(eachLog).length - 1; i++) {
+        const range = parseInt(Object.keys(eachLog)[i])
+        const nextRange = parseInt(Object.keys(eachLog)[i+1])
+        everyLog.push({
+          power: -Math.round((eachLog[nextRange].power - eachLog[range].power) / (eachLog[nextRange].log_time - eachLog[range].log_time) * (range + everyMs - eachLog[range].log_time) * 100) / 100,
+          log_time: new Date(range),
+        })
+      }
+      console.log(everyLog)
+      return everyLog
     }
 
     async function showRooms(roomsId) {
@@ -220,6 +255,7 @@ export default {
             }
             roomsData[roomId].roomInfo.avgUsed = calcAvgUsed(roomsData[roomId].roomLog, 1000 * 3600 * 24 * 7, 1000 * 3600 * 24)
             roomsData[roomId].roomInfo.update_time = new Date(roomsData[roomId].roomInfo.update_time)
+            roomsData[roomId].roomUsed = calcTotalUsed(roomsData[roomId].roomLog)
           }
         }
       }
