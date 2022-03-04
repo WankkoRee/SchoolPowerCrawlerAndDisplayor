@@ -52,7 +52,7 @@
         <n-space vertical>
           <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
             <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
-              <RoomStatic :roomInfo="roomsData[roomId].roomInfo" />
+              <RoomStatic :roomInfo="roomsData[roomId].roomInfo" :roomName="roomsData[roomId].roomName" />
             </n-grid-item>
           </n-grid>
           <div>

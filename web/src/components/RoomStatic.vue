@@ -1,6 +1,6 @@
 <template>
   <n-space vertical>
-    <n-card :title="`${roomInfo.area} の ${roomInfo.building} の ${roomInfo.room}`" hoverable>
+    <n-card :title="roomName" hoverable>
       <template #header-extra>
         <n-time :time="new Date(roomInfo.update_time ? roomInfo.update_time : 0)" type="relative" />
       </template>
@@ -30,6 +30,7 @@ export default {
   name: "RoomStatic",
   props: {
     roomInfo: Object,
+    roomName: String,
   },
   components: {
     NSpace, NStatistic, NNumberAnimation, NCard, NTime,
