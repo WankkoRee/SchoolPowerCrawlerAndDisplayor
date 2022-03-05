@@ -108,20 +108,32 @@ export default {
   setup(props) {
     const message = useMessage()
 
-    function checkRequest(req) {
-      if (req.status !== 200) {
-        // 网络异常
-        message.error(`网络异常，HTTP ${req.status}`, {keepAliveOnHover: true})
-        console.error(req)
-        return false
+    async function checkRequest(req) {
+      const rt = {
+        result: undefined,
+        err: false,
       }
-      if (req.data.code !== 1) {
-        // 数据异常
-        message.error(`数据异常，${req.data.error}`, {keepAliveOnHover: true})
-        console.error(req.data)
-        return false
+      try {
+        const response = await req
+        if (response.status !== 200) {
+          // 网络异常
+          message.error(`服务器异常，HTTP ${response.status}`, {keepAliveOnHover: true})
+          console.error(response)
+          rt.err = true
+        } else if (response.data.code !== 1) {
+          // 数据异常
+          message.error(`数据异常，${response.data.error}`, {keepAliveOnHover: true})
+          console.error(response.data)
+          rt.err = true
+        } else {
+          rt.result = response.data.data
+        }
+      } catch (error) {
+        message.error(`网络异常，${error.message}`, {keepAliveOnHover: true})
+        console.error(error)
+        rt.err = true
       }
-      return true
+      return rt
     }
 
     // 主题
@@ -133,10 +145,11 @@ export default {
     const roomsSelected = ref([])
     const roomsData = {}
     async function getAreas() {
-      const areasReq = await axios.get("./api/area")
+      const areasRequset = axios.get("./api/area")
       const areas = []
-      if (checkRequest(areasReq)) {
-        areasReq.data.data.forEach(area => {
+      const {result, err} = await checkRequest(areasRequset)
+      if (!err) {
+        result.forEach(area => {
           areas.push({
             label: area,
             value: area,
@@ -148,10 +161,11 @@ export default {
       return areas.sort((a, b) => a.label.localeCompare(b.label, undefined, {numeric: true, sensitivity: 'base'}))
     }
     async function getBuildings(area) {
-      const buildingsReq = await axios.get(`./api/area/${area}`)
+      const buildingsRequest = axios.get(`./api/area/${area}`)
       const buildings = []
-      if (checkRequest(buildingsReq)) {
-        buildingsReq.data.data.forEach(building => {
+      const {result, err} = await checkRequest(buildingsRequest)
+      if (!err) {
+        result.forEach(building => {
           buildings.push({
             label: building,
             value: building,
@@ -163,10 +177,11 @@ export default {
       return buildings.sort((a, b) => a.label.localeCompare(b.label, undefined, {numeric: true, sensitivity: 'base'}))
     }
     async function getRooms(building) {
-      const roomsReq = await axios.get(`./api/building/${building}`)
+      const roomsRequest = axios.get(`./api/building/${building}`)
       const rooms = []
-      if (checkRequest(roomsReq)) {
-        roomsReq.data.data.forEach(room => {
+      const {result, err} = await checkRequest(roomsRequest)
+      if (!err) {
+        result.forEach(room => {
           rooms.push({
             label: room.room,
             value: room.id,
@@ -244,23 +259,31 @@ export default {
       const added = roomsId.filter(roomId => !roomsSelected.value.includes(roomId))
 
       roomsSelected.value = roomsSelected.value.filter(roomId => !deleted.includes(roomId)) // delete取消选中的寝室
+      roomsSelect.value = roomsSelect.value.filter(roomId => !deleted.includes(roomId))
+
       for (const roomId of added) {
-        if (Object.keys(roomsData).indexOf(roomId) === -1) {
-          const roomReq = await axios.get(`./api/room/${roomId}`)
-          if (checkRequest(roomReq)) {
+        if (Object.keys(roomsData).indexOf(roomId.toString()) === -1) {
+          const roomRequest = axios.get(`./api/room/${roomId}`)
+          const {result, err} = await checkRequest(roomRequest)
+          if (!err) {
             roomsData[roomId] = {
-              roomInfo: roomReq.data.data.roomInfo,
-              roomName: `${roomReq.data.data.roomInfo.area} の ${roomReq.data.data.roomInfo.building} の ${roomReq.data.data.roomInfo.room}`,
-              roomLog: roomReq.data.data.roomLog.map(log => { return {power: log.power, log_time: new Date(log.log_time)} }).sort((a, b) => a.log_time.getTime() - b.log_time.getTime())
+              roomInfo: result.roomInfo,
+              roomName: `${result.roomInfo.area} の ${result.roomInfo.building} の ${result.roomInfo.room}`,
+              roomLog: result.roomLog.map(log => { return {power: log.power, log_time: new Date(log.log_time)} }).sort((a, b) => a.log_time.getTime() - b.log_time.getTime())
             }
             roomsData[roomId].roomInfo.avgUsed = calcAvgUsed(roomsData[roomId].roomLog, 1000 * 3600 * 24 * 7, 1000 * 3600 * 24)
             roomsData[roomId].roomInfo.update_time = new Date(roomsData[roomId].roomInfo.update_time)
             roomsData[roomId].roomDailyUsed = calcTotalUsed(roomsData[roomId].roomLog, 1000 * 3600 * 24)
             roomsData[roomId].roomHourlyUsed = calcTotalUsed(roomsData[roomId].roomLog, 1000 * 3600)
+
+            roomsSelected.value.push(roomId) // add新选中的寝室
+            roomsSelect.value.push(roomId)
           }
+        } else {
+          roomsSelected.value.push(roomId) // add新选中的寝室
+          roomsSelect.value.push(roomId)
         }
       }
-      roomsSelected.value.push(...added) // add新选中的寝室
     }
 
     return {
@@ -279,15 +302,24 @@ export default {
           option.children = await getRooms(option.value)
         }
       },
-      async handleRoomsSelect(value) {
+      async handleRoomsSelect(value, option) {
+        const tmpSelected = [...value]
+        const tmpOption = [...option]
+
+
+        tmpOption.forEach(room => room.disabled = true)
+
+        roomsSelect.value.splice(0, roomsSelect.value.length) // roomsSelect.value.clear()
+        roomsSelect.value.push(...roomsSelected.value)
+
         const maxLimit = 8
-        if (value.length > maxLimit) {
-          roomsSelect.value.splice(0, roomsSelect.value.length) // roomsSelect.value.clear()
-          roomsSelect.value.push(...roomsSelected.value)
-          message.warning(`最多选择${maxLimit}个，你尝试选择的寝室有${value.length}个，已超出范围`, {keepAliveOnHover: true})
+        if (tmpSelected.length > maxLimit) {
+          message.warning(`最多选择${maxLimit}个，你尝试选择的寝室有${tmpSelected.length}个，已超出范围`, {keepAliveOnHover: true})
           return
         }
-        await showRooms(value)
+        await showRooms(tmpSelected)
+
+        tmpOption.forEach(room => room.disabled = false)
       },
 
       roomsSelect,
