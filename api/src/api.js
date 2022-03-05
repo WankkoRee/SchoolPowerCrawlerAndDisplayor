@@ -47,7 +47,7 @@ async function api (fastify, options) {
                     items: {type: 'string'}
                 }) } } }, async (request, reply) => {
         try {
-            const areas = (await knex('sp_room').groupBy('area').select('area')).map(area => area.area)
+            const areas = (await knex('sp_room').where('is_show', true).groupBy('area').select('area')).map(area => area.area)
 
             return {code: 1, data: areas}
         } catch (error) {
@@ -65,7 +65,7 @@ async function api (fastify, options) {
         try {
             const {name: area} = request.params
 
-            const buildings = (await knex('sp_room').where('area', area).groupBy('building').select('building')).map(building => building.building)
+            const buildings = (await knex('sp_room').where('is_show', true).where('area', area).groupBy('building').select('building')).map(building => building.building)
             if (buildings.length === 0)
                 throw new fastify.seError('非法输入', 101, `area="${area}" not in database`)
 
@@ -91,7 +91,7 @@ async function api (fastify, options) {
         try {
             const {name: building} = request.params
 
-            const rooms = (await knex('sp_room').where('building', building).select('id', 'room'))
+            const rooms = (await knex('sp_room').where('is_show', true).where('building', building).select('id', 'room'))
             if (rooms.length === 0)
                 throw new fastify.seError('非法输入', 101, `building="${building}" not in database`)
 
@@ -138,7 +138,7 @@ async function api (fastify, options) {
             if (id <= 0)
                 throw new fastify.seError('非法输入', 101, `${id} <= 0`)
 
-            const roomInfo = (await knex('sp_room').where('id', id).select('area', 'building', 'room', 'power', 'update_time'))[0]
+            const roomInfo = (await knex('sp_room').where('is_show', true).where('id', id).select('area', 'building', 'room', 'power', 'update_time'))[0]
             if (roomInfo === undefined)
                 throw new fastify.seError('非法输入', 101, `id=${id} not in database`)
             const roomLog = await knex('sp_log').where('room', id).orderBy('log_time').select('power', 'log_time')

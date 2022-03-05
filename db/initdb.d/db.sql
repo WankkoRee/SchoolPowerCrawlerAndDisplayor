@@ -16,6 +16,7 @@ CREATE TABLE `sp_room`  (
   `power` decimal(10, 2) NOT NULL DEFAULT 0,
   `create_time` datetime NOT NULL,
   `update_time` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `is_show` bool NOT NULL DEFAULT true,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `room`(`room`) USING BTREE,
   INDEX `area`(`area`) USING BTREE,
