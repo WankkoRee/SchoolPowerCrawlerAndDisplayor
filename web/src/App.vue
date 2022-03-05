@@ -21,6 +21,7 @@
                 v-model:value="roomsSelect"
                 @load="handleRoomsLoad"
                 @update:value="handleRoomsSelect"
+                :disabled="roomsSelectLoading"
             />
           </n-space>
         </n-grid-item>
@@ -143,6 +144,7 @@ export default {
     const rooms = ref([])
     const roomsSelect = ref([])
     const roomsSelected = ref([])
+    const roomsSelectLoading = ref(false)
     const roomsData = {}
     async function getAreas() {
       const areasRequset = axios.get("./api/area")
@@ -302,12 +304,21 @@ export default {
           option.children = await getRooms(option.value)
         }
       },
-      async handleRoomsSelect(value, option) {
+      async handleRoomsSelect(value) {
+        roomsSelectLoading.value = true
+        rooms.value.forEach(buildings => {
+          buildings.disabled = true
+          if (buildings.children)
+            buildings.children.forEach(rooms => {
+              rooms.disabled = true
+              if (rooms.children)
+                rooms.children.forEach(room => {
+                  room.disabled = true
+                })
+            })
+        })
+
         const tmpSelected = [...value]
-        const tmpOption = [...option]
-
-
-        tmpOption.forEach(room => room.disabled = true)
 
         roomsSelect.value.splice(0, roomsSelect.value.length) // roomsSelect.value.clear()
         roomsSelect.value.push(...roomsSelected.value)
@@ -315,15 +326,27 @@ export default {
         const maxLimit = 8
         if (tmpSelected.length > maxLimit) {
           message.warning(`最多选择${maxLimit}个，你尝试选择的寝室有${tmpSelected.length}个，已超出范围`, {keepAliveOnHover: true})
-          return
+        } else {
+          await showRooms(tmpSelected)
         }
-        await showRooms(tmpSelected)
 
-        tmpOption.forEach(room => room.disabled = false)
+        rooms.value.forEach(buildings => {
+          buildings.disabled = false
+          if (buildings.children)
+            buildings.children.forEach(rooms => {
+              rooms.disabled = false
+              if (rooms.children)
+                rooms.children.forEach(room => {
+                  room.disabled = false
+                })
+            })
+        })
+        roomsSelectLoading.value = false
       },
 
       roomsSelect,
       roomsSelected,
+      roomsSelectLoading,
       roomsData,
     }
   },
