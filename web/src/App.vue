@@ -1,98 +1,95 @@
 <template>
-  <n-config-provider :theme="theme" :locale="zhCN" :date-locale="dateZhCN">
-    <n-layout position="absolute">
-      <n-layout-header position="absolute" style="height: 64px; padding: 8px" bordered>
-        <n-grid cols="12" style="height: 100%;">
-          <n-grid-item span="3">
-            <n-space align="center" justify="start" style="height: 100%; margin-top: 0; margin-bottom: 0;">
-              <div style="font-size: 18px;">{{ title }}</div>
-            </n-space>
-          </n-grid-item>
-          <n-grid-item span="6">
-            <n-space align="center" justify="center" style="width: 100%; height: 100%; margin-top: 0; margin-bottom: 0;" item-style="width: 100%">
-              <n-cascader
-                  placeholder="请选择要查询的寝室"
-                  :options="rooms"
-                  multiple
-                  check-strategy="child"
-                  clearable
-                  remote
-                  separator=" の "
-                  max-tag-count="responsive"
-                  v-model:value="roomsSelect"
-                  @load="handleRoomsLoad"
-                  @update:value="handleRoomsSelect"
-              />
-            </n-space>
-          </n-grid-item>
-          <n-grid-item span="3">
-            <n-space align="center" justify="end" style="height: 100%; margin-top: 0; margin-bottom: 0;">
-              <n-switch
-                  checked-value="🌙"
-                  unchecked-value="☀️"
-                  v-model:value="themeSwitch"
-                  @update:value="handleThemeSwitch"
-                  size="medium"
-              >
-                <template #icon>
-                  {{ themeSwitch }}
-                </template>
-                <template #checked>
-                  夜间
-                </template>
-                <template #unchecked>
-                  日间
-                </template>
-              </n-switch>
-            </n-space>
+  <n-layout position="absolute">
+    <n-layout-header position="absolute" style="height: 64px; padding: 8px" bordered>
+      <n-grid cols="12" style="height: 100%;">
+        <n-grid-item span="3">
+          <n-space align="center" justify="start" style="height: 100%; margin-top: 0; margin-bottom: 0;">
+            <div style="font-size: 18px;">{{ title }}</div>
+          </n-space>
+        </n-grid-item>
+        <n-grid-item span="6">
+          <n-space align="center" justify="center" style="width: 100%; height: 100%; margin-top: 0; margin-bottom: 0;" item-style="width: 100%">
+            <n-cascader
+                placeholder="请选择要查询的寝室"
+                :options="rooms"
+                multiple
+                check-strategy="child"
+                clearable
+                remote
+                separator=" の "
+                max-tag-count="responsive"
+                v-model:value="roomsSelect"
+                @load="handleRoomsLoad"
+                @update:value="handleRoomsSelect"
+            />
+          </n-space>
+        </n-grid-item>
+        <n-grid-item span="3">
+          <n-space align="center" justify="end" style="height: 100%; margin-top: 0; margin-bottom: 0;">
+            <n-switch
+                checked-value="dark"
+                unchecked-value="light"
+                v-model:value="themeSwitch"
+                @update:value="handleThemeSwitch"
+                size="medium"
+            >
+              <template #icon>
+                {{ {light: "☀️", dark: "🌙"}[themeSwitch] }}
+              </template>
+              <template #checked>
+                夜间
+              </template>
+              <template #unchecked>
+                日间
+              </template>
+            </n-switch>
+          </n-space>
+        </n-grid-item>
+      </n-grid>
+    </n-layout-header>
+    <n-layout position="absolute" style="top: 64px; bottom: 64px;" content-style="padding: 8px;">
+      <n-space vertical>
+        <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
+          <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
+            <RoomStatic :roomInfo="roomsData[roomId].roomInfo" :roomName="roomsData[roomId].roomName" />
           </n-grid-item>
         </n-grid>
-      </n-layout-header>
-      <n-layout position="absolute" style="top: 64px; bottom: 64px;" content-style="padding: 8px;">
-        <n-space vertical>
-          <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
-            <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
-              <RoomStatic :roomInfo="roomsData[roomId].roomInfo" :roomName="roomsData[roomId].roomName" />
+        <div>
+          <n-grid :x-gap="8" :y-gap="8" cols="1">
+            <n-grid-item>
+              <RoomsChart chartName="历史电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
+            </n-grid-item>
+            <n-grid-item>
+              <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomDailyUsed)" />
+            </n-grid-item>
+            <n-grid-item>
+              <RoomsChart chartName="每小时用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomHourlyUsed)" />
             </n-grid-item>
           </n-grid>
-          <div>
-            <n-grid :x-gap="8" :y-gap="8" cols="1">
-              <n-grid-item>
-                <RoomsChart chartName="历史电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
-              </n-grid-item>
-              <n-grid-item>
-                <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomDailyUsed)" />
-              </n-grid-item>
-              <n-grid-item>
-                <RoomsChart chartName="每小时用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomHourlyUsed)" />
-              </n-grid-item>
-            </n-grid>
-          </div>
-        </n-space>
-      </n-layout>
-      <n-layout-footer position="absolute" style="height: 64px; padding: 8px" bordered>
-        <n-space align="center" justify="space-around" style="height: 100%; margin-top: 0; margin-bottom: 0;">
-          <span>
-            Copyright &copy; <n-button text tag="a" href="https://wkr.moe" target="_blank" type="primary">Wankko Ree</n-button> All Rights Reserved.
-          </span>
-          <span>
-            Made With ❤️, <n-button text tag="a" href="https://staging-cn.vuejs.org" target="_blank" type="primary">Vue</n-button> and <n-button text tag="a" href="https://www.naiveui.com" target="_blank" type="primary">Naive UI</n-button>.
-          </span>
-          <span>
-            Open Source on <n-button text tag="a" href="https://github.com/WankkoRee/SchoolPowerCrawlerAndDisplayor" target="_blank" type="primary">Github</n-button>.
-          </span>
-        </n-space>
-      </n-layout-footer>
+        </div>
+      </n-space>
     </n-layout>
-  </n-config-provider>
+    <n-layout-footer position="absolute" style="height: 64px; padding: 8px" bordered>
+      <n-space align="center" justify="space-around" style="height: 100%; margin-top: 0; margin-bottom: 0;">
+        <span>
+          Copyright &copy; <n-button text tag="a" href="https://wkr.moe" target="_blank" type="primary">Wankko Ree</n-button> All Rights Reserved.
+        </span>
+        <span>
+          Made With ❤️, <n-button text tag="a" href="https://staging-cn.vuejs.org" target="_blank" type="primary">Vue</n-button> and <n-button text tag="a" href="https://www.naiveui.com" target="_blank" type="primary">Naive UI</n-button>.
+        </span>
+        <span>
+          Open Source on <n-button text tag="a" href="https://github.com/WankkoRee/SchoolPowerCrawlerAndDisplayor" target="_blank" type="primary">Github</n-button>.
+        </span>
+      </n-space>
+    </n-layout-footer>
+  </n-layout>
 </template>
 
 <script>
 import { ref, onBeforeMount } from "vue"
 import {
-  NConfigProvider, NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader,
-  useOsTheme,
-  darkTheme, zhCN, dateZhCN,
+  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader,
+  useMessage,
 } from 'naive-ui'
 import axios from "axios"
 
@@ -102,23 +99,25 @@ import RoomsChart from "@/components/RoomsChart"
 export default {
   name: 'App',
   props: {
+    switchTheme: Function,
   },
   components: {
-    NConfigProvider, NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader,
+    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader,
     RoomStatic, RoomsChart,
   },
   setup(props) {
-    console.log(props)
+    const message = useMessage()
+
     function checkRequest(req) {
       if (req.status !== 200) {
         // 网络异常
-        // TODO: log
+        message.error(`网络异常，HTTP ${req.status}`, {keepAliveOnHover: true})
         console.error(req)
         return false
       }
       if (req.data.code !== 1) {
         // 数据异常
-        // TODO: log
+        message.error(`数据异常，${req.data.error}`, {keepAliveOnHover: true})
         console.error(req.data)
         return false
       }
@@ -126,12 +125,8 @@ export default {
     }
 
     // 主题
-    const theme = ref(null) // 主题包
-    const themeSwitch = ref("☀️") // 主题文本
-    if (useOsTheme().value === "dark") {
-      theme.value = darkTheme
-      themeSwitch.value = "🌙"
-    }
+    const themeSwitch = ref(props.switchTheme()) // 主题文本
+
     // 寝室
     const rooms = ref([])
     const roomsSelect = ref([])
@@ -271,15 +266,10 @@ export default {
     return {
       title: process.env.VUE_APP_TITLE,
 
-      theme,
       themeSwitch,
-      handleThemeSwitch(value) {
-        if (value === "🌙")
-          theme.value = darkTheme
-        else
-          theme.value = null
+      handleThemeSwitch(themeName) {
+        props.switchTheme(themeName)
       },
-      zhCN, dateZhCN,
 
       rooms,
       async handleRoomsLoad(option) {
@@ -290,10 +280,11 @@ export default {
         }
       },
       async handleRoomsSelect(value) {
-        if (value.length > 8) {
+        const maxLimit = 8
+        if (value.length > maxLimit) {
           roomsSelect.value.splice(0, roomsSelect.value.length) // roomsSelect.value.clear()
           roomsSelect.value.push(...roomsSelected.value)
-          // TODO: log
+          message.warning(`最多选择${maxLimit}个，你尝试选择的寝室有${value.length}个，已超出范围`, {keepAliveOnHover: true})
           return
         }
         await showRooms(value)
@@ -308,7 +299,5 @@ export default {
 </script>
 
 <style scoped>
-#app {
 
-}
 </style>

@@ -1,4 +1,4 @@
 import { createApp } from 'vue'
-import App from './App.vue'
+import GateWay from './GateWay.vue'
 
-createApp(App).mount('#app')
+createApp(GateWay).mount('#app')

@@ -90,7 +90,7 @@ export default {
     }
 
     watch(() => props.theme, (theme) => {
-      initChart(theme === "🌙" ? 'dark' : 'vintage')
+      initChart({light: 'vintage', dark: 'dark'}[theme])
     })
 
     watch(() => JSON.stringify([props.roomsName, props.roomsLog]), () => {
@@ -101,7 +101,7 @@ export default {
     })
 
     onMounted(() => {
-      initChart(props.theme === "🌙" ? 'dark' : 'vintage')
+      initChart({light: 'vintage', dark: 'dark'}[props.theme])
     })
 
     return {
