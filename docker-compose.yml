@@ -8,7 +8,7 @@ services:
     volumes:
       - "./api:/home/school_power_api"
     working_dir: "/home/school_power_api"
-    command: /bin/bash -c "npm install && npm run start"
+    command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && npm install && npm run start"
   school_power_db:
     container_name: school_power_db
     image: "mariadb:10.5.3"
@@ -19,3 +19,4 @@ services:
       - ./db/initdb.d:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ROOT_PASSWORD: "123456"
+      TZ: "Asia/Shanghai"
