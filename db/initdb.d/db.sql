@@ -50,8 +50,8 @@ CREATE TABLE `sp_daily`  (
   `power` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '只在insert时初始化本数据，只在sp_log触发daily时修改本数据',
   `oldest_power` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '只在insert时初始化本数据',
   `oldest_time` datetime NOT NULL COMMENT '只在insert时初始化本数据',
-  `lastest_power` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '只在insert时初始化本数据，只在update时修改本数据',
-  `lastest_time` datetime NOT NULL DEFAULT '1970-01-01 00:00:00' COMMENT '只在insert时初始化本数据，只在update时修改本数据',
+  `latest_power` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '只在insert时初始化本数据，只在update时修改本数据',
+  `latest_time` datetime NOT NULL DEFAULT '1970-01-01 00:00:00' COMMENT '只在insert时初始化本数据，只在update时修改本数据',
   `update_time` datetime NOT NULL DEFAULT '1970-01-01 00:00:00' COMMENT '只在insert时初始化本数据，只在sp_log触发daily时修改本数据',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `room_daily`(`room`, `date`) USING BTREE,
@@ -77,8 +77,8 @@ BEGIN
 	declare today bool DEFAULT false;
 	declare today_oldest_power decimal(10,2) DEFAULT 0;
 	declare today_oldest_time datetime DEFAULT now();
-	declare today_lastest_power decimal(10,2) DEFAULT 0;
-	declare today_lastest_time datetime DEFAULT now();
+	declare today_latest_power decimal(10,2) DEFAULT 0;
+	declare today_latest_time datetime DEFAULT now();
 
 	declare yesterday bool DEFAULT false;
 	declare yesterday_power decimal(10,2) DEFAULT 0;
@@ -88,7 +88,7 @@ BEGIN
 	declare tomorrow_power decimal(10,2) DEFAULT 0;
 	declare tomorrow_time datetime DEFAULT now();
 
-	select count(*), oldest_power, oldest_time, lastest_power, lastest_time, lastest_power-oldest_power, power, update_time into today, today_oldest_power, today_oldest_time, today_lastest_power, today_lastest_time, power_today, already_power, already_time from sp_daily where room = arg_room and date = arg_date;
+	select count(*), oldest_power, oldest_time, latest_power, latest_time, latest_power-oldest_power, power, update_time into today, today_oldest_power, today_oldest_time, today_latest_power, today_latest_time, power_today, already_power, already_time from sp_daily where room = arg_room and date = arg_date;
 	if today = 0 then
 		return 0;
 	end if;
@@ -97,14 +97,14 @@ BEGIN
 		return already_power;
 	end if;
 
-	select count(*), lastest_power, lastest_time into yesterday, yesterday_power, yesterday_time from sp_daily where room = arg_room and date = DATE_SUB(arg_date, INTERVAL 1 day);
+	select count(*), latest_power, latest_time into yesterday, yesterday_power, yesterday_time from sp_daily where room = arg_room and date = DATE_SUB(arg_date, INTERVAL 1 day);
 	if yesterday = 1 then
 		set power_yesterday = (today_oldest_power-yesterday_power) / TIMESTAMPDIFF(SECOND, yesterday_time, today_oldest_time) * TIMESTAMPDIFF(SECOND, arg_date, today_oldest_time);
 	end if;
 
 	select count(*), oldest_power, oldest_time into tomorrow, tomorrow_power, tomorrow_time from sp_daily where room = arg_room and date = DATE_ADD(arg_date, INTERVAL 1 day);
 	if tomorrow = 1 then
-		set power_tomorrow = (tomorrow_power-today_lastest_power) / TIMESTAMPDIFF(SECOND, today_lastest_time, tomorrow_time) * TIMESTAMPDIFF(SECOND, today_lastest_time, DATE_SUB(arg_date, INTERVAL 1 day));
+		set power_tomorrow = (tomorrow_power-today_latest_power) / TIMESTAMPDIFF(SECOND, today_latest_time, tomorrow_time) * TIMESTAMPDIFF(SECOND, today_latest_time, DATE_SUB(arg_date, INTERVAL 1 day));
 	end if;
 
 	RETURN power_yesterday + power_today + power_tomorrow;
@@ -201,9 +201,9 @@ CREATE TRIGGER `daily` AFTER INSERT ON `sp_log` FOR EACH ROW begin
 	declare yesterday date;
 	declare today date DEFAULT date(new.log_time);
 
-	insert into sp_daily (room, date, oldest_power, oldest_time, lastest_power, lastest_time)
+	insert into sp_daily (room, date, oldest_power, oldest_time, latest_power, latest_time)
 		values (new.room, today, new.power, new.log_time, new.power, new.log_time)
-		ON DUPLICATE KEY UPDATE lastest_power = new.power, lastest_time = new.log_time;
+		ON DUPLICATE KEY UPDATE latest_power = new.power, latest_time = new.log_time;
 
 	select count(*), date(update_time) into has_yesterday, yesterday from sp_daily where room = new.room and date = today - INTERVAL 1 day;
 	if has_yesterday and yesterday != today then
@@ -232,7 +232,7 @@ delimiter ;
 DROP TRIGGER IF EXISTS `avg_day_this_week_u`;
 delimiter ;;
 CREATE TRIGGER `avg_day_this_week_u` AFTER UPDATE ON `sp_daily` FOR EACH ROW begin
-	if old.lastest_time != new.lastest_time then
+	if old.latest_time != new.latest_time then
 		update sp_room set avg_day_this_week = calc_avg_day_in_week(new.room, new.date) where id = new.room;
 	end if;
 end
