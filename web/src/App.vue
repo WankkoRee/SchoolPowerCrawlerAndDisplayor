@@ -211,22 +211,35 @@ export default {
       roomLog.forEach(log => {
         const range = log.log_time - (log.log_time - timezone) % everyMs
         if (!Object.keys(eachLog).includes(range.toString()))
-          eachLog[range] = {log_time: new Date()}
-        eachLog[range+everyMs] = log
+          eachLog[range] = {oldest: log, latest: log}
 
-        if (eachLog[range].log_time - range < 0 || log.log_time - range < eachLog[range].log_time - range)
-          eachLog[range] = log
+        if (eachLog[range].latest.log_time < log.log_time)
+          eachLog[range].latest = log
       })
 
+      console.log(eachLog)
+
       const everyLog = []
-      for (let i = 0; i < Object.keys(eachLog).length - 1; i++) {
-        const range = parseInt(Object.keys(eachLog)[i])
-        const nextRange = parseInt(Object.keys(eachLog)[i+1])
+      for (const [range, {oldest, latest}] of Object.entries(eachLog)) {
+        const prevRange = (parseInt(range) - everyMs).toString()
+        const nextRange = (parseInt(range) + everyMs).toString()
+
+        const prev = Object.keys(eachLog).includes(prevRange) ?
+            (oldest.power - eachLog[prevRange].latest.power) / (oldest.log_time - eachLog[prevRange].latest.log_time) * (oldest.log_time - parseInt(range))
+            : 0
+        const now = latest.power - oldest.power
+        const next = Object.keys(eachLog).includes(nextRange) ?
+            (eachLog[nextRange].oldest.power - latest.power) / (eachLog[nextRange].oldest.log_time - latest.log_time) * (parseInt(range) + everyMs - latest.log_time)
+            : 0
+        console.log(prev, now, next)
         everyLog.push({
-          power: -Math.round((eachLog[nextRange].power - eachLog[range].power) / (eachLog[nextRange].log_time - eachLog[range].log_time) * (range + everyMs - eachLog[range].log_time) * 100) / 100,
-          log_time: new Date(range),
+          power: -Math.round((prev + now + next) * 100) / 100,
+          log_time: new Date(parseInt(range)),
         })
       }
+
+      console.log(everyLog)
+
       return everyLog
     }
 
