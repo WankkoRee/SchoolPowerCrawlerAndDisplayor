@@ -277,8 +277,6 @@ export default {
           eachLog[range].latest = log
       })
 
-      console.log(eachLog)
-
       const everyLog = []
       for (const [range, {oldest, latest}] of Object.entries(eachLog)) {
         const prevRange = (parseInt(range) - everyMs).toString()
@@ -291,14 +289,11 @@ export default {
         const next = Object.keys(eachLog).includes(nextRange) ?
             (eachLog[nextRange].oldest.power - latest.power) / (eachLog[nextRange].oldest.log_time - latest.log_time) * (parseInt(range) + everyMs - latest.log_time)
             : 0
-        console.log(prev, now, next)
         everyLog.push({
           power: -Math.round((prev + now + next) * 100) / 100,
           log_time: new Date(parseInt(range)),
         })
       }
-
-      console.log(everyLog)
 
       return everyLog
     }

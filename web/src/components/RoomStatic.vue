@@ -50,8 +50,7 @@ export default {
   components: {
     NSpace, NStatistic, NNumberAnimation, NCard, NTime,
   },
-  setup(props) {
-    console.log(props)
+  setup() {
     return {
     }
   },

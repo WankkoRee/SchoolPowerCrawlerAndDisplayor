@@ -105,8 +105,7 @@ export default {
     })
 
     return {
-      handleResize ({ width, height }) {
-        console.log(width, height)
+      handleResize () {
         if (roomsLogChart.value)
           roomsLogChart.value.resize()
       }

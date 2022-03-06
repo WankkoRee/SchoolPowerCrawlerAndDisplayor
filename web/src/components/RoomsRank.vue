@@ -27,7 +27,8 @@ export default {
     NCard, NGrid, NGridItem, NProgress,
   },
   setup() {
-
+    return {
+    }
   }
 }
 </script>
