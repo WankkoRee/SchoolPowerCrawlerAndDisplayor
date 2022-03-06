@@ -27,6 +27,9 @@
         </n-grid-item>
         <n-grid-item span="3">
           <n-space align="center" justify="end" style="height: 100%; margin-top: 0; margin-bottom: 0;">
+            <n-button @click="showDrawer=!showDrawer">
+              🏆
+            </n-button>
             <n-switch
                 checked-value="dark"
                 unchecked-value="light"
@@ -49,6 +52,7 @@
       </n-grid>
     </n-layout-header>
     <n-layout position="absolute" style="top: 64px; bottom: 64px;" content-style="padding: 8px;">
+      <div id="drawer-target">
       <n-space vertical>
         <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
           <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
@@ -69,6 +73,27 @@
           </n-grid>
         </div>
       </n-space>
+      </div>
+      <n-drawer
+          :show="showDrawer"
+          height="100%"
+          placement="top"
+          to="#drawer-target"
+      >
+        <div style="padding: 8px">
+          <n-grid :x-gap="8" :y-gap="8" cols="1">
+            <n-grid-item>
+              <rooms-rank title="今日用电量Top3" :data="dailyTopUsed" unit="kWh" />
+            </n-grid-item>
+            <n-grid-item>
+              <rooms-rank title="本周用电量Top3" :data="weeklyTopUsed" unit="kWh" />
+            </n-grid-item>
+            <n-grid-item>
+              <rooms-rank title="本周日均用电量Top3" :data="weeklyTopAvg" unit="kWh/d" />
+            </n-grid-item>
+          </n-grid>
+        </div>
+      </n-drawer>
     </n-layout>
     <n-layout-footer position="absolute" style="height: 64px; padding: 8px" bordered>
       <n-space align="center" justify="space-around" style="height: 100%; margin-top: 0; margin-bottom: 0;">
@@ -89,13 +114,14 @@
 <script>
 import { ref, onBeforeMount } from "vue"
 import {
-  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader,
+  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer,
   useMessage,
 } from 'naive-ui'
 import axios from "axios"
 
 import RoomStatic from "@/components/RoomStatic"
 import RoomsChart from "@/components/RoomsChart"
+import RoomsRank from "@/components/RoomsRank"
 
 export default {
   name: 'App',
@@ -103,8 +129,8 @@ export default {
     switchTheme: Function,
   },
   components: {
-    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader,
-    RoomStatic, RoomsChart,
+    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer,
+    RoomStatic, RoomsChart, RoomsRank,
   },
   setup(props) {
     const message = useMessage()
@@ -140,6 +166,36 @@ export default {
     // 主题
     const themeSwitch = ref(props.switchTheme()) // 主题文本
 
+    // 排行
+    const showDrawer = ref(false)
+    const dailyTopUsed = ref([])
+    const weeklyTopUsed = ref([])
+    const weeklyTopAvg = ref([])
+    async function getDailyTopUsed() {
+      const dailyTopUsedRequest = axios.get(`./api/rank/daily/${new Date().toISOString().slice(0, 10)}/topUsed`)
+      const {result, err} = await checkRequest(dailyTopUsedRequest)
+      if (!err) {
+        return result
+      }
+      return []
+    }
+    async function getWeeklyTopUsed() {
+      const weeklyTopUsedRequest = axios.get(`./api/rank/weekly/topUsed`)
+      const {result, err} = await checkRequest(weeklyTopUsedRequest)
+      if (!err) {
+        return result
+      }
+      return []
+    }
+    async function getWeeklyTopAvg() {
+      const weeklyTopAvgRequest = axios.get(`./api/rank/weekly/topAvg`)
+      const {result, err} = await checkRequest(weeklyTopAvgRequest)
+      if (!err) {
+        return result
+      }
+      return []
+    }
+
     // 寝室
     const rooms = ref([])
     const roomsSelect = ref([])
@@ -147,9 +203,9 @@ export default {
     const roomsSelectLoading = ref(false)
     const roomsData = {}
     async function getAreas() {
-      const areasRequset = axios.get("./api/area")
+      const areasRequest = axios.get("./api/area")
       const areas = []
-      const {result, err} = await checkRequest(areasRequset)
+      const {result, err} = await checkRequest(areasRequest)
       if (!err) {
         result.forEach(area => {
           areas.push({
@@ -198,6 +254,10 @@ export default {
       const areas = await getAreas()
       rooms.value.splice(0, rooms.value.length) // rooms.value.clear()
       rooms.value.push(...areas)
+
+      dailyTopUsed.value = await getDailyTopUsed()
+      weeklyTopUsed.value = await getWeeklyTopUsed()
+      weeklyTopAvg.value = await getWeeklyTopAvg()
     })
 
     function calcTotalUsed(roomLog, everyMs) {
@@ -281,6 +341,11 @@ export default {
       handleThemeSwitch(themeName) {
         props.switchTheme(themeName)
       },
+
+      showDrawer,
+      dailyTopUsed,
+      weeklyTopUsed,
+      weeklyTopAvg,
 
       rooms,
       async handleRoomsLoad(option) {
