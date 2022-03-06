@@ -135,49 +135,49 @@ BEGIN
 	declare oneday date DEFAULT STR_TO_DATE(CONCAT(YEARWEEK(arg_date, 1),'Monday'), '%x%v %W');
 
 	set monday = calc_daily(arg_room, oneday);
-	if monday != 0 then
+	if monday < 0 then
 		set total_power = total_power + monday;
 		set total_day = total_day + 1;
 	end if;
 
 	set oneday = date_add(oneday, INTERVAL 1 day);
 	set tuesday = calc_daily(arg_room, oneday);
-		if tuesday != 0 then
+		if tuesday < 0 then
 		set total_power = total_power + tuesday;
 		set total_day = total_day + 1;
 	end if;
 
 	set oneday = date_add(oneday, INTERVAL 1 day);
 	set wednesday = calc_daily(arg_room, oneday);
-		if wednesday != 0 then
+		if wednesday < 0 then
 		set total_power = total_power + wednesday;
 		set total_day = total_day + 1;
 	end if;
 
 	set oneday = date_add(oneday, INTERVAL 1 day);
 	set thursday = calc_daily(arg_room, oneday);
-		if thursday != 0 then
+		if thursday < 0 then
 		set total_power = total_power + thursday;
 		set total_day = total_day + 1;
 	end if;
 
 	set oneday = date_add(oneday, INTERVAL 1 day);
 	set friday = calc_daily(arg_room, oneday);
-		if friday != 0 then
+		if friday < 0 then
 		set total_power = total_power + friday;
 		set total_day = total_day + 1;
 	end if;
 
 	set oneday = date_add(oneday, INTERVAL 1 day);
 	set saturday = calc_daily(arg_room, oneday);
-		if saturday != 0 then
+		if saturday < 0 then
 		set total_power = total_power + saturday;
 		set total_day = total_day + 1;
 	end if;
 
 	set oneday = date_add(oneday, INTERVAL 1 day);
 	set sunday = calc_daily(arg_room, oneday);
-		if sunday != 0 then
+		if sunday < 0 then
 		set total_power = total_power + sunday;
 		set total_day = total_day + 1;
 	end if;
