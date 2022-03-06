@@ -16,11 +16,12 @@ demo: [校园电费爬 - 南阳师范学院](https://school.power.daixia.hu/)
 
 - 爬虫
   - 纯`requests`爬虫
-  - `MySQL`数据落地
+  - `MariaDB`数据落地
   - `AES/ECB/PKCS7`网络数据加密
 - 前端
   - `Vue 3`单页面实现
   - `Naive UI`作为界面库
+  - `ECharts`作为图表库
 - 后端
   - `Fastify`作为api快速构建工具
   - `knex`作为数据库查询语句自动生成工具
