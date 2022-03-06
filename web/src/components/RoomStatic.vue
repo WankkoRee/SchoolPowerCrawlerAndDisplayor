@@ -22,7 +22,7 @@
           <n-number-animation
               ref="avgUsed"
               :from="0"
-              :to="roomInfo.avgUsed"
+              :to="-roomInfo.avg_day_this_week"
               :duration="500"
               :active="true"
               :precision="2"

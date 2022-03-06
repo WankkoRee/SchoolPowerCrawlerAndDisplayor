@@ -115,6 +115,7 @@ async function api (fastify, options) {
                                 room: {type: 'string'},
                                 power: {type: 'number'},
                                 update_time: {type: 'string', format: 'date-time'},
+                                avg_day_this_week: {type: 'number'},
                             }
                         },
                         roomLog: {
@@ -124,6 +125,16 @@ async function api (fastify, options) {
                                 properties: {
                                     power: {type: 'number'},
                                     log_time: {type: 'string', format: 'date-time'},
+                                }
+                            }
+                        },
+                        roomDaily: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    power: {type: 'number'},
+                                    date: {type: 'string', format: 'date'},
                                 }
                             }
                         }
@@ -138,12 +149,13 @@ async function api (fastify, options) {
             if (id <= 0)
                 throw new fastify.seError('非法输入', 101, `${id} <= 0`)
 
-            const roomInfo = (await knex('sp_room').where('is_show', true).where('id', id).select('area', 'building', 'room', 'power', 'update_time'))[0]
+            const roomInfo = (await knex('sp_room').where('is_show', true).where('id', id).select('area', 'building', 'room', 'power', 'update_time', 'avg_day_this_week'))[0]
             if (roomInfo === undefined)
                 throw new fastify.seError('非法输入', 101, `id=${id} not in database`)
-            const roomLog = await knex('sp_log').where('room', id).orderBy('log_time').select('power', 'log_time')
+            const roomLog = await knex('sp_log').where('room', id).select('power', 'log_time')
+            const roomDaily = await knex('sp_daily').where('room', id).select('power', 'date')
 
-            return {code: 1, data: {roomInfo, roomLog}}
+            return {code: 1, data: {roomInfo, roomLog, roomDaily}}
         } catch (error) {
             return fastify.se_error.ApiErrorReturn(error)
         }

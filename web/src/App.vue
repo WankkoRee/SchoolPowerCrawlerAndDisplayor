@@ -61,7 +61,7 @@
               <RoomsChart chartName="历史电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
             </n-grid-item>
             <n-grid-item>
-              <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomDailyUsed)" />
+              <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomDaily)" />
             </n-grid-item>
             <n-grid-item>
               <RoomsChart chartName="每小时用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomHourlyUsed)" />
@@ -200,32 +200,6 @@ export default {
       rooms.value.push(...areas)
     })
 
-    /*
-    计算rangeMs内的每everyMs用电量
-    @param {Array} [roomLog] - 电量日志;
-    @param {Integer} [rangeMs] - 计算周期，单位为毫秒;
-    @param {Integer} [everyMs] - 计算基数，单位为毫秒;
-     */
-    function calcAvgUsed(roomLog, rangeMs, everyMs) {
-      if (rangeMs == null)
-        rangeMs = 1000 * 3600 * 24 * 7 // 取7天内用电情况
-      if (everyMs == null)
-        everyMs = 1000 * 3600 * 24 // 计算每1天的平均用电情况
-
-      let oldest = {log_time: new Date()}
-      let latest = {log_time: new Date(0)}
-
-      const now = new Date()
-      roomLog.forEach(log => {
-        if (log.log_time - latest.log_time >= 0)
-          latest = log
-        const diff = now - log.log_time
-        if (diff - rangeMs <= 0 && diff > now - oldest.log_time)
-          oldest = log
-      })
-      return -(latest.power - oldest.power) / ((latest.log_time - oldest.log_time) / everyMs)
-    }
-
     function calcTotalUsed(roomLog, everyMs) {
       if (everyMs == null)
         everyMs = 1000 * 3600 * 24 // 计算每1天的用电情况
@@ -271,11 +245,10 @@ export default {
             roomsData[roomId] = {
               roomInfo: result.roomInfo,
               roomName: `${result.roomInfo.area} の ${result.roomInfo.building} の ${result.roomInfo.room}`,
-              roomLog: result.roomLog.map(log => { return {power: log.power, log_time: new Date(log.log_time)} }).sort((a, b) => a.log_time.getTime() - b.log_time.getTime())
+              roomLog: result.roomLog.map(log => { return {power: log.power, log_time: new Date(log.log_time)} }).sort((a, b) => a.log_time.getTime() - b.log_time.getTime()),
+              roomDaily: result.roomDaily.map(log => { return {power: -log.power, log_time: new Date(log.date)} }),
             }
-            roomsData[roomId].roomInfo.avgUsed = calcAvgUsed(roomsData[roomId].roomLog, 1000 * 3600 * 24 * 7, 1000 * 3600 * 24)
             roomsData[roomId].roomInfo.update_time = new Date(roomsData[roomId].roomInfo.update_time)
-            roomsData[roomId].roomDailyUsed = calcTotalUsed(roomsData[roomId].roomLog, 1000 * 3600 * 24)
             roomsData[roomId].roomHourlyUsed = calcTotalUsed(roomsData[roomId].roomLog, 1000 * 3600)
 
             roomsSelected.value.push(roomId) // add新选中的寝室
