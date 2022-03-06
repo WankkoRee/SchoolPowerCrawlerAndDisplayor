@@ -1,8 +1,8 @@
 <template>
   <n-card hoverable>
     <div :id="chartName" style="height: 320px;">
-      <ResizeObserver @notify="handleResize" :showTrigger="true"/>
     </div>
+    <ResizeObserver @notify="handleResize" :showTrigger="true"/>
   </n-card>
 </template>
 
