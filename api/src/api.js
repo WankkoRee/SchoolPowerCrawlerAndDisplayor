@@ -20,6 +20,13 @@ function getApiSchema (data) {
     }
 }
 
+function getWeekday(d, diff) { // Mon Tue Wed Thu Fri Sat Sun = 0~6
+    d = new Date(d)
+    d.setHours(0, 0, 0, 0)
+    const day = d.getDay()
+    return new Date(d.setDate(d.getDate() - day + (day === 0 ? -6 : 1) + diff % 7)) // adjust when day is sunday
+}
+
 async function api (fastify, options) {
     fastify.register(require('./error'))
     const knex = require('knex')({
@@ -176,6 +183,101 @@ async function api (fastify, options) {
                 .select('power', 'date')
 
             return {code: 1, data: {roomInfo, roomLog, roomDaily}}
+        } catch (error) {
+            return fastify.se_error.ApiErrorReturn(error)
+        }
+    })
+
+    /*
+    获取某日用电量最高的寝室`room`
+     */
+    fastify.get('/rank/daily/:date/topUsed', { schema: { response: { 200: getApiSchema({
+                    type: 'object',
+                    properties: {
+                        area: {type: 'string'},
+                        building: {type: 'string'},
+                        room: {type: 'string'},
+                        power: {type: 'number'},
+                    },
+                    default: null
+                }) } } }, async (request, reply) => {
+        try {
+            const {date: dateStr} = request.params
+            const date = new Date(dateStr)
+
+            const roomInfo = (await knex('sp_daily')
+                .where('date', date)
+                .join('sp_room', 'sp_daily.room', 'sp_room.id')
+                .where('sp_room.is_show', true)
+                .where('sp_daily.power', '<=', '0')
+                .orderBy('sp_daily.power', 'asc')
+                .limit(3)
+                .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room', 'sp_daily.power as power')
+            )[0]
+            if (roomInfo === undefined)
+                throw new fastify.seError('非法输入', 101, `date="${date}" not in database`)
+
+            return {code: 1, data: roomInfo}
+        } catch (error) {
+            return fastify.se_error.ApiErrorReturn(error)
+        }
+    })
+
+    /*
+    获取本周用电量最高的寝室`room`
+     */
+    fastify.get('/rank/weekly/topUsed', { schema: { response: { 200: getApiSchema({
+                    type: 'object',
+                    properties: {
+                        area: {type: 'string'},
+                        building: {type: 'string'},
+                        room: {type: 'string'},
+                        power: {type: 'number'},
+                    },
+                    default: null
+                }) } } }, async (request, reply) => {
+        try {
+            const roomInfo = (await knex('sp_daily')
+                    .whereBetween('date', [getWeekday(new Date(), 0), getWeekday(new Date(), 6)])
+                    .join('sp_room', 'sp_daily.room', 'sp_room.id')
+                    .where('sp_room.is_show', true)
+                    .where('sp_daily.power', '<=', '0')
+                    .groupBy('sp_daily.room')
+                    .orderBy('power', 'asc')
+                    .limit(3)
+                    .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
+                    .sum('sp_daily.power as power')
+            )[0]
+
+            return {code: 1, data: roomInfo}
+        } catch (error) {
+            return fastify.se_error.ApiErrorReturn(error)
+        }
+    })
+
+    /*
+    获取本周日均用电量最高的寝室`room`
+     */
+    fastify.get('/rank/weekly/topAvg', { schema: { response: { 200: getApiSchema({
+                    type: 'object',
+                    properties: {
+                        area: {type: 'string'},
+                        building: {type: 'string'},
+                        room: {type: 'string'},
+                        power: {type: 'number'},
+                    },
+                    default: null
+                }) } } }, async (request, reply) => {
+        try {
+            const roomInfo = (await knex('sp_room')
+                .where('is_show', true)
+                .where('avg_day_this_week', '<=', 0)
+                .orderBy('avg_day_this_week', 'asc')
+                .limit(3)
+                .select('area', 'building', 'room', 'avg_day_this_week as power')
+            )[0]
+
+            return {code: 1, data: roomInfo}
         } catch (error) {
             return fastify.se_error.ApiErrorReturn(error)
         }
