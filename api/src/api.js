@@ -192,20 +192,23 @@ async function api (fastify, options) {
     获取某日用电量最高的寝室`room`
      */
     fastify.get('/rank/daily/:date/topUsed', { schema: { response: { 200: getApiSchema({
-                    type: 'object',
-                    properties: {
-                        area: {type: 'string'},
-                        building: {type: 'string'},
-                        room: {type: 'string'},
-                        power: {type: 'number'},
-                    },
-                    default: null
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            area: {type: 'string'},
+                            building: {type: 'string'},
+                            room: {type: 'string'},
+                            power: {type: 'number'},
+                        },
+                        default: null
+                    }
                 }) } } }, async (request, reply) => {
         try {
             const {date: dateStr} = request.params
-            const date = new Date(dateStr)
+            const date = new Date(new Date(dateStr).setHours(0))
 
-            const roomInfo = (await knex('sp_daily')
+            const roomInfo = await knex('sp_daily')
                 .where('date', date)
                 .join('sp_room', 'sp_daily.room', 'sp_room.id')
                 .where('sp_room.is_show', true)
@@ -213,8 +216,7 @@ async function api (fastify, options) {
                 .orderBy('sp_daily.power', 'asc')
                 .limit(3)
                 .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room', 'sp_daily.power as power')
-            )[0]
-            if (roomInfo === undefined)
+            if (roomInfo.length === 0)
                 throw new fastify.seError('非法输入', 101, `date="${date}" not in database`)
 
             return {code: 1, data: roomInfo}
@@ -227,17 +229,20 @@ async function api (fastify, options) {
     获取本周用电量最高的寝室`room`
      */
     fastify.get('/rank/weekly/topUsed', { schema: { response: { 200: getApiSchema({
-                    type: 'object',
-                    properties: {
-                        area: {type: 'string'},
-                        building: {type: 'string'},
-                        room: {type: 'string'},
-                        power: {type: 'number'},
-                    },
-                    default: null
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            area: {type: 'string'},
+                            building: {type: 'string'},
+                            room: {type: 'string'},
+                            power: {type: 'number'},
+                        },
+                        default: null
+                    }
                 }) } } }, async (request, reply) => {
         try {
-            const roomInfo = (await knex('sp_daily')
+            const roomInfo = await knex('sp_daily')
                     .whereBetween('date', [getWeekday(new Date(), 0), getWeekday(new Date(), 6)])
                     .join('sp_room', 'sp_daily.room', 'sp_room.id')
                     .where('sp_room.is_show', true)
@@ -247,7 +252,6 @@ async function api (fastify, options) {
                     .limit(3)
                     .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
                     .sum('sp_daily.power as power')
-            )[0]
 
             return {code: 1, data: roomInfo}
         } catch (error) {
@@ -259,23 +263,25 @@ async function api (fastify, options) {
     获取本周日均用电量最高的寝室`room`
      */
     fastify.get('/rank/weekly/topAvg', { schema: { response: { 200: getApiSchema({
-                    type: 'object',
-                    properties: {
-                        area: {type: 'string'},
-                        building: {type: 'string'},
-                        room: {type: 'string'},
-                        power: {type: 'number'},
-                    },
-                    default: null
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            area: {type: 'string'},
+                            building: {type: 'string'},
+                            room: {type: 'string'},
+                            power: {type: 'number'},
+                        },
+                        default: null
+                    }
                 }) } } }, async (request, reply) => {
         try {
-            const roomInfo = (await knex('sp_room')
+            const roomInfo = await knex('sp_room')
                 .where('is_show', true)
                 .where('avg_day_this_week', '<=', 0)
                 .orderBy('avg_day_this_week', 'asc')
                 .limit(3)
                 .select('area', 'building', 'room', 'avg_day_this_week as power')
-            )[0]
 
             return {code: 1, data: roomInfo}
         } catch (error) {
