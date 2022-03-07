@@ -172,7 +172,7 @@ export default {
     const weeklyTopUsed = ref([])
     const weeklyTopAvg = ref([])
     async function getDailyTopUsed() {
-      const dailyTopUsedRequest = axios.get(`./api/rank/daily/${new Date().toISOString().slice(0, 10)}/topUsed`)
+      const dailyTopUsedRequest = axios.get(`./api/rank/daily/${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}/topUsed`)
       const {result, err} = await checkRequest(dailyTopUsedRequest)
       if (!err) {
         return result
