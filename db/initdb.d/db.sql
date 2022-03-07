@@ -104,7 +104,7 @@ BEGIN
 
 	select count(*), oldest_power, oldest_time into tomorrow, tomorrow_power, tomorrow_time from sp_daily where room = arg_room and date = DATE_ADD(arg_date, INTERVAL 1 day);
 	if tomorrow = 1 then
-		set power_tomorrow = (tomorrow_power-today_latest_power) / TIMESTAMPDIFF(SECOND, today_latest_time, tomorrow_time) * TIMESTAMPDIFF(SECOND, today_latest_time, DATE_SUB(arg_date, INTERVAL 1 day));
+		set power_tomorrow = (tomorrow_power-today_latest_power) / TIMESTAMPDIFF(SECOND, today_latest_time, tomorrow_time) * TIMESTAMPDIFF(SECOND, today_latest_time, DATE_ADD(arg_date, INTERVAL 1 day));
 	end if;
 
 	RETURN power_yesterday + power_today + power_tomorrow;
