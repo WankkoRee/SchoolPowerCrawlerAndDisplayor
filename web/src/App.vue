@@ -59,8 +59,11 @@
       </n-grid>
     </n-layout-header>
     <n-layout position="absolute" style="top: 64px; bottom: 64px;" content-style="padding: 8px;">
-      <div id="container">
-        <n-space vertical>
+      <div id="container" style="min-height: 100%">
+        <div v-if="!roomsSelected.length" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);">
+          <n-empty description="要不咱先选几个寝室看看数据？" />
+        </div>
+        <n-space v-if="roomsSelected.length" vertical>
           <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
             <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
               <RoomStatic :roomInfo="roomsData[roomId].roomInfo" :roomName="roomsData[roomId].roomName" />
@@ -179,7 +182,7 @@
 <script>
 import { ref, onBeforeMount } from "vue"
 import {
-  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer,
+  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty,
   useMessage,
 } from 'naive-ui'
 import axios from "axios"
@@ -194,7 +197,7 @@ export default {
     switchTheme: Function,
   },
   components: {
-    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer,
+    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty,
     RoomStatic, RoomsChart, RoomsRank,
   },
   setup(props) {
