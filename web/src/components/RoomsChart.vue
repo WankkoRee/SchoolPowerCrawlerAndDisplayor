@@ -54,7 +54,10 @@ export default {
         }
       },
       legend: {
-        data: null
+        data: null,
+        type: 'scroll',
+        x:'center',
+        y:'bottom',
       },
       toolbox: {
         feature: {
@@ -72,7 +75,7 @@ export default {
       grid: {
         left: '3%',
         right: '4%',
-        bottom: '3%',
+        bottom: '10%',
         containLabel: true
       },
       backgroundColor: 'rgba(255,255,255,0)' // 透明
