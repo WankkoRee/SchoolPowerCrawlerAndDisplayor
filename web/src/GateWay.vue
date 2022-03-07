@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme="theme" :theme-overrides="themeOverrides">
+  <n-config-provider :locale="locale" :date-locale="dateZhCN" :theme="theme" :theme-overrides="themeOverrides">
     <n-message-provider>
       <app :switchTheme="switchTheme" />
     </n-message-provider>
@@ -10,7 +10,7 @@
 import {ref, watch} from "vue"
 import {
   NConfigProvider, NMessageProvider,
-  useOsTheme,
+  createLocale, useOsTheme,
   zhCN, dateZhCN, darkTheme,
 } from "naive-ui"
 
@@ -23,9 +23,19 @@ export default {
     App,
   },
   setup() {
-    const theme = ref(null)
-    const themeName = ref("light")
+    const locale = createLocale({
+      Cascader: {
+        loadingRequiredMessage: (label) => `别点框框嗷，我还不知道 ${label} 里面有啥呢！`
+      },
+    }, zhCN)
 
+    const theme = ref(null)
+    const themeOverrides = {
+      Cascader: {
+        columnWidth: '120px'
+      },
+    }
+    const themeName = ref("light")
     const switchTheme = (arg_themeName) => {
       if (arg_themeName === "light") {
         theme.value = null
@@ -42,17 +52,10 @@ export default {
       switchTheme(arg_themeName)
     })
 
-    const themeOverrides = {
-      Cascader: {
-        columnWidth: '120px'
-      }
-    }
-
     return {
-      theme,
-      zhCN, dateZhCN,
+      locale, dateZhCN,
+      theme, themeOverrides,
       switchTheme,
-      themeOverrides,
     }
   }
 }
