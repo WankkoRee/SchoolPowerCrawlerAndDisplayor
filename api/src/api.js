@@ -133,7 +133,7 @@ async function api (fastify, options) {
                                 building: {type: 'string'},
                                 room: {type: 'string'},
                                 power: {type: 'number'},
-                                update_time: {type: 'string', format: 'date-time'},
+                                update_time: {type: 'integer'},
                                 avg_day_this_week: {type: 'number'},
                             }
                         },
@@ -143,7 +143,7 @@ async function api (fastify, options) {
                                 type: 'object',
                                 properties: {
                                     power: {type: 'number'},
-                                    log_time: {type: 'string', format: 'date-time'},
+                                    log_time: {type: 'integer'},
                                 }
                             }
                         },
@@ -153,7 +153,7 @@ async function api (fastify, options) {
                                 type: 'object',
                                 properties: {
                                     power: {type: 'number'},
-                                    date: {type: 'string', format: 'date'},
+                                    date: {type: 'integer'},
                                 }
                             }
                         }
@@ -206,7 +206,7 @@ async function api (fastify, options) {
                 }) } } }, async (request, reply) => {
         try {
             const {date: dateStr} = request.params
-            const date = new Date(new Date(dateStr).setHours(0))
+            const date = new Date(parseInt(dateStr))
 
             const roomInfo = await knex('sp_daily')
                 .where('date', date)

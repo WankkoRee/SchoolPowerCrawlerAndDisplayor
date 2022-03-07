@@ -166,13 +166,17 @@ export default {
     // 主题
     const themeSwitch = ref(props.switchTheme()) // 主题文本
 
+
+    const getDate = (time) => {
+      return time.setHours(0,0,0,0) // ret integer
+    }
     // 排行
     const showDrawer = ref(false)
     const dailyTopUsed = ref([])
     const weeklyTopUsed = ref([])
     const weeklyTopAvg = ref([])
     async function getDailyTopUsed() {
-      const dailyTopUsedRequest = axios.get(`./api/rank/daily/${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}/topUsed`)
+      const dailyTopUsedRequest = axios.get(`./api/rank/daily/${getDate(new Date())}/topUsed`)
       const {result, err} = await checkRequest(dailyTopUsedRequest)
       if (!err) {
         return result
