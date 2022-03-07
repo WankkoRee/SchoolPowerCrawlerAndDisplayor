@@ -2,12 +2,12 @@
   <n-layout position="absolute">
     <n-layout-header position="absolute" style="height: 64px; padding: 8px" bordered>
       <n-grid cols="12" style="height: 100%;" item-responsive>
-        <n-grid-item span="10 600:3">
+        <n-grid-item span="10 900:3">
           <n-space align="center" justify="start" style="height: 100%; margin-top: 0; margin-bottom: 0;">
             <div style="font-size: 18px;">{{ title }}</div>
           </n-space>
         </n-grid-item>
-        <n-grid-item span="0 600:6">
+        <n-grid-item span="0 900:6">
           <n-space align="center" justify="center" style="width: 100%; height: 100%; margin-top: 0; margin-bottom: 0;" item-style="width: 100%">
             <n-cascader
                 placeholder="请选择要查询的寝室"
@@ -25,7 +25,7 @@
             />
           </n-space>
         </n-grid-item>
-        <n-grid-item span="0 600:3">
+        <n-grid-item span="0 900:3">
           <n-space align="center" justify="end" style="height: 100%; margin-top: 0; margin-bottom: 0;">
             <n-button @click="showRank=!showRank">
               🏆
@@ -49,10 +49,10 @@
             </n-switch>
           </n-space>
         </n-grid-item>
-        <n-grid-item span="2 600:0">
+        <n-grid-item span="2 900:0">
           <n-space align="center" justify="end" style="height: 100%; margin-top: 0; margin-bottom: 0;">
-            <n-button @click="showMenu=!showMenu">
-              =
+            <n-button @click="showMenu && showRank ? showRank=!showRank : showMenu=!showMenu">
+              {{ showMenu && showRank ? '🏆' : '=' }}
             </n-button>
           </n-space>
         </n-grid-item>
@@ -111,7 +111,7 @@
             </n-grid-item>
             <n-grid-item span="1">
               <n-space align="center" justify="space-around" style="height: 100%; margin-top: 0; margin-bottom: 0;">
-                <n-button @click="showRank=!showRank; showMenu=false">
+                <n-button @click="showRank=!showRank">
                   🏆
                 </n-button>
                 <n-switch
@@ -138,7 +138,8 @@
       </n-drawer>
       <n-drawer
           :show="showRank"
-          height="auto"
+          height="100%"
+          width="100%"
           placement="top"
           to="#container"
           @esc="showRank=false"
