@@ -149,14 +149,14 @@
           @mask-click="showRank=false"
       >
         <div style="padding: 8px">
-          <n-grid :x-gap="8" :y-gap="8" cols="1">
-            <n-grid-item>
+          <n-grid :x-gap="8" :y-gap="8" cols="3" item-responsive>
+            <n-grid-item span="3 900:1">
               <rooms-rank title="今日用电量Top3" :data="dailyTopUsed" unit="kWh" />
             </n-grid-item>
-            <n-grid-item>
+            <n-grid-item span="3 900:1">
               <rooms-rank title="本周用电量Top3" :data="weeklyTopUsed" unit="kWh" />
             </n-grid-item>
-            <n-grid-item>
+            <n-grid-item span="3 900:1">
               <rooms-rank title="本周日均用电量Top3" :data="weeklyTopAvg" unit="kWh/d" />
             </n-grid-item>
           </n-grid>
