@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme="theme">
+  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme="theme" :theme-overrides="themeOverrides">
     <n-message-provider>
       <app :switchTheme="switchTheme" />
     </n-message-provider>
@@ -42,10 +42,17 @@ export default {
       switchTheme(arg_themeName)
     })
 
+    const themeOverrides = {
+      Cascader: {
+        columnWidth: '120px'
+      }
+    }
+
     return {
       theme,
       zhCN, dateZhCN,
       switchTheme,
+      themeOverrides,
     }
   }
 }
