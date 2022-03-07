@@ -1,13 +1,13 @@
 <template>
   <n-layout position="absolute">
     <n-layout-header position="absolute" style="height: 64px; padding: 8px" bordered>
-      <n-grid cols="12" style="height: 100%;">
-        <n-grid-item span="3">
+      <n-grid cols="12" style="height: 100%;" item-responsive>
+        <n-grid-item span="10 600:3">
           <n-space align="center" justify="start" style="height: 100%; margin-top: 0; margin-bottom: 0;">
             <div style="font-size: 18px;">{{ title }}</div>
           </n-space>
         </n-grid-item>
-        <n-grid-item span="6">
+        <n-grid-item span="0 600:6">
           <n-space align="center" justify="center" style="width: 100%; height: 100%; margin-top: 0; margin-bottom: 0;" item-style="width: 100%">
             <n-cascader
                 placeholder="请选择要查询的寝室"
@@ -25,9 +25,9 @@
             />
           </n-space>
         </n-grid-item>
-        <n-grid-item span="3">
+        <n-grid-item span="0 600:3">
           <n-space align="center" justify="end" style="height: 100%; margin-top: 0; margin-bottom: 0;">
-            <n-button @click="showDrawer=!showDrawer">
+            <n-button @click="showRank=!showRank">
               🏆
             </n-button>
             <n-switch
@@ -49,36 +49,100 @@
             </n-switch>
           </n-space>
         </n-grid-item>
+        <n-grid-item span="2 600:0">
+          <n-space align="center" justify="end" style="height: 100%; margin-top: 0; margin-bottom: 0;">
+            <n-button @click="showMenu=!showMenu">
+              =
+            </n-button>
+          </n-space>
+        </n-grid-item>
       </n-grid>
     </n-layout-header>
     <n-layout position="absolute" style="top: 64px; bottom: 64px;" content-style="padding: 8px;">
-      <div id="drawer-target">
-      <n-space vertical>
-        <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
-          <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
-            <RoomStatic :roomInfo="roomsData[roomId].roomInfo" :roomName="roomsData[roomId].roomName" />
-          </n-grid-item>
-        </n-grid>
-        <div>
+      <div id="container">
+        <n-space vertical>
+          <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
+            <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
+              <RoomStatic :roomInfo="roomsData[roomId].roomInfo" :roomName="roomsData[roomId].roomName" />
+            </n-grid-item>
+          </n-grid>
+          <div>
+            <n-grid :x-gap="8" :y-gap="8" cols="1">
+              <n-grid-item>
+                <RoomsChart chartName="历史电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
+              </n-grid-item>
+              <n-grid-item>
+                <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomDaily)" />
+              </n-grid-item>
+              <n-grid-item>
+                <RoomsChart chartName="每小时用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomHourlyUsed)" />
+              </n-grid-item>
+            </n-grid>
+          </div>
+        </n-space>
+      </div>
+      <n-drawer
+          :show="showMenu"
+          height="auto"
+          placement="top"
+          to="#container"
+          @esc="showMenu=false"
+          @mask-click="showMenu=false"
+      >
+        <div style="padding: 8px">
           <n-grid :x-gap="8" :y-gap="8" cols="1">
-            <n-grid-item>
-              <RoomsChart chartName="历史电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
+            <n-grid-item span="1">
+              <n-space align="center" justify="center" style="width: 100%; height: 100%; margin-top: 0; margin-bottom: 0;" item-style="width: 100%">
+                <n-cascader
+                    placeholder="请选择要查询的寝室"
+                    :options="rooms"
+                    multiple
+                    check-strategy="child"
+                    clearable
+                    remote
+                    separator=" の "
+                    max-tag-count="responsive"
+                    v-model:value="roomsSelect"
+                    @load="handleRoomsLoad"
+                    @update:value="handleRoomsSelect"
+                    :disabled="roomsSelectLoading"
+                />
+              </n-space>
             </n-grid-item>
-            <n-grid-item>
-              <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomDaily)" />
-            </n-grid-item>
-            <n-grid-item>
-              <RoomsChart chartName="每小时用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomHourlyUsed)" />
+            <n-grid-item span="1">
+              <n-space align="center" justify="space-around" style="height: 100%; margin-top: 0; margin-bottom: 0;">
+                <n-button @click="showRank=!showRank; showMenu=false">
+                  🏆
+                </n-button>
+                <n-switch
+                    checked-value="dark"
+                    unchecked-value="light"
+                    v-model:value="themeSwitch"
+                    @update:value="handleThemeSwitch"
+                    size="medium"
+                >
+                  <template #icon>
+                    {{ {light: "☀️", dark: "🌙"}[themeSwitch] }}
+                  </template>
+                  <template #checked>
+                    夜间
+                  </template>
+                  <template #unchecked>
+                    日间
+                  </template>
+                </n-switch>
+              </n-space>
             </n-grid-item>
           </n-grid>
         </div>
-      </n-space>
-      </div>
+      </n-drawer>
       <n-drawer
-          :show="showDrawer"
-          height="100%"
+          :show="showRank"
+          height="auto"
           placement="top"
-          to="#drawer-target"
+          to="#container"
+          @esc="showRank=false"
+          @mask-click="showRank=false"
       >
         <div style="padding: 8px">
           <n-grid :x-gap="8" :y-gap="8" cols="1">
@@ -165,13 +229,14 @@ export default {
 
     // 主题
     const themeSwitch = ref(props.switchTheme()) // 主题文本
+    const showMenu = ref(false)
 
 
     const getDate = (time) => {
       return time.setHours(0,0,0,0) // ret integer
     }
     // 排行
-    const showDrawer = ref(false)
+    const showRank = ref(false)
     const dailyTopUsed = ref([])
     const weeklyTopUsed = ref([])
     const weeklyTopAvg = ref([])
@@ -340,8 +405,9 @@ export default {
       handleThemeSwitch(themeName) {
         props.switchTheme(themeName)
       },
+      showMenu,
 
-      showDrawer,
+      showRank,
       dailyTopUsed,
       weeklyTopUsed,
       weeklyTopAvg,
