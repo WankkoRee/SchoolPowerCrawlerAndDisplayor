@@ -85,12 +85,11 @@
         </n-space>
       </div>
       <n-drawer
-          :show="showMenu"
+          v-model:show="showMenu"
           height="auto"
           placement="top"
           to="#container"
-          @esc="showMenu=false"
-          @mask-click="showMenu=false"
+          :auto-focus="false"
       >
         <div style="padding: 8px">
           <n-grid :x-gap="8" :y-gap="8" cols="1">
@@ -140,24 +139,73 @@
         </div>
       </n-drawer>
       <n-drawer
-          :show="showRank"
+          v-model:show="showRank"
           height="100%"
-          width="100%"
           placement="top"
           to="#container"
-          @esc="showRank=false"
-          @mask-click="showRank=false"
+          :auto-focus="false"
       >
         <div style="padding: 8px">
           <n-grid :x-gap="8" :y-gap="8" cols="3" item-responsive>
             <n-grid-item span="3 900:1">
-              <rooms-rank title="今日用电量Top3" :data="dailyTopUsed" unit="kWh" />
+              <n-card title="今日用电量Top3" hoverable>
+                <rooms-rank :data="dailyTopUsed" :type="dailyTopUsedType" unit="kWh" />
+                <template #header-extra>
+                  <n-input-number style="width: 80px" v-model:value="dailyTopUsedLimit" :update-value-on-input="false" :show-button="false" placeholder="" :min="1" :max="20" @update:value="dailyTopUsedTypeUpdate">
+                    <template #prefix>
+                      前
+                    </template>
+                    <template #suffix>
+                      的
+                    </template>
+                  </n-input-number>
+                  <n-radio-group v-model:value="dailyTopUsedType" @update:value="dailyTopUsedTypeUpdate">
+                    <n-radio-button value="area">校区</n-radio-button>
+                    <n-radio-button value="building">宿舍楼</n-radio-button>
+                    <n-radio-button value="room">寝室</n-radio-button>
+                  </n-radio-group>
+                </template>
+              </n-card>
             </n-grid-item>
             <n-grid-item span="3 900:1">
-              <rooms-rank title="本周用电量Top3" :data="weeklyTopUsed" unit="kWh" />
+              <n-card title="本周用电量Top3" hoverable>
+                <rooms-rank :data="weeklyTopUsed" :type="weeklyTopUsedType" unit="kWh" />
+                <template #header-extra>
+                  <n-input-number style="width: 80px" v-model:value="weeklyTopUsedLimit" :update-value-on-input="false" :show-button="false" placeholder="" :min="1" :max="20" @update:value="weeklyTopUsedTypeUpdate">
+                    <template #prefix>
+                      前
+                    </template>
+                    <template #suffix>
+                      的
+                    </template>
+                  </n-input-number>
+                  <n-radio-group v-model:value="weeklyTopUsedType" @update:value="weeklyTopUsedTypeUpdate">
+                    <n-radio-button value="area">校区</n-radio-button>
+                    <n-radio-button value="building">宿舍楼</n-radio-button>
+                    <n-radio-button value="room">寝室</n-radio-button>
+                  </n-radio-group>
+                </template>
+              </n-card>
             </n-grid-item>
             <n-grid-item span="3 900:1">
-              <rooms-rank title="本周日均用电量Top3" :data="weeklyTopAvg" unit="kWh/d" />
+              <n-card title="本周日均用电量Top3" hoverable>
+                <rooms-rank :data="weeklyTopAvg" :type="weeklyTopAvgType" unit="kWh/d" />
+                <template #header-extra>
+                  <n-input-number style="width: 80px" v-model:value="weeklyTopAvgLimit" :update-value-on-input="false" :show-button="false" placeholder="" :min="1" :max="20" @update:value="weeklyTopAvgTypeUpdate">
+                    <template #prefix>
+                      前
+                    </template>
+                    <template #suffix>
+                      的
+                    </template>
+                  </n-input-number>
+                  <n-radio-group v-model:value="weeklyTopAvgType" @update:value="weeklyTopAvgTypeUpdate">
+                    <n-radio-button value="area">校区</n-radio-button>
+                    <n-radio-button value="building">宿舍楼</n-radio-button>
+                    <n-radio-button value="room">寝室</n-radio-button>
+                  </n-radio-group>
+                </template>
+              </n-card>
             </n-grid-item>
           </n-grid>
         </div>
@@ -182,7 +230,7 @@
 <script>
 import { ref, onBeforeMount } from "vue"
 import {
-  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty,
+  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty, NCard, NRadioGroup, NRadioButton, NInputNumber,
   useMessage,
 } from 'naive-ui'
 import axios from "axios"
@@ -197,7 +245,7 @@ export default {
     switchTheme: Function,
   },
   components: {
-    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty,
+    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty, NCard, NRadioGroup, NRadioButton, NInputNumber,
     RoomStatic, RoomsChart, RoomsRank,
   },
   setup(props) {
@@ -242,10 +290,16 @@ export default {
     // 排行
     const showRank = ref(false)
     const dailyTopUsed = ref([])
+    const dailyTopUsedType = ref("room")
+    const dailyTopUsedLimit = ref(3)
     const weeklyTopUsed = ref([])
+    const weeklyTopUsedType = ref("room")
+    const weeklyTopUsedLimit = ref(3)
     const weeklyTopAvg = ref([])
+    const weeklyTopAvgType = ref("room")
+    const weeklyTopAvgLimit = ref(3)
     async function getDailyTopUsed() {
-      const dailyTopUsedRequest = axios.get(`./api/rank/daily/${getDate(new Date())}/topUsed`)
+      const dailyTopUsedRequest = axios.get(`./api/rank/daily/${getDate(new Date())}/topUsed/${dailyTopUsedType.value}/${dailyTopUsedLimit.value}`)
       const {result, err} = await checkRequest(dailyTopUsedRequest)
       if (!err) {
         return result
@@ -253,7 +307,7 @@ export default {
       return []
     }
     async function getWeeklyTopUsed() {
-      const weeklyTopUsedRequest = axios.get(`./api/rank/weekly/topUsed`)
+      const weeklyTopUsedRequest = axios.get(`./api/rank/weekly/${getDate(new Date())}/topUsed/${weeklyTopUsedType.value}/${weeklyTopUsedLimit.value}`)
       const {result, err} = await checkRequest(weeklyTopUsedRequest)
       if (!err) {
         return result
@@ -261,7 +315,7 @@ export default {
       return []
     }
     async function getWeeklyTopAvg() {
-      const weeklyTopAvgRequest = axios.get(`./api/rank/weekly/topAvg`)
+      const weeklyTopAvgRequest = axios.get(`./api/rank/weekly/topAvg/${weeklyTopAvgType.value}/${weeklyTopAvgLimit.value}`)
       const {result, err} = await checkRequest(weeklyTopAvgRequest)
       if (!err) {
         return result
@@ -413,8 +467,23 @@ export default {
 
       showRank,
       dailyTopUsed,
+      dailyTopUsedType,
+      dailyTopUsedLimit,
+      async dailyTopUsedTypeUpdate() {
+        dailyTopUsed.value = await getDailyTopUsed()
+      },
       weeklyTopUsed,
+      weeklyTopUsedType,
+      weeklyTopUsedLimit,
+      async weeklyTopUsedTypeUpdate() {
+        weeklyTopUsed.value = await getWeeklyTopUsed()
+      },
       weeklyTopAvg,
+      weeklyTopAvgType,
+      weeklyTopAvgLimit,
+      async weeklyTopAvgTypeUpdate() {
+        weeklyTopAvg.value = await getWeeklyTopAvg()
+      },
 
       rooms,
       async handleRoomsLoad(option) {
