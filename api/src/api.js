@@ -311,7 +311,7 @@ async function api (fastify, options) {
                 .orderBy('power', 'asc') // alias后的`power`
                 .limit(limit)
                 .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
-                .sum('sp_room.avg_day_this_week as power')
+                .avg('sp_room.avg_day_this_week as power')
 
             return {code: 1, data: roomInfo}
         } catch (error) {
