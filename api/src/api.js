@@ -189,9 +189,9 @@ async function api (fastify, options) {
     })
 
     /*
-    获取某日用电量最高的寝室`room`
+    获取某日用电量最高的寝室`room`/宿舍楼`building`/校区`area`
      */
-    fastify.get('/rank/daily/:date/topUsed', { schema: { response: { 200: getApiSchema({
+    fastify.get('/rank/daily/:date/topUsed/:type/:limit', { schema: { response: { 200: getApiSchema({
                     type: 'array',
                     items: {
                         type: 'object',
@@ -205,19 +205,28 @@ async function api (fastify, options) {
                     }
                 }) } } }, async (request, reply) => {
         try {
-            const {date: dateStr} = request.params
+            const {date: dateStr, type, limit: limitStr} = request.params
             const date = new Date(parseInt(dateStr))
+            const limit = parseInt(limitStr)
+            if (!["area", "building", "room"].includes(type))
+                throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
+            if (limit.toString() !== limitStr)
+                throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
+            if (limit <= 0 || limit > 10)
+                throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
 
             const roomInfo = await knex('sp_daily')
-                .where('date', date)
+                .where('sp_daily.date', date)
                 .join('sp_room', 'sp_daily.room', 'sp_room.id')
                 .where('sp_room.is_show', true)
-                .where('sp_daily.power', '<=', '0')
-                .orderBy('sp_daily.power', 'asc')
-                .limit(3)
-                .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room', 'sp_daily.power as power')
+                .where('sp_daily.power', '<=', 0)
+                .groupBy(`sp_room.${type}`)
+                .orderBy('power', 'asc') // alias后的`power`
+                .limit(limit)
+                .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
+                .sum('sp_daily.power as power')
             if (roomInfo.length === 0)
-                throw new fastify.seError('非法输入', 101, `date="${date}" not in database`)
+                throw new fastify.seError('非法输入', 101, `date="${date}" and type="${type}" not in database`)
 
             return {code: 1, data: roomInfo}
         } catch (error) {
@@ -226,9 +235,9 @@ async function api (fastify, options) {
     })
 
     /*
-    获取本周用电量最高的寝室`room`
+    获取本周用电量最高的寝室`room`/宿舍楼`building`/校区`area`
      */
-    fastify.get('/rank/weekly/topUsed', { schema: { response: { 200: getApiSchema({
+    fastify.get('/rank/weekly/:date/topUsed/:type/:limit', { schema: { response: { 200: getApiSchema({
                     type: 'array',
                     items: {
                         type: 'object',
@@ -242,16 +251,26 @@ async function api (fastify, options) {
                     }
                 }) } } }, async (request, reply) => {
         try {
+            const {date: dateStr, type, limit: limitStr} = request.params
+            const date = new Date(parseInt(dateStr))
+            const limit = parseInt(limitStr)
+            if (!["area", "building", "room"].includes(type))
+                throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
+            if (limit.toString() !== limitStr)
+                throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
+            if (limit <= 0 || limit > 10)
+                throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
+
             const roomInfo = await knex('sp_daily')
-                    .whereBetween('date', [getWeekday(new Date(), 0), getWeekday(new Date(), 6)])
-                    .join('sp_room', 'sp_daily.room', 'sp_room.id')
-                    .where('sp_room.is_show', true)
-                    .where('sp_daily.power', '<=', '0')
-                    .groupBy('sp_daily.room')
-                    .orderBy('power', 'asc')
-                    .limit(3)
-                    .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
-                    .sum('sp_daily.power as power')
+                .whereBetween('sp_daily.date', [getWeekday(date, 0), getWeekday(date, 6)])
+                .join('sp_room', 'sp_daily.room', 'sp_room.id')
+                .where('sp_room.is_show', true)
+                .where('sp_daily.power', '<=', 0)
+                .groupBy(`sp_room.${type}`)
+                .orderBy('power', 'asc') // alias后的`power`
+                .limit(limit)
+                .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
+                .sum('sp_daily.power as power')
 
             return {code: 1, data: roomInfo}
         } catch (error) {
@@ -260,9 +279,9 @@ async function api (fastify, options) {
     })
 
     /*
-    获取本周日均用电量最高的寝室`room`
+    获取本周日均用电量最高的寝室`room`/宿舍楼`building`/校区`area`
      */
-    fastify.get('/rank/weekly/topAvg', { schema: { response: { 200: getApiSchema({
+    fastify.get('/rank/weekly/topAvg/:type/:limit', { schema: { response: { 200: getApiSchema({
                     type: 'array',
                     items: {
                         type: 'object',
@@ -276,12 +295,23 @@ async function api (fastify, options) {
                     }
                 }) } } }, async (request, reply) => {
         try {
+            const {type, limit: limitStr} = request.params
+            const limit = parseInt(limitStr)
+            if (!["area", "building", "room"].includes(type))
+                throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
+            if (limit.toString() !== limitStr)
+                throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
+            if (limit <= 0 || limit > 10)
+                throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
+
             const roomInfo = await knex('sp_room')
-                .where('is_show', true)
-                .where('avg_day_this_week', '<=', 0)
-                .orderBy('avg_day_this_week', 'asc')
-                .limit(3)
-                .select('area', 'building', 'room', 'avg_day_this_week as power')
+                .where('sp_room.is_show', true)
+                .where('sp_room.avg_day_this_week', '<=', 0)
+                .groupBy(`sp_room.${type}`)
+                .orderBy('power', 'asc') // alias后的`power`
+                .limit(limit)
+                .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
+                .sum('sp_room.avg_day_this_week as power')
 
             return {code: 1, data: roomInfo}
         } catch (error) {
