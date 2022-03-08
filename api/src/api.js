@@ -212,7 +212,7 @@ async function api (fastify, options) {
                 throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
             if (limit.toString() !== limitStr)
                 throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
-            if (limit <= 0 || limit > 10)
+            if (limit <= 0 || limit > 20)
                 throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
 
             const roomInfo = await knex('sp_daily')
@@ -258,7 +258,7 @@ async function api (fastify, options) {
                 throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
             if (limit.toString() !== limitStr)
                 throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
-            if (limit <= 0 || limit > 10)
+            if (limit <= 0 || limit > 20)
                 throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
 
             const roomInfo = await knex('sp_daily')
@@ -301,7 +301,7 @@ async function api (fastify, options) {
                 throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
             if (limit.toString() !== limitStr)
                 throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
-            if (limit <= 0 || limit > 10)
+            if (limit <= 0 || limit > 20)
                 throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
 
             const roomInfo = await knex('sp_room')
