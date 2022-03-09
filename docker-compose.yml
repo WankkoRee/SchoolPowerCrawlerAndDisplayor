@@ -9,6 +9,7 @@ services:
       - "./api:/home/school_power_api"
     working_dir: "/home/school_power_api"
     command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && npm install && npm run start"
+    restart: unless-stopped
   school_power_db:
     container_name: school_power_db
     image: "mariadb:10.5.3"
@@ -20,3 +21,12 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "123456"
       TZ: "Asia/Shanghai"
+    restart: unless-stopped
+  school_power_crawler:
+    container_name: school_power_crawler
+    image: "python:3.9.10-slim"
+    volumes:
+      - "./crawler:/home/school_power_crawler"
+    working_dir: "/home/school_power_crawler"
+    command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && pip install --no-cache-dir -r requirements.txt && python main.py"
+    restart: unless-stopped

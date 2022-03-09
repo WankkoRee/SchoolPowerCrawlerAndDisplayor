@@ -1,3 +1,6 @@
+import time
+
+import schedule
 from requests import Session
 import pymysql
 
@@ -5,6 +8,8 @@ from config import host, schoolId, aesEcbPkcs7, username, password, db_host, db_
 
 
 def main():
+    print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()), "定时任务开始")
+
     conn = pymysql.connect(host=db_host, user=db_username, passwd=db_password, db=db_name)
     cur = conn.cursor()
     ss = Session()
@@ -95,6 +100,16 @@ def main():
     cur.close()
     conn.close()
 
+    print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()), "定时任务结束")
+
+
+def task():
+    print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()), "定时任务创建")
+    schedule.every().hour.at(":00").do(main)
+    while True:
+        schedule.run_pending()
+        time.sleep(0.1)
+
 
 if __name__ == '__main__':
-    main()
+    task()
