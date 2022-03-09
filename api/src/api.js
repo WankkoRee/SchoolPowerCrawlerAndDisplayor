@@ -219,7 +219,7 @@ async function api (fastify, options) {
                 .where('sp_daily.date', date)
                 .join('sp_room', 'sp_daily.room', 'sp_room.id')
                 .where('sp_room.is_show', true)
-                .where('sp_daily.power', '<=', 0)
+                .where('sp_daily.power', '<', 0)
                 .groupBy(`sp_room.${type}`)
                 .orderBy('power', 'asc') // alias后的`power`
                 .limit(limit)
@@ -265,7 +265,7 @@ async function api (fastify, options) {
                 .whereBetween('sp_daily.date', [getWeekday(date, 0), getWeekday(date, 6)])
                 .join('sp_room', 'sp_daily.room', 'sp_room.id')
                 .where('sp_room.is_show', true)
-                .where('sp_daily.power', '<=', 0)
+                .where('sp_daily.power', '<', 0)
                 .groupBy(`sp_room.${type}`)
                 .orderBy('power', 'asc') // alias后的`power`
                 .limit(limit)
@@ -306,7 +306,7 @@ async function api (fastify, options) {
 
             const roomInfo = await knex('sp_room')
                 .where('sp_room.is_show', true)
-                .where('sp_room.avg_day_this_week', '<=', 0)
+                .where('sp_room.avg_day_this_week', '<', 0)
                 .groupBy(`sp_room.${type}`)
                 .orderBy('power', 'asc') // alias后的`power`
                 .limit(limit)
