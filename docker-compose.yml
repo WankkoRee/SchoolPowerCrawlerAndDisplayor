@@ -40,8 +40,8 @@ services:
       SP_HOST: "https://dk.nynu.edu.cn"
       SP_SCHOOL_ID: 4
       SP_AES_KEY: "31323334353637383930414243444546"
-      SP_USERNAME:
-      SP_PASSWORD:
+      SP_USERNAME: ""
+      SP_PASSWORD: ""
       SP_DB_HOST: "school_power_db"
       SP_DB_PORT: 3306
       SP_DB_USER: "root"
