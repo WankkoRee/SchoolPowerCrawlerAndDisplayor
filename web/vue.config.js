@@ -3,7 +3,7 @@ module.exports = defineConfig({
   transpileDependencies: true,
   chainWebpack: config => {
     config.plugin('html').tap(args => {
-      args[0].title=process.env.VUE_APP_TITLE
+      args[0].title=process.env.SP_VUE_APP_TITLE
       return args
     })
   },
