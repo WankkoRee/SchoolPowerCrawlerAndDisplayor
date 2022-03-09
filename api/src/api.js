@@ -32,14 +32,14 @@ async function api (fastify, options) {
     const knex = require('knex')({
         client: 'mysql2',
         connection: {
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASS,
-            database: process.env.DB_NAME,
+            host: process.env.SP_DB_HOST,
+            port: process.env.SP_DB_PORT,
+            user: process.env.SP_DB_USER,
+            password: process.env.SP_DB_PASS,
+            database: process.env.SP_DB_NAME,
         },
-        debug: process.env.DEBUG === "1",
-        asyncStackTraces: process.env.DEBUG === "1",
+        debug: process.env.SP_DEBUG === "1",
+        asyncStackTraces: process.env.SP_DEBUG === "1",
     })
     fastify.addHook('onClose', async (instance, done) => {
         await knex.destroy();

@@ -1,23 +1,27 @@
+import os
 import time
+import datetime
 
+from dotenv import load_dotenv
 import schedule
 from requests import Session
 import pymysql
 
-from config import host, schoolId, aesEcbPkcs7, username, password, db_host, db_username, db_password, db_name
+from util import AES_ECB_PKCS7
 
 
 def main():
-    print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()), "定时任务开始")
+    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), "定时任务开始")
 
-    conn = pymysql.connect(host=db_host, user=db_username, passwd=db_password, db=db_name)
+    conn = pymysql.connect(host=os.getenv('SP_DB_HOST'), port=int(os.getenv('SP_DB_PORT')), user=os.getenv('SP_DB_USER'), passwd=os.getenv('SP_DB_PASS'), db=os.getenv('SP_DB_NAME'))
     cur = conn.cursor()
     ss = Session()
     data = {}
+    aesEcbPkcs7 = AES_ECB_PKCS7(bytes.fromhex(os.getenv('SP_AES_KEY')))
     ####
     try:
-        ret = ss.post(url=f"{host}/login", data={
-            "zhToken": aesEcbPkcs7.encrypt(f'userNo={username}&password={password}', "hex")
+        ret = ss.post(url=f"{os.getenv('SP_HOST')}/login", data={
+            "zhToken": aesEcbPkcs7.encrypt(f"userNo={os.getenv('SP_USERNAME')}&password={os.getenv('SP_PASSWORD')}", "hex")
         })
         assert ret.status_code == 200 and ret.json()['code'] == 1
     except AssertionError:
@@ -28,7 +32,7 @@ def main():
         raise e
     ####
     try:
-        ret = ss.post(url=f"{host}/member/power/selectArea")
+        ret = ss.post(url=f"{os.getenv('SP_HOST')}/member/power/selectArea")
         assert ret.status_code == 200 and ret.json()['code'] == 1
     except AssertionError:
         print("获取area异常", ret.status_code, ret.text)
@@ -46,8 +50,8 @@ def main():
         data[areaName] = {}
         ####
         try:
-            ret = ss.post(url=f"{host}/member/power/buildings", data={
-                "schoolId": schoolId,
+            ret = ss.post(url=f"{os.getenv('SP_HOST')}/member/power/buildings", data={
+                "schoolId": int(os.getenv('SP_SCHOOL_ID')),
                 "areaId": areaId
             })
             assert ret.status_code == 200 and ret.json()['code'] == 1
@@ -65,8 +69,8 @@ def main():
             data[areaName][buildingName] = {}
             ####
             try:
-                ret = ss.post(url=f"{host}/member/power/rooms", data={
-                    "schoolId": schoolId,
+                ret = ss.post(url=f"{os.getenv('SP_HOST')}/member/power/rooms", data={
+                    "schoolId": int(os.getenv('SP_SCHOOL_ID')),
                     "areaId": areaId,
                     "buildId": buildingId,
                     "compCode": compCode
@@ -100,11 +104,11 @@ def main():
     cur.close()
     conn.close()
 
-    print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()), "定时任务结束")
+    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), "定时任务结束")
 
 
 def task():
-    print(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()), "定时任务创建")
+    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), "定时任务创建")
     schedule.every().hour.at(":00").do(main)
     while True:
         schedule.run_pending()
@@ -112,4 +116,6 @@ def task():
 
 
 if __name__ == '__main__':
+    load_dotenv('.env.local')
+    load_dotenv('.env')
     task()

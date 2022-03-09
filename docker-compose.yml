@@ -9,6 +9,13 @@ services:
       - "./api:/home/school_power_api"
     working_dir: "/home/school_power_api"
     command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && npm install && npm run start"
+    environment:
+      SP_PORT: 3000
+      SP_DB_HOST: "school_power_db"
+      SP_DB_PORT: 3306
+      SP_DB_USER: "root"
+      SP_DB_PASS: "123456"
+      SP_DB_NAME: "school_power"
     restart: unless-stopped
   school_power_db:
     container_name: school_power_db
@@ -29,4 +36,15 @@ services:
       - "./crawler:/home/school_power_crawler"
     working_dir: "/home/school_power_crawler"
     command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && pip install --no-cache-dir -r requirements.txt && python main.py"
+    environment:
+      SP_HOST: "https://dk.nynu.edu.cn"
+      SP_SCHOOL_ID: 4
+      SP_AES_KEY: "31323334353637383930414243444546"
+      SP_USERNAME:
+      SP_PASSWORD:
+      SP_DB_HOST: "school_power_db"
+      SP_DB_PORT: 3306
+      SP_DB_USER: "root"
+      SP_DB_PASS: "123456"
+      SP_DB_NAME: "school_power"
     restart: unless-stopped
