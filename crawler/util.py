@@ -1,6 +1,7 @@
 from Crypto.Cipher import AES
 import base64
 
+reTryJob = None
 
 class AES_ECB_PKCS7:
     def __init__(self, key):
