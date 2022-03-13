@@ -1,4 +1,9 @@
 **/.idea/
 **/node_modules/
 **/.env.local
+
 /db/data/
+
+/mirai/
+!/mirai/config.json
+!/mirai/config/net.mamoe.mirai-api-http/setting.yml
