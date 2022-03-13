@@ -88,8 +88,7 @@ demo: [校园电费爬 - 南阳师范学院](https://school.power.daixia.hu/)
   - `knex`作为**数据库查询**语句自动生成工具
 - 机器人
   - `Mirai`提供**机器人核心**
-  - `mirai-api-http`作为`websocket`中间层连接**机器人核心**与**机器人功能实现**
-  - `Python`作为**机器人功能实现**与`websocket`中间层交互
+  - 自写`Mirai Console Plugin`项目`SchoolPowerBot`作为**机器人功能实现**
   - 自研项目`WatchDoger`作为**可交互`bash`**传递工具
 
 ## 项目性质
