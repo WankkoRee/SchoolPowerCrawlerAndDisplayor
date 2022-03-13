@@ -2,6 +2,8 @@ version: "3"
 services:
   school_power_api:
     container_name: school_power_api
+    depends_on:
+      - school_power_db
     image: "node:17.4.0-slim"
     expose:
       - "3000"
@@ -31,6 +33,8 @@ services:
     restart: unless-stopped
   school_power_crawler:
     container_name: school_power_crawler
+    depends_on:
+      - school_power_api
     image: "python:3.9.10-slim"
     volumes:
       - "./crawler:/home/school_power_crawler"
@@ -47,4 +51,16 @@ services:
       SP_DB_USER: "root"
       SP_DB_PASS: "123456"
       SP_DB_NAME: "school_power"
+    restart: unless-stopped
+  school_power_mirai:
+    container_name: school_power_mirai
+    depends_on:
+      - school_power_crawler
+    image: "openjdk:11.0.14.1-jre-buster"
+    expose:
+      - "80"
+    volumes:
+      - "./mirai:/home/school_power_mirai"
+    working_dir: "/home/school_power_mirai"
+    command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && wget -P /tmp https://github.com/WankkoRee/WatchDoger/releases/download/v1.0.0/WatchDoger_v1.0.0_linux_amd64.tar.gz && tar -xzvf /tmp/WatchDoger_v1.0.0_linux_amd64.tar.gz -C ./ && wget -P /tmp https://github.com/iTXTech/mirai-console-loader/releases/download/v1.2.2/mcl-1.2.2.zip && unzip -o -d ./ /tmp/mcl-1.2.2.zip && chmod +x ./server && chmod +x ./client && chmod +x ./mcl && ./server ./mcl"
     restart: unless-stopped
