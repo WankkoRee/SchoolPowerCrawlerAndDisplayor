@@ -114,6 +114,7 @@ def main():
         if util.reTryJob is not None:
             log("本次定时任务成功，取消了定时重试任务")
             schedule.cancel_job(util.reTryJob)
+            util.reTryJob = None
     except Exception as e:
         log("main中发现未知异常", e)
         return
