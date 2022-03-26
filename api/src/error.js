@@ -1,26 +1,26 @@
 const fp = require('fastify-plugin')
 
-function seError (fastify, options, next) {
-    if (fastify.seError) {
-        return next(new Error('fastify.seError has already been registered'))
+function spError (fastify, options, next) {
+    if (fastify.spError) {
+        return next(new Error('fastify.spError has already been registered'))
     } else {
         /*
         api.js
-            throw new fastify.seError('非法输入', 101, )
+            throw new fastify.spError('非法输入', 101, )
          */
 
-        fastify.seError = class extends Error {
+        fastify.spError = class extends Error {
             constructor(message, code, detail) {
                 super(message)
                 this.detail = detail ? detail : null
-                this.name = "seError"
+                this.name = "spError"
                 this.code = code ? code : 0
             }
         }
-        fastify.se_error = {
+        fastify.sp_error = {
             ApiErrorReturn: (error) => {
                 console.log(error)
-                if (error instanceof fastify.seError) return {code: 1000+error.code, error: error.message}
+                if (error instanceof fastify.spError) return {code: 1000+error.code, error: error.message}
                 else if (error.sqlMessage) return {code: 10000+error.errno, error: error.sqlMessage}
                 else if (error instanceof TypeError) return {code: 99998, error: error.message}
                 else return {code: 99999, error: error.message}
@@ -30,7 +30,7 @@ function seError (fastify, options, next) {
     next()
 }
 
-module.exports = fp(seError, {
+module.exports = fp(spError, {
     fastify: '>=3.27.2',
-    name: 'se-error'
+    name: 'sp-error'
 })

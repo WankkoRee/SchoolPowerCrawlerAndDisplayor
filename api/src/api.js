@@ -62,7 +62,7 @@ async function api (fastify, options) {
 
             return {code: 1, data: areas}
         } catch (error) {
-            return fastify.se_error.ApiErrorReturn(error)
+            return fastify.sp_error.ApiErrorReturn(error)
         }
     })
 
@@ -83,11 +83,11 @@ async function api (fastify, options) {
                 .select('building')
             ).map(building => building.building)
             if (buildings.length === 0)
-                throw new fastify.seError('非法输入', 101, `area="${area}" not in database`)
+                throw new fastify.spError('非法输入', 101, `area="${area}" not in database`)
 
             return {code: 1, data: buildings}
         } catch (error) {
-            return fastify.se_error.ApiErrorReturn(error)
+            return fastify.sp_error.ApiErrorReturn(error)
         }
     })
 
@@ -112,11 +112,11 @@ async function api (fastify, options) {
                 .where('building', building)
                 .select('id', 'room')
             if (rooms.length === 0)
-                throw new fastify.seError('非法输入', 101, `building="${building}" not in database`)
+                throw new fastify.spError('非法输入', 101, `building="${building}" not in database`)
 
             return {code: 1, data: rooms}
         } catch (error) {
-            return fastify.se_error.ApiErrorReturn(error)
+            return fastify.sp_error.ApiErrorReturn(error)
         }
     })
 
@@ -164,9 +164,9 @@ async function api (fastify, options) {
             const {id: idStr} = request.params
             const id = parseInt(idStr)
             if (id.toString() !== idStr)
-                throw new fastify.seError('非法输入', 101, `${id} !== "${idStr}"`)
+                throw new fastify.spError('非法输入', 101, `${id} !== "${idStr}"`)
             if (id <= 0)
-                throw new fastify.seError('非法输入', 101, `${id} <= 0`)
+                throw new fastify.spError('非法输入', 101, `${id} <= 0`)
 
             const roomInfo = (await knex('sp_room')
                 .where('is_show', true)
@@ -174,7 +174,7 @@ async function api (fastify, options) {
                 .select('area', 'building', 'room', 'power', 'update_time', 'avg_day_this_week')
             )[0]
             if (roomInfo === undefined)
-                throw new fastify.seError('非法输入', 101, `id=${id} not in database`)
+                throw new fastify.spError('非法输入', 101, `id=${id} not in database`)
             const roomLog = await knex('sp_log')
                 .where('room', id)
                 .select('power', 'log_time')
@@ -184,7 +184,7 @@ async function api (fastify, options) {
 
             return {code: 1, data: {roomInfo, roomLog, roomDaily}}
         } catch (error) {
-            return fastify.se_error.ApiErrorReturn(error)
+            return fastify.sp_error.ApiErrorReturn(error)
         }
     })
 
@@ -209,11 +209,11 @@ async function api (fastify, options) {
             const date = new Date(parseInt(dateStr))
             const limit = parseInt(limitStr)
             if (!["area", "building", "room"].includes(type))
-                throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
+                throw new fastify.spError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
             if (limit.toString() !== limitStr)
-                throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
+                throw new fastify.spError('非法输入', 101, `${limit} !== "${limitStr}"`)
             if (limit <= 0 || limit > 20)
-                throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
+                throw new fastify.spError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
 
             const roomInfo = await knex('sp_daily')
                 .where('sp_daily.date', date)
@@ -226,11 +226,11 @@ async function api (fastify, options) {
                 .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
                 .sum('sp_daily.power as power')
             if (roomInfo.length === 0)
-                throw new fastify.seError('非法输入', 101, `date="${date}" and type="${type}" not in database`)
+                throw new fastify.spError('非法输入', 101, `date="${date}" and type="${type}" not in database`)
 
             return {code: 1, data: roomInfo}
         } catch (error) {
-            return fastify.se_error.ApiErrorReturn(error)
+            return fastify.sp_error.ApiErrorReturn(error)
         }
     })
 
@@ -255,11 +255,11 @@ async function api (fastify, options) {
             const date = new Date(parseInt(dateStr))
             const limit = parseInt(limitStr)
             if (!["area", "building", "room"].includes(type))
-                throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
+                throw new fastify.spError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
             if (limit.toString() !== limitStr)
-                throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
+                throw new fastify.spError('非法输入', 101, `${limit} !== "${limitStr}"`)
             if (limit <= 0 || limit > 20)
-                throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
+                throw new fastify.spError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
 
             const roomInfo = await knex('sp_daily')
                 .whereBetween('sp_daily.date', [getWeekday(date, 0), getWeekday(date, 6)])
@@ -274,7 +274,7 @@ async function api (fastify, options) {
 
             return {code: 1, data: roomInfo}
         } catch (error) {
-            return fastify.se_error.ApiErrorReturn(error)
+            return fastify.sp_error.ApiErrorReturn(error)
         }
     })
 
@@ -298,11 +298,11 @@ async function api (fastify, options) {
             const {type, limit: limitStr} = request.params
             const limit = parseInt(limitStr)
             if (!["area", "building", "room"].includes(type))
-                throw new fastify.seError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
+                throw new fastify.spError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
             if (limit.toString() !== limitStr)
-                throw new fastify.seError('非法输入', 101, `${limit} !== "${limitStr}"`)
+                throw new fastify.spError('非法输入', 101, `${limit} !== "${limitStr}"`)
             if (limit <= 0 || limit > 20)
-                throw new fastify.seError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
+                throw new fastify.spError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
 
             const roomInfo = await knex('sp_room')
                 .where('sp_room.is_show', true)
@@ -315,7 +315,7 @@ async function api (fastify, options) {
 
             return {code: 1, data: roomInfo}
         } catch (error) {
-            return fastify.se_error.ApiErrorReturn(error)
+            return fastify.sp_error.ApiErrorReturn(error)
         }
     })
 
