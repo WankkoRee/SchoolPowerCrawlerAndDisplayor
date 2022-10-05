@@ -175,11 +175,17 @@ async function api (fastify, options) {
             )[0]
             if (roomInfo === undefined)
                 throw new fastify.spError('非法输入', 101, `id=${id} not in database`)
+            const beginDay = new Date()
+            beginDay.setHours(-24*60, 0, 0, 0)
+            const endDay = new Date()
+            endDay.setHours(24, 0, 0, 0)
             const roomLog = await knex('sp_log')
                 .where('room', id)
+                .whereBetween('log_time', [beginDay, endDay])
                 .select('power', 'log_time')
             const roomDaily = await knex('sp_daily')
                 .where('room', id)
+                .whereBetween('date', [beginDay, endDay])
                 .select('power', 'date')
 
             return {code: 1, data: {roomInfo, roomLog, roomDaily}}
