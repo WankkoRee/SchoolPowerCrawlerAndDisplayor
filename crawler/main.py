@@ -5,6 +5,7 @@ import time
 import traceback
 import urllib.parse
 
+import ddddocr
 from Crypto.Cipher import AES
 from dotenv import load_dotenv
 import schedule
@@ -43,8 +44,28 @@ def login(ss: Session):
         },
     )
     assert ret.status_code == 200, f"无法找到登录页, HTTP {ret.status_code}"
-    pwdEncryptSalt = re.search(r'<input type="hidden" id="pwdEncryptSalt" value="([A-Za-z0-9]+)" />', ret.text).group(1)
-    execution = re.search(r'<input type="hidden" id="execution" name="execution" value="([A-Za-z0-9-_/+=]+)" />', ret.text).group(1)
+    pwdEncryptSalt = re.search(r'<div id="pwdLoginDiv" style="display: none">[\s\S]*?<input type="hidden" id="pwdEncryptSalt" value="([A-Za-z0-9]+)" />', ret.text).group(1)
+    execution = re.search(r'<div id="pwdLoginDiv" style="display: none">[\s\S]*?<input type="hidden" id="execution" name="execution" value="([A-Za-z0-9-_/+=]+)" />', ret.text).group(1)
+
+    ret = ss.get(
+        f"{os.getenv('SP_VPN_HOST')}/{vpn_host_encode(os.getenv('SP_SSO_HOST'))}/authserver/checkNeedCaptcha.htl",
+        params={
+            "username": os.getenv('SP_SSO_USERNAME'),
+            "_": int(time.time()*1000),
+        }
+    )
+    assert ret.status_code == 200, f"无法得知是否需要验证码, HTTP {ret.status_code}"
+    if ret.json()["isNeed"]:
+        ret = ss.get(
+            f"{os.getenv('SP_VPN_HOST')}/{vpn_host_encode(os.getenv('SP_SSO_HOST'))}/authserver/getCaptcha.htl",
+            params=str(int(time.time()*1000)),
+        )
+        assert ret.status_code == 200, f"无法获取验证码, HTTP {ret.status_code}"
+
+        ocr = ddddocr.DdddOcr(show_ad=False)
+        captcha = ocr.classification(ret.content)
+    else:
+        captcha = ""
 
     ret = ss.post(
         f"{os.getenv('SP_VPN_HOST')}/{vpn_host_encode(os.getenv('SP_SSO_HOST'))}/authserver/login",
@@ -54,7 +75,7 @@ def login(ss: Session):
         data={
             "username": os.getenv('SP_SSO_USERNAME'),
             "password": password_encode(os.getenv('SP_SSO_PASSWORD'), pwdEncryptSalt),
-            "captcha": "",
+            "captcha": captcha,
             "_eventId": "submit",
             "cllt": "userNameLogin",
             "dllt": "generalLogin",
