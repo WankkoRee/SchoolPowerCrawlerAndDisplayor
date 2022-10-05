@@ -1,17 +1,92 @@
+import base64
 import os
+import re
 import time
-import datetime
+import traceback
+import urllib.parse
 
+from Crypto.Cipher import AES
 from dotenv import load_dotenv
 import schedule
 from requests import Session
 import pymysql
 
 import util
+from util import log, aes_random_generate, pkcs7padding, vpn_host_parse
 
 
-def log(*values: object):
-    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), *values)
+def vpn_host_encode(host: str) -> str:
+    protocol, hostname = vpn_host_parse(host)
+    key = bytes.fromhex(os.getenv('SP_VPN_KEY'))
+    iv = bytes.fromhex(os.getenv('SP_VPN_IV'))
+    cipher = AES.new(key=key, iv=iv, mode=AES.MODE_CFB, segment_size=128)
+
+    encrypted = cipher.encrypt(hostname.encode()).hex()
+
+    return f"{protocol}/{iv.hex()}{encrypted}"
+
+
+def password_encode(password: str, pwdEncryptSalt: str) -> str:
+    cipher = AES.new(
+        key=pwdEncryptSalt.encode(),
+        iv=aes_random_generate(16).encode(),
+        mode=AES.MODE_CBC,
+    )
+    return base64.b64encode(cipher.encrypt(pkcs7padding(aes_random_generate(64)+password).encode())).decode()
+
+
+def login(ss: Session):
+    ret = ss.get(
+        f"{os.getenv('SP_VPN_HOST')}/{vpn_host_encode(os.getenv('SP_SSO_HOST'))}/authserver/login",
+        params={
+            "service": f"{os.getenv('SP_VPN_HOST')}/login?cas_login=true"
+        },
+    )
+    assert ret.status_code == 200, f"无法找到登录页, HTTP {ret.status_code}"
+    pwdEncryptSalt = re.search(r'<input type="hidden" id="pwdEncryptSalt" value="([A-Za-z0-9]+)" />', ret.text).group(1)
+    execution = re.search(r'<input type="hidden" id="execution" name="execution" value="([A-Za-z0-9-_/+=]+)" />', ret.text).group(1)
+
+    ret = ss.post(
+        f"{os.getenv('SP_VPN_HOST')}/{vpn_host_encode(os.getenv('SP_SSO_HOST'))}/authserver/login",
+        params={
+            "service": f"{os.getenv('SP_VPN_HOST')}/login?cas_login=true"
+        },
+        data={
+            "username": os.getenv('SP_SSO_USERNAME'),
+            "password": password_encode(os.getenv('SP_SSO_PASSWORD'), pwdEncryptSalt),
+            "captcha": "",
+            "_eventId": "submit",
+            "cllt": "userNameLogin",
+            "dllt": "generalLogin",
+            "lt": "",
+            "execution": execution,
+        },
+    )
+    assert ret.status_code == 200, "登录失败, "+re.search(r'<span id="showErrorTip" class="form-error"><span>(.+)</span></span>', ret.text).group(1)
+
+    ret = ss.get(
+        f"{os.getenv('SP_VPN_HOST')}/{vpn_host_encode(os.getenv('SP_SSO_HOST'))}/authserver/login",
+        params={
+            "service": f"{os.getenv('SP_HOST')}/outIndex/power"
+        },
+    )
+    assert ret.status_code == 200 and "电费充值" in ret.text, "登录失败, 无法通过SSO登录"
+
+    ret = ss.post(
+        f"{os.getenv('SP_VPN_HOST')}/wengine-vpn/cookie",
+        params={
+            "method": "get",
+            "host": vpn_host_parse(os.getenv('SP_HOST'))[1],
+            "scheme": vpn_host_parse(os.getenv('SP_HOST'))[0],
+            "path": "/member/power",
+            "vpn_timestamp": int(time.time()*1000),
+        },
+    )
+    assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的Cookie失败"
+
+    for cookie_str in ret.text.split('; '):
+        cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()
+        ss.cookies.set(cookie[0], cookie[1], domain=urllib.parse.urlparse(os.getenv('SP_HOST')).hostname)
 
 
 def main():
@@ -19,22 +94,17 @@ def main():
 
     log("定时任务开始")
     try:
-        conn = pymysql.connect(host=os.getenv('SP_DB_HOST'), port=int(os.getenv('SP_DB_PORT')), user=os.getenv('SP_DB_USER'), passwd=os.getenv('SP_DB_PASS'), db=os.getenv('SP_DB_NAME'))
-        cur = conn.cursor()
+        if os.getenv('SP_DEBUG') == "0":
+            conn = pymysql.connect(host=os.getenv('SP_DB_HOST'), port=int(os.getenv('SP_DB_PORT')), user=os.getenv('SP_DB_USER'), passwd=os.getenv('SP_DB_PASS'), db=os.getenv('SP_DB_NAME'))
+            cur = conn.cursor()
         ss = Session()
         data = {}
-        aesEcbPkcs7 = util.AES_ECB_PKCS7(bytes.fromhex(os.getenv('SP_AES_KEY')))
         ####
         try:
-            ret = ss.post(url=f"{os.getenv('SP_HOST')}/login", data={
-                "zhToken": aesEcbPkcs7.encrypt(f"userNo={os.getenv('SP_USERNAME')}&password={os.getenv('SP_PASSWORD')}", "hex")
-            })
-            assert ret.status_code == 200 and ret.json()['code'] == 1
-        except AssertionError:
-            log("登录异常", ret.status_code, ret.text)
-            return
+            login(ss)
         except Exception as e:
             log("登录异常", e)
+            log(*traceback.format_tb(e.__traceback__))
             return
         ####
         try:
@@ -45,6 +115,7 @@ def main():
             return
         except Exception as e:
             log("获取area异常", e)
+            log(*traceback.format_tb(e.__traceback__))
             return
 
         ret = ret.json()
@@ -66,6 +137,7 @@ def main():
                 return
             except Exception as e:
                 log("获取building异常", e)
+                log(*traceback.format_tb(e.__traceback__))
                 return
             ret = ret.json()
             ####
@@ -87,6 +159,7 @@ def main():
                     return
                 except Exception as e:
                     log("获取room异常", e)
+                    log(*traceback.format_tb(e.__traceback__))
                     return
                 ret = ret.json()
                 ####
@@ -96,19 +169,21 @@ def main():
                     data[areaName][buildingName][roomName] = power
                     log(areaName, buildingName, roomName, power)
                     ####
-                    cur.execute("select id from sp_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
-                    roomData = cur.fetchall()
-                    if len(roomData) == 0:
-                        cur.execute("insert into sp_room(area, building, room, create_time) values(%s, %s, %s, CURRENT_TIMESTAMP)", (areaName, buildingName, roomName))
+                    if os.getenv('SP_DEBUG') == "0":
                         cur.execute("select id from sp_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
                         roomData = cur.fetchall()
-                    dbId, = roomData
-                    cur.execute("update sp_room set power = %s, update_time = CURRENT_TIMESTAMP where id = %s", (power, dbId))
-                    cur.execute("insert into sp_log(room, power, log_time) values(%s, %s, CURRENT_TIMESTAMP)", (dbId, power))
+                        if len(roomData) == 0:
+                            cur.execute("insert into sp_room(area, building, room, create_time) values(%s, %s, %s, CURRENT_TIMESTAMP)", (areaName, buildingName, roomName))
+                            cur.execute("select id from sp_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
+                            roomData = cur.fetchall()
+                        dbId, = roomData
+                        cur.execute("update sp_room set power = %s, update_time = CURRENT_TIMESTAMP where id = %s", (power, dbId))
+                        cur.execute("insert into sp_log(room, power, log_time) values(%s, %s, CURRENT_TIMESTAMP)", (dbId, power))
         ####
-        conn.commit()
-        cur.close()
-        conn.close()
+        if os.getenv('SP_DEBUG') == "0":
+            conn.commit()
+            cur.close()
+            conn.close()
 
         needReTry = False
         if util.reTryJob is not None:
@@ -117,6 +192,7 @@ def main():
             util.reTryJob = None
     except Exception as e:
         log("main中发现未知异常", e)
+        log(*traceback.format_tb(e.__traceback__))
         return
     finally:
         if needReTry and util.reTryJob is None:
@@ -126,6 +202,7 @@ def main():
 
 
 def task():
+    main()
     log("定时任务创建")
     schedule.every().hour.at(":00").do(main)
     while True:

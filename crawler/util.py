@@ -1,41 +1,32 @@
-from Crypto.Cipher import AES
-import base64
+import datetime
+import random
+import urllib.parse
 
 reTryJob = None
 
-class AES_ECB_PKCS7:
-    def __init__(self, key):
-        self.key = key  # 初始化密钥
-        self.length = AES.block_size  # 初始化数据块大小
-        self.aes = AES.new(self.key, AES.MODE_ECB)  # 初始化AES,ECB模式的实例
-        # 截断函数，去除填充的字符
-        self.unpad = lambda date: date[0:-ord(date[-1])]
 
-    def pad(self, text):
-        """
-        #填充函数，使被加密数据的字节码长度是block_size的整数倍
-        """
-        count = len(text.encode('utf-8'))
-        add = self.length - (count % self.length)
-        entext = text + (chr(add) * add)
-        return entext
+def log(*values: object):
+    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), *values)
 
-    def encrypt(self, encrData: str, encoding: str = "base64") -> str:  # 加密函数
-        res = self.aes.encrypt(self.pad(encrData).encode("utf8"))
-        if encoding == "base64":
-            msg = base64.b64encode(res).decode("utf8")
-        elif encoding == "hex":
-            msg = res.hex()
-        else:
-            msg = base64.b64encode(res).decode("utf8")
-        return msg
 
-    def decrypt(self, decrData: str, encoding: str = "base64") -> str:  # 解密函数
-        if encoding == "base64":
-            res = base64.b64decode(decrData)
-        elif encoding == "hex":
-            res = bytes.fromhex(decrData)
-        else:
-            res = base64.b64decode(decrData)
-        msg = self.aes.decrypt(res).decode("utf8")
-        return self.unpad(msg)
+def aes_random_generate(length: int) -> str:
+    base = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678"
+    return "".join(random.choices(base, k=length))
+
+
+def pkcs7padding(text: str) -> str:
+    bs = 16
+    length = len(text)
+    bytes_length = len(text.encode('utf-8'))
+    padding_size = length if (bytes_length == length) else bytes_length
+    padding = bs - padding_size % bs
+    padding_text = chr(padding) * padding
+    return text + padding_text
+
+
+def vpn_host_parse(host: str) -> tuple[str, str]:
+    host_p = urllib.parse.urlparse(host)
+    protocol = host_p.scheme
+    if host_p.port:
+        protocol += f"-{host_p.port}"
+    return protocol, host_p.hostname
