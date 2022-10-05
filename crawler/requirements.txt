@@ -3,4 +3,4 @@ schedule~=1.1.0
 requests~=2.25.1
 pycryptodome~=3.10.1
 PyMySQL~=1.0.2
-ddddocr~=0.0.8
+ddddocr~=1.4.7
