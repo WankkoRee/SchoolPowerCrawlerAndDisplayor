@@ -91,23 +91,50 @@ def login(ss: Session):
             "service": f"{os.getenv('SP_HOST')}/outIndex/power"
         },
     )
-    assert ret.status_code == 200 and "电费充值" in ret.text, "登录失败, 无法通过SSO登录"
+    assert ret.status_code == 200, "登录失败, 无法通过SSO登录"
 
-    ret = ss.post(
-        f"{os.getenv('SP_VPN_HOST')}/wengine-vpn/cookie",
-        params={
-            "method": "get",
-            "host": vpn_host_parse(os.getenv('SP_HOST'))[1],
-            "scheme": vpn_host_parse(os.getenv('SP_HOST'))[0],
-            "path": "/member/power",
-            "vpn_timestamp": int(time.time()*1000),
-        },
-    )
-    assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的Cookie失败"
+    if "电费充值" in ret.text:
+        # 通过vpn访问
+        ret = ss.post(
+            f"{os.getenv('SP_VPN_HOST')}/wengine-vpn/cookie",
+            params={
+                "method": "get",
+                "host": vpn_host_parse(os.getenv('SP_HOST'))[1],
+                "scheme": vpn_host_parse(os.getenv('SP_HOST'))[0],
+                "path": "/member/power",
+                "vpn_timestamp": int(time.time()*1000),
+            },
+        )
+        assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的SP Cookie失败"
 
-    for cookie_str in ret.text.split('; '):
-        cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()
-        ss.cookies.set(cookie[0], cookie[1], domain=urllib.parse.urlparse(os.getenv('SP_HOST')).hostname)
+        for cookie_str in ret.text.split('; '):
+            cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()
+            ss.cookies.set(cookie[0], cookie[1], domain=urllib.parse.urlparse(os.getenv('SP_HOST')).hostname)
+    elif "访问出错" in ret.text:
+        # 通过公网访问
+        ret = ss.post(
+            f"{os.getenv('SP_VPN_HOST')}/wengine-vpn/cookie",
+            params={
+                "method": "get",
+                "host": vpn_host_parse(os.getenv('SP_SSO_HOST'))[1],
+                "scheme": vpn_host_parse(os.getenv('SP_SSO_HOST'))[0],
+                "path": "/authserver/login",
+                "vpn_timestamp": int(time.time() * 1000),
+            },
+        )
+        assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的SSO Cookie失败"
+
+        for cookie_str in ret.text.split('; '):
+            cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()
+            ss.cookies.set(cookie[0], cookie[1], domain=urllib.parse.urlparse(os.getenv('SP_SSO_HOST')).hostname)
+
+        ret = ss.get(
+            f"{os.getenv('SP_HOST')}/outIndex/power"
+        )
+        assert ret.status_code == 200 and "电费充值" in ret.text, "登录失败, 无法通过SSO登录后从外网跳转"
+        ...
+    else:
+        assert False, "登录失败，未知情况"
 
 
 def main():
