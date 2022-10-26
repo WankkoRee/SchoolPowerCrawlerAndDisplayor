@@ -215,7 +215,8 @@ def main():
                     roomName = roomIdAndPower['title']
                     roomId, _, power = roomIdAndPower['value'].partition(",")
                     data[areaName][buildingName][roomName] = power
-                    log(areaName, buildingName, roomName, power)
+                    if os.getenv('SP_DEBUG') != "0":
+                        log(areaName, buildingName, roomName, power)
                     ####
                     if os.getenv('SP_DEBUG') == "0":
                         cur.execute("select id from sp_room where area = %s and building = %s and room = %s", (areaName, buildingName, roomName))
