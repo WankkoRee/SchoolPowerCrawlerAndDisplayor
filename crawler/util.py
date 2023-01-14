@@ -1,8 +1,12 @@
+import base64
 import datetime
 import random
 import urllib.parse
 
-reTryJob = None
+from Crypto.Cipher import AES
+
+
+retry_task = None
 
 
 def log(*values: object):
@@ -30,3 +34,21 @@ def vpn_host_parse(host: str) -> tuple[str, str]:
     if host_p.port:
         protocol += f"-{host_p.port}"
     return protocol, host_p.hostname
+
+
+def vpn_host_encode(host: str, key: bytes, iv: bytes) -> str:
+    protocol, hostname = vpn_host_parse(host)
+    cipher = AES.new(key=key, iv=iv, mode=AES.MODE_CFB, segment_size=128)
+
+    encrypted = cipher.encrypt(hostname.encode()).hex()
+
+    return f"{protocol}/{iv.hex()}{encrypted}"
+
+
+def password_encode(password: str, salt: str) -> str:
+    cipher = AES.new(
+        key=salt.encode(),
+        iv=aes_random_generate(16).encode(),
+        mode=AES.MODE_CBC,
+    )
+    return base64.b64encode(cipher.encrypt(pkcs7padding(aes_random_generate(64)+password).encode())).decode()
