@@ -19,27 +19,30 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
 
     sp_host, sp_school_id, sp_vpn_host, sp_vpn_key, sp_vpn_iv, sp_sso_host, sp_sso_username, sp_sso_password, sp_db_host, sp_db_port, sp_db_user, sp_db_pass, sp_db_name, sp_debug = sp_env
 
+    # 通过 VPN 登录 SSO，解析登录页面
     ret = ss.get(
-        f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
+        url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
         params={
-            "service": f"{sp_vpn_host}/login?cas_login=true"
+            "service": f"{sp_vpn_host}/login?cas_login=true",
         },
     )
     assert ret.status_code == 200, f"无法找到登录页, HTTP {ret.status_code}"
     salt = re.search(r'<div id="pwdLoginDiv" style="display: none">[\s\S]*?<input type="hidden" id="pwdEncryptSalt" value="([A-Za-z0-9]+)" />', ret.text).group(1)
     execution = re.search(r'<div id="pwdLoginDiv" style="display: none">[\s\S]*?<input type="hidden" id="execution" name="execution" value="([A-Za-z0-9-_/+=]+)" />', ret.text).group(1)
 
+    # 通过 VPN 登录 SSO，判断是否需要验证码
     ret = ss.get(
-        f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/checkNeedCaptcha.htl",
+        url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/checkNeedCaptcha.htl",
         params={
             "username": sp_sso_username,
             "_": int(time.time()*1000),
-        }
+        },
     )
     assert ret.status_code == 200, f"无法得知是否需要验证码, HTTP {ret.status_code}"
     if ret.json()["isNeed"]:
+        # 通过 VPN 登录 SSO，识别验证码
         ret = ss.get(
-            f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/getCaptcha.htl",
+            url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/getCaptcha.htl",
             params=str(int(time.time()*1000)),
         )
         assert ret.status_code == 200, f"无法获取验证码, HTTP {ret.status_code}"
@@ -49,10 +52,11 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
     else:
         captcha = ""
 
+    # 通过 VPN 登录 SSO，发起登录
     ret = ss.post(
-        f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
+        url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
         params={
-            "service": f"{sp_vpn_host}/login?cas_login=true"
+            "service": f"{sp_vpn_host}/login?cas_login=true",
         },
         data={
             "username": sp_sso_username,
@@ -67,18 +71,21 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
     )
     assert ret.status_code == 200, "登录失败, "+re.search(r'<span id="showErrorTip" class="form-error"><span>(.+)</span></span>', ret.text).group(1)
 
+    # 通过 SSO 登录随行校园
     ret = ss.get(
-        f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
+        url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
         params={
-            "service": f"{sp_host}/outIndex/power"
+            "service": f"{sp_host}/outIndex/power",
         },
     )
     assert ret.status_code == 200, "登录失败, 无法通过SSO登录"
 
     if "电费充值" in ret.text:
-        # 通过vpn访问
+        # 通过 VPN 访问的方式，手动获取随行校园的 Cookies
+
+        # 获取随行校园的 Cookies
         ret = ss.post(
-            f"{sp_vpn_host}/wengine-vpn/cookie",
+            url=f"{sp_vpn_host}/wengine-vpn/cookie",
             params={
                 "method": "get",
                 "host": vpn_host_parse(sp_host)[1],
@@ -87,15 +94,18 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
                 "vpn_timestamp": int(time.time()*1000),
             },
         )
-        assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的SP Cookie失败"
+        assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的随行校园Cookies失败"
 
+        # 解析随行校园的 Cookies 并应用
         for cookie_str in ret.text.split('; '):
             cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()
             ss.cookies.set(cookie[0], cookie[1], domain=urllib.parse.urlparse(sp_host).hostname)
     elif "访问出错" in ret.text:
-        # 通过公网访问
+        # 通过 SSO 访问的方式，自动获取随行校园的 Cookies
+
+        # 获取 SSO 的 Cookies
         ret = ss.post(
-            f"{sp_vpn_host}/wengine-vpn/cookie",
+            url=f"{sp_vpn_host}/wengine-vpn/cookie",
             params={
                 "method": "get",
                 "host": vpn_host_parse(sp_sso_host)[1],
@@ -106,20 +116,22 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
         )
         assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的SSO Cookie失败"
 
+        # 解析 SSO 的 Cookies 并应用
         for cookie_str in ret.text.split('; '):
             cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()
             ss.cookies.set(cookie[0], cookie[1], domain=urllib.parse.urlparse(sp_sso_host).hostname)
 
+        # 访问外网随行校园，将跳转 SSO 获取登录状态并跳转回随行校园，此时随行校园 Cookies 已自动应用
         ret = ss.get(
-            f"{sp_host}/outIndex/power"
+            url=f"{sp_host}/outIndex/power",
         )
         assert ret.status_code == 200 and "电费充值" in ret.text, "登录失败, 无法通过SSO登录后从外网跳转"
-        ...
     else:
         assert False, "登录失败，未知情况"
 
 
 def prepare() -> tuple[str, int, str, bytes, bytes, str, str, str, str, int, str, str, str, bool]:
+    """一次性读取所有需要的环境变量"""
     return (
         os.getenv('SP_HOST'),
         int(os.getenv('SP_SCHOOL_ID')),
@@ -165,7 +177,9 @@ def task():
 
         # 尝试获取校区
         try:
-            ret = ss.post(url=f"{sp_host}/member/power/selectArea")
+            ret = ss.post(
+                url=f"{sp_host}/member/power/selectArea",
+            )
             assert ret.status_code == 200 and ret.json()['code'] == 1
         except AssertionError:
             log("获取 校区[area] 异常", ret.status_code, ret.text)
@@ -185,10 +199,13 @@ def task():
 
             # 尝试获取宿舍楼
             try:
-                ret = ss.post(url=f"{sp_host}/member/power/buildings", data={
-                    "schoolId": sp_school_id,
-                    "areaId": area_id,
-                })
+                ret = ss.post(
+                    url=f"{sp_host}/member/power/buildings",
+                    data={
+                        "schoolId": sp_school_id,
+                        "areaId": area_id,
+                    },
+                )
                 assert ret.status_code == 200 and ret.json()['code'] == 1
             except AssertionError:
                 log("获取 宿舍楼[building] 异常", ret.status_code, ret.text)
@@ -208,12 +225,15 @@ def task():
 
                 # 尝试获取寝室
                 try:
-                    ret = ss.post(url=f"{sp_host}/member/power/rooms", data={
-                        "schoolId": sp_school_id,
-                        "areaId": area_id,
-                        "buildId": building_id,
-                        "compCode": comp_code,
-                    })
+                    ret = ss.post(
+                        url=f"{sp_host}/member/power/rooms",
+                        data={
+                            "schoolId": sp_school_id,
+                            "areaId": area_id,
+                            "buildId": building_id,
+                            "compCode": comp_code,
+                        },
+                    )
                     assert ret.status_code == 200 and ret.json()['code'] == 1
                 except AssertionError:
                     log("获取 寝室[room] 异常", ret.status_code, ret.text)
