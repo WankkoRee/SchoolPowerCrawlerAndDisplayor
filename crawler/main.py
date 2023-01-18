@@ -8,7 +8,7 @@ import ddddocr
 from dotenv import load_dotenv
 import schedule
 from requests import Session
-import pymysql
+import taos
 
 import util
 from util import log, vpn_host_parse, vpn_host_encode, password_encode
@@ -257,32 +257,35 @@ def task():
 
         # 非调试模式则将数据入库
         if not sp_debug:
-            conn = pymysql.connect(
+            conn = taos.connect(
                 host=sp_db_host,
                 port=sp_db_port,
                 user=sp_db_user,
                 passwd=sp_db_pass,
-                db=sp_db_name,
+                database=sp_db_name,
             )
-            cur = conn.cursor()
+            stmt = conn.statement("insert into ? using `powers` tags (?, ?, ?, ?, ?) values (?, ?)")
 
             for area_name in data:
                 for building_name in data[area_name]:
                     for room_name in data[area_name][building_name]:
                         power = data[area_name][building_name][room_name]
 
-                        cur.execute("select id from sp_room where area = %s and building = %s and room = %s", (area_name, building_name, room_name))
-                        db_room = cur.fetchall()
-                        if len(db_room) == 0:  # 新寝室，需要创建
-                            cur.execute("insert into sp_room(area, building, room, create_time) values(%s, %s, %s, CURRENT_TIMESTAMP)", (area_name, building_name, room_name))
-                            cur.execute("select id from sp_room where area = %s and building = %s and room = %s", (area_name, building_name, room_name))
-                            db_room = cur.fetchall()
-                        db_room_id, = db_room
-                        cur.execute("update sp_room set power = %s, update_time = CURRENT_TIMESTAMP where id = %s", (power, db_room_id))
-                        cur.execute("insert into sp_log(room, power, log_time) values(%s, %s, CURRENT_TIMESTAMP)", (db_room_id, power))
+                        tags = taos.new_bind_params(5)
+                        tags[0].binary(area_name)
+                        tags[1].binary(building_name)
+                        tags[2].binary(room_name)
+                        tags[3].timestamp(time.time())
+                        tags[4].bool(True)
+                        stmt.set_tbname_tags(f"`{area_name}{building_name}{room_name}`", tags)
 
-            conn.commit()
-            cur.close()
+                        values = taos.new_bind_params(2)
+                        values[0].timestamp(time.time())
+                        values[1].float(float(power))
+                        stmt.bind_param(values)
+
+            stmt.execute()
+            stmt.close()
             conn.close()
 
         need_retry = False
