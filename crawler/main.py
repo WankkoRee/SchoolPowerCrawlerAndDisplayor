@@ -5,6 +5,7 @@ import traceback
 import urllib.parse
 
 import ddddocr
+from decimal import Decimal
 from dotenv import load_dotenv
 import schedule
 from requests import Session
@@ -272,16 +273,16 @@ def task():
                         power = data[area_name][building_name][room_name]
 
                         tags = taos.new_bind_params(5)
-                        tags[0].binary(area_name)
-                        tags[1].binary(building_name)
-                        tags[2].binary(room_name)
+                        tags[0].nchar(area_name)
+                        tags[1].nchar(building_name)
+                        tags[2].nchar(room_name)
                         tags[3].timestamp(time.time())
                         tags[4].bool(True)
                         stmt.set_tbname_tags(f"`{area_name}{building_name}{room_name}`", tags)
 
                         values = taos.new_bind_params(2)
                         values[0].timestamp(time.time())
-                        values[1].float(float(power))
+                        values[1].int(int(Decimal(power)*100))
                         stmt.bind_param(values)
 
             stmt.execute()
