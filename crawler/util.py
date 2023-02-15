@@ -7,6 +7,7 @@ from Crypto.Cipher import AES
 
 
 retry_task = None
+last_powers = {}
 
 
 def log(*values: object):

@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import schedule
 from requests import Session
 import taos
+from taos.error import ProgrammingError
 
 import util
 from util import log, vpn_host_parse, vpn_host_encode, password_encode
@@ -165,7 +166,7 @@ def task():
     try:
         sp_host, sp_school_id, sp_vpn_host, sp_vpn_key, sp_vpn_iv, sp_sso_host, sp_sso_username, sp_sso_password, sp_db_host, sp_db_port, sp_db_user, sp_db_pass, sp_db_name, sp_debug = sp_env = prepare()
         ss = Session()
-        data = {}
+        data: dict[dict[dict[tuple[float, str]]]] = {}
         ret = None
 
         # 尝试登录
@@ -245,12 +246,13 @@ def task():
                     return  # 前往 finally
                 ret = ret.json()
                 rooms = ret['data']
+                ts = time.time()
 
                 # 尝试解析每个寝室
                 for room in rooms:
                     room_name = room['title']
                     room_id, _, power = room['value'].partition(",")
-                    data[area_name][building_name][room_name] = power
+                    data[area_name][building_name][room_name] = ts, power
 
                     # 调试模式则将数据打印
                     if sp_debug:
@@ -264,26 +266,52 @@ def task():
                 user=sp_db_user,
                 passwd=sp_db_pass,
                 database=sp_db_name,
+                timezone="Asia/Shanghai",
             )
-            stmt = conn.statement("insert into ? using `powers` tags (?, ?, ?, ?, ?) values (?, ?)")
+            stmt = conn.statement("insert into ? (ts, power, spending) using `powers` tags (?, ?, ?, ?, ?) values (?, ?, ?)")
 
             for area_name in data:
                 for building_name in data[area_name]:
                     for room_name in data[area_name][building_name]:
-                        power = data[area_name][building_name][room_name]
+                        table_name = f"`{area_name}{building_name}{room_name}`"
+                        table_exist = True
+                        if table_name not in util.last_powers.keys():
+                            try:
+                                ts, power, spending = conn.query(f"select last_row(ts, power, spending) from {table_name}").fetch_all()[0]
+                                util.last_powers[table_name] = ts.timestamp(), power, spending
+                            except ProgrammingError as e:
+                                if e.errno == 0x80002662 - 0x100000000 or e.msg == 'Fail to get table info, error: Table does not exist':
+                                    table_exist = False
+                                    log(f"新寝室: {table_name}")
+                                else:
+                                    raise e
+
+                        ts, power = data[area_name][building_name][room_name]
+                        power = int(Decimal(power)*100)
+                        spending = (power - util.last_powers[table_name][1]) if table_exist else None
 
                         tags = taos.new_bind_params(5)
                         tags[0].nchar(area_name)
                         tags[1].nchar(building_name)
                         tags[2].nchar(room_name)
-                        tags[3].timestamp(time.time())
+                        tags[3].timestamp(ts)
                         tags[4].bool(True)
-                        stmt.set_tbname_tags(f"`{area_name}{building_name}{room_name}`", tags)
+                        stmt.set_tbname_tags(table_name, tags)
 
-                        values = taos.new_bind_params(2)
-                        values[0].timestamp(time.time())
-                        values[1].int(int(Decimal(power)*100))
+                        values = taos.new_bind_params(3)
+                        values[0].timestamp(ts)
+                        values[1].int(power)
+                        values[2].int(None)
                         stmt.bind_param(values)
+
+                        if table_exist:  # 更新上一次的 spending
+                            values = taos.new_bind_params(3)
+                            values[0].timestamp(util.last_powers[table_name][0])
+                            values[1].int(util.last_powers[table_name][1])
+                            values[2].int(spending)
+                            stmt.bind_param(values)
+
+                        util.last_powers[table_name] = (ts, power, None)  # 缓存这一次的 power
 
             stmt.execute()
             stmt.close()
@@ -319,6 +347,6 @@ def main():
 
 
 if __name__ == '__main__':
-    load_dotenv('.env.local')
-    load_dotenv('.env')
+    load_dotenv('.env', override=True)
+    load_dotenv('.env.local', override=True)
     main()
