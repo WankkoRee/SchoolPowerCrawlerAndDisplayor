@@ -270,14 +270,18 @@ def task():
             )
             stmt = conn.statement("insert into ? (ts, power, spending) using `powers` tags (?, ?, ?, ?, ?) values (?, ?, ?)")
 
+            if len(util.last_powers) == 0:
+                for table_name, ts, power, spending in conn.query(f"select tbname, last_row(ts, power, spending) from powers partition by tbname").fetch_all():
+                    util.last_powers[table_name] = ts.timestamp(), power, spending
+
             for area_name in data:
                 for building_name in data[area_name]:
                     for room_name in data[area_name][building_name]:
-                        table_name = f"`{area_name}{building_name}{room_name}`"
+                        table_name = f"{area_name}{building_name}{room_name}"
                         table_exist = True
                         if table_name not in util.last_powers.keys():
                             try:
-                                ts, power, spending = conn.query(f"select last_row(ts, power, spending) from {table_name}").fetch_all()[0]
+                                ts, power, spending = conn.query(f"select last_row(ts, power, spending) from `{table_name}`").fetch_all()[0]
                                 util.last_powers[table_name] = ts.timestamp(), power, spending
                             except ProgrammingError as e:
                                 if e.errno == 0x80002662 - 0x100000000 or e.msg == 'Fail to get table info, error: Table does not exist':
@@ -288,7 +292,7 @@ def task():
 
                         ts, power = data[area_name][building_name][room_name]
                         power = int(Decimal(power)*100)
-                        spending = (power - util.last_powers[table_name][1]) if table_exist else None
+                        spending = (util.last_powers[table_name][1] - power) if table_exist else None  # 反向减，算用电情况
 
                         tags = taos.new_bind_params(5)
                         tags[0].nchar(area_name)
@@ -296,7 +300,7 @@ def task():
                         tags[2].nchar(room_name)
                         tags[3].timestamp(ts)
                         tags[4].bool(True)
-                        stmt.set_tbname_tags(table_name, tags)
+                        stmt.set_tbname_tags(f"`{table_name}`", tags)
 
                         values = taos.new_bind_params(3)
                         values[0].timestamp(ts)
