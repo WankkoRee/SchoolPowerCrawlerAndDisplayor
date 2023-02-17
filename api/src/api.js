@@ -1,203 +1,219 @@
-function getApiSchema (data) {
-    return {
-        type: 'object',
-        properties: {},
-        if: {
-            properties: {
-                code: {type:'integer', enum: [1]}
-            }
-        }, then: {
-            properties: {
-                code: {type: 'integer'},
-                data: data
-            }
-        }, else: {
-            properties: {
-                code: {type: 'integer'},
-                error: {type: 'string'}
-            }
-        }
-    }
-}
-
-function getWeekday(d, diff) { // Mon Tue Wed Thu Fri Sat Sun = 0~6
-    d = new Date(d)
-    d.setHours(0, 0, 0, 0)
-    const day = d.getDay()
-    return new Date(d.setDate(d.getDate() - day + (day === 0 ? -6 : 1) + diff % 7)) // adjust when day is sunday
-}
-
 async function api (fastify, options) {
-    fastify.register(require('./error'))
-    const knex = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: process.env.SP_DB_HOST,
-            port: process.env.SP_DB_PORT,
-            user: process.env.SP_DB_USER,
-            password: process.env.SP_DB_PASS,
-            database: process.env.SP_DB_NAME,
-        },
-        debug: process.env.SP_DEBUG === "1",
-        asyncStackTraces: process.env.SP_DEBUG === "1",
-    })
-    fastify.addHook('onClose', async (instance, done) => {
-        await knex.destroy();
-        done();
-    })
+    await fastify.register(require('./error'))
+    await fastify.register(require('./db'))
+    await fastify.register(require('./util'))
 
     /*
     获取所有校区`area`
      */
-    fastify.get('/area', { schema: { response: { 200: getApiSchema({
+    fastify.get('/info', {
+        schema: {
+            response: {
+                200: fastify.sp_util.getApiSchema({
                     type: 'array',
-                    items: {type: 'string'}
-                }) } } }, async (request, reply) => {
-        try {
-            const areas = (await knex('sp_room')
-                .where('is_show', true)
-                .groupBy('area')
-                .select('area')
-            ).map(area => area.area)
-
-            return {code: 1, data: areas}
-        } catch (error) {
-            return fastify.sp_error.ApiErrorReturn(error)
-        }
+                    items: {type: 'string'},
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        return await fastify.sp_db.getAreas()
     })
 
     /*
     获取指定校区`area`的所有宿舍楼`building`
      */
-    fastify.get('/area/:name', {schema: { response: { 200: getApiSchema({
+    fastify.get('/info/:area', {
+        schema: {
+            params: {
+                area: {type: 'string'},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
                     type: 'array',
-                    items: {type: 'string'}
-                }) } } }, async (request, reply) => {
-        try {
-            const {name: area} = request.params
-
-            const buildings = (await knex('sp_room')
-                .where('is_show', true)
-                .where('area', area)
-                .groupBy('building')
-                .select('building')
-            ).map(building => building.building)
-            if (buildings.length === 0)
-                throw new fastify.spError('非法输入', 101, `area="${area}" not in database`)
-
-            return {code: 1, data: buildings}
-        } catch (error) {
-            return fastify.sp_error.ApiErrorReturn(error)
-        }
+                    items: {type: 'string'},
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            area: area,
+        } = request.params
+        return await fastify.sp_db.getBuildings(area)
     })
 
     /*
     获取指定宿舍楼`building`的所有寝室`room`
      */
-    fastify.get('/building/:name', {schema: { response: { 200: getApiSchema({
+    fastify.get('/info/:area/:building', {
+        schema: {
+            params: {
+                area: {type: 'string'},
+                building: {type: 'string'},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
                     type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            id: {type: 'integer'},
-                            room: {type: 'string'},
-                        }
-                    }
-                }) } } }, async (request, reply) => {
-        try {
-            const {name: building} = request.params
-
-            const rooms = await knex('sp_room')
-                .where('is_show', true)
-                .where('building', building)
-                .select('id', 'room')
-            if (rooms.length === 0)
-                throw new fastify.spError('非法输入', 101, `building="${building}" not in database`)
-
-            return {code: 1, data: rooms}
-        } catch (error) {
-            return fastify.sp_error.ApiErrorReturn(error)
-        }
+                    items: {type: 'string'},
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            area: area,
+            building: building,
+        } = request.params
+        return await fastify.sp_db.getRooms(area, building)
     })
 
     /*
-    获取指定寝室`room`
+    获取指定寝室`room`的信息
      */
-    fastify.get('/room/:id', { schema: { response: { 200: getApiSchema({
+    fastify.get('/info/:area/:building/:room', {
+        schema: {
+            params: {
+                area: {type: 'string'},
+                building: {type: 'string'},
+                room: {type: 'string'},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
                     type: 'object',
                     properties: {
-                        roomInfo: {
-                            type: 'object',
-                            properties: {
-                                area: {type: 'string'},
-                                building: {type: 'string'},
-                                room: {type: 'string'},
-                                power: {type: 'number'},
-                                update_time: {type: 'integer'},
-                                avg_day_this_week: {type: 'number'},
-                            }
-                        },
-                        roomLog: {
-                            type: 'array',
-                            items: {
-                                type: 'object',
-                                properties: {
-                                    power: {type: 'number'},
-                                    log_time: {type: 'integer'},
-                                }
-                            }
-                        },
-                        roomDaily: {
-                            type: 'array',
-                            items: {
-                                type: 'object',
-                                properties: {
-                                    power: {type: 'number'},
-                                    date: {type: 'integer'},
-                                }
-                            }
-                        }
+                        ts: {type: 'integer'},
+                        power: {type: 'integer'},
+                        area: {type: 'string'},
+                        building: {type: 'string'},
+                        room: {type: 'string'},
                     },
                     default: null
-                }) } } }, async (request, reply) => {
-        try {
-            const {id: idStr} = request.params
-            const id = parseInt(idStr)
-            if (id.toString() !== idStr)
-                throw new fastify.spError('非法输入', 101, `${id} !== "${idStr}"`)
-            if (id <= 0)
-                throw new fastify.spError('非法输入', 101, `${id} <= 0`)
-
-            const roomInfo = (await knex('sp_room')
-                .where('is_show', true)
-                .where('id', id)
-                .select('area', 'building', 'room', 'power', 'update_time', 'avg_day_this_week')
-            )[0]
-            if (roomInfo === undefined)
-                throw new fastify.spError('非法输入', 101, `id=${id} not in database`)
-            const beginDay = new Date()
-            beginDay.setHours(-24*60, 0, 0, 0)
-            const endDay = new Date()
-            endDay.setHours(24, 0, 0, 0)
-            const roomLog = await knex('sp_log')
-                .where('room', id)
-                .whereBetween('log_time', [beginDay, endDay])
-                .select('power', 'log_time')
-            const roomDaily = await knex('sp_daily')
-                .where('room', id)
-                .whereBetween('date', [beginDay, endDay])
-                .select('power', 'date')
-
-            return {code: 1, data: {roomInfo, roomLog, roomDaily}}
-        } catch (error) {
-            return fastify.sp_error.ApiErrorReturn(error)
-        }
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            area: area,
+            building: building,
+            room: room,
+        } = request.params
+        return await fastify.sp_db.getRoomInfo(area, building, room)
     })
 
     /*
-    获取某日用电量最高的寝室`room`/宿舍楼`building`/校区`area`
+    获取指定寝室`room`的`during`周期内平均用电情况，可设置指定日期`date`
      */
-    fastify.get('/rank/daily/:date/topUsed/:type/:limit', { schema: { response: { 200: getApiSchema({
+    fastify.get('/data/:area/:building/:room/avg/:during', {
+        schema: {
+            params: {
+                area: {type: 'string'},
+                building: {type: 'string'},
+                room: {type: 'string'},
+                during: {type: 'string'},
+            },
+            query: {
+              datum: {type: 'integer'},
+              to: {type: 'integer'},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'number',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            area: area,
+            building: building,
+            room: room,
+            during: during,
+        } = request.params
+        const {
+            datum: datum_timestamp,
+            to: to_timestamp,
+        } = request.query
+        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        datum.setHours(0, 0, 0, 0) // 设置为 当天00:00:00.000
+        let to = new Date(datum) // 设置为 当天
+
+        if (during === 'week') {
+            datum.setDate(fastify.sp_util.getMondayOffset(datum)) // 设置为周一
+            to.setHours(7*24, 0, 0, 0) // 设置为 7天后00:00:00.000
+        } else if (during === 'month') {
+            datum.setDate(1) // 设置为 月初
+            to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
+        } else {
+            if (to_timestamp !== undefined) {
+                to = new Date(to_timestamp) // 设置为 指定时间
+            }
+            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+        }
+
+        return await fastify.sp_db.getRoomSpendingDailyAvgInDuring(area, building, room, datum, to)
+    })
+
+    /*
+    获取指定寝室`room`的过去电表情况，可设置指定日期`datum`和最早日期`from`，默认30天
+     */
+    fastify.get('/data/:area/:building/:room/logs', {
+        schema: {
+            params: {
+                area: {type: 'string'},
+                building: {type: 'string'},
+                room: {type: 'string'},
+            },
+            query: {
+              datum: {type: 'integer'},
+              from: {type: 'integer'},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            ts: {type: 'integer'},
+                            power: {type: 'integer'},
+                        },
+                    },
+                    default: null
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            area: area,
+            building: building,
+            room: room,
+        } = request.params
+        const {
+            datum: datum_timestamp,
+            from: from_timestamp,
+        } = request.query
+        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        datum.setHours(24, 0, 0, 0)
+        const from = from_timestamp ? new Date(from_timestamp) : new Date(datum)
+        from.setHours(0, 0, 0, 0)
+        if (from_timestamp === undefined) {
+            from.setHours(-24 * 30)
+        }
+        return await fastify.sp_db.getRoomLogs(area, building, room, from, datum)
+    })
+
+    /*
+    获取某时间区间`during`用电量最高的范围`range`，如寝室`room`/宿舍楼`building`/校区`area`，可限制返回条数`limit`和自定义区间`to`
+     */
+    fastify.get('/rank/sum/:range/:during', {
+        schema: {
+            params: {
+                range: {type: 'string', enum: ['area', 'building', 'room']},
+                during: {type: 'string'},
+            },
+            query: {
+              datum: {type: 'integer'},
+              to: {type: 'integer'},
+              limit: {type: 'integer', minimum: 1, default: 20, maxmem: 30},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
                     type: 'array',
                     items: {
                         type: 'object',
@@ -205,45 +221,67 @@ async function api (fastify, options) {
                             area: {type: 'string'},
                             building: {type: 'string'},
                             room: {type: 'string'},
-                            power: {type: 'number'},
+                            spending: {type: 'number'},
                         },
                         default: null
-                    }
-                }) } } }, async (request, reply) => {
-        try {
-            const {date: dateStr, type, limit: limitStr} = request.params
-            const date = new Date(parseInt(dateStr))
-            const limit = parseInt(limitStr)
-            if (!["area", "building", "room"].includes(type))
-                throw new fastify.spError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
-            if (limit.toString() !== limitStr)
-                throw new fastify.spError('非法输入', 101, `${limit} !== "${limitStr}"`)
-            if (limit <= 0 || limit > 20)
-                throw new fastify.spError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
+                    },
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            range: range,
+            during: during,
+        } = request.params
+        const {
+            datum: datum_timestamp,
+            to: to_timestamp,
+            limit: limit,
+        } = request.query
+        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        datum.setHours(0, 0, 0, 0) // 设置为 当天00:00:00.000
+        let to = new Date(datum)
 
-            const roomInfo = await knex('sp_daily')
-                .where('sp_daily.date', date)
-                .join('sp_room', 'sp_daily.room', 'sp_room.id')
-                .where('sp_room.is_show', true)
-                .where('sp_daily.power', '<', 0)
-                .groupBy(`sp_room.${type}`)
-                .orderBy('power', 'asc') // alias后的`power`
-                .limit(limit)
-                .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
-                .sum('sp_daily.power as power')
-            if (roomInfo.length === 0)
-                throw new fastify.spError('非法输入', 101, `date="${date}" and type="${type}" not in database`)
+        if (during === 'day') {
+            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+        } else if (during === 'week') {
+            datum.setDate(fastify.sp_util.getMondayOffset(datum)) // 设置为周一
+            to.setHours(7*24, 0, 0, 0) // 设置为 7天后00:00:00.000
+        } else if (during === 'month') {
+            datum.setDate(1) // 设置为 月初
+            to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
+        } else {
+            if (to_timestamp !== undefined) {
+                to = new Date(to_timestamp) // 设置为 指定时间
+            }
+            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+        }
 
-            return {code: 1, data: roomInfo}
-        } catch (error) {
-            return fastify.sp_error.ApiErrorReturn(error)
+        if (range === 'area') {
+            return await fastify.sp_db.getAreaSpendingRankInDuring(datum, to, limit)
+        } else if (range === 'building') {
+            return await fastify.sp_db.getBuildingSpendingRankInDuring(datum, to, limit)
+        } else if (range === 'room') {
+            return await fastify.sp_db.getRoomSpendingRankInDuring(datum, to, limit)
         }
     })
 
     /*
-    获取本周用电量最高的寝室`room`/宿舍楼`building`/校区`area`
+    获取某时间区间`during`日均用电量最高的范围`range`，如寝室`room`/宿舍楼`building`/校区`area`，可限制返回条数`limit`和自定义区间`to`
      */
-    fastify.get('/rank/weekly/:date/topUsed/:type/:limit', { schema: { response: { 200: getApiSchema({
+    fastify.get('/rank/dailyAvg/:range/:during', {
+        schema: {
+            params: {
+                range: {type: 'string', enum: ['area', 'building', 'room']},
+                during: {type: 'string'},
+            },
+            query: {
+              datum: {type: 'integer'},
+              to: {type: 'integer'},
+              limit: {type: 'integer', minimum: 1, default: 20, maxmem: 30},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
                     type: 'array',
                     items: {
                         type: 'object',
@@ -251,77 +289,48 @@ async function api (fastify, options) {
                             area: {type: 'string'},
                             building: {type: 'string'},
                             room: {type: 'string'},
-                            power: {type: 'number'},
+                            spending: {type: 'number'},
                         },
                         default: null
-                    }
-                }) } } }, async (request, reply) => {
-        try {
-            const {date: dateStr, type, limit: limitStr} = request.params
-            const date = new Date(parseInt(dateStr))
-            const limit = parseInt(limitStr)
-            if (!["area", "building", "room"].includes(type))
-                throw new fastify.spError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
-            if (limit.toString() !== limitStr)
-                throw new fastify.spError('非法输入', 101, `${limit} !== "${limitStr}"`)
-            if (limit <= 0 || limit > 20)
-                throw new fastify.spError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
+                    },
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            range: range,
+            during: during,
+        } = request.params
+        const {
+            datum: datum_timestamp,
+            to: to_timestamp,
+            limit: limit,
+        } = request.query
+        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        datum.setHours(0, 0, 0, 0) // 设置为 当天00:00:00.000
+        let to = new Date(datum)
 
-            const roomInfo = await knex('sp_daily')
-                .whereBetween('sp_daily.date', [getWeekday(date, 0), getWeekday(date, 6)])
-                .join('sp_room', 'sp_daily.room', 'sp_room.id')
-                .where('sp_room.is_show', true)
-                .where('sp_daily.power', '<', 0)
-                .groupBy(`sp_room.${type}`)
-                .orderBy('power', 'asc') // alias后的`power`
-                .limit(limit)
-                .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
-                .sum('sp_daily.power as power')
-
-            return {code: 1, data: roomInfo}
-        } catch (error) {
-            return fastify.sp_error.ApiErrorReturn(error)
+        if (during === 'day') {
+            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+        } else if (during === 'week') {
+            datum.setDate(fastify.sp_util.getMondayOffset(datum)) // 设置为周一
+            to.setHours(7*24, 0, 0, 0) // 设置为 7天后00:00:00.000
+        } else if (during === 'month') {
+            datum.setDate(1) // 设置为 月初
+            to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
+        } else {
+            if (to_timestamp !== undefined) {
+                to = new Date(to_timestamp) // 设置为 指定时间
+            }
+            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
         }
-    })
 
-    /*
-    获取本周日均用电量最高的寝室`room`/宿舍楼`building`/校区`area`
-     */
-    fastify.get('/rank/weekly/topAvg/:type/:limit', { schema: { response: { 200: getApiSchema({
-                    type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            area: {type: 'string'},
-                            building: {type: 'string'},
-                            room: {type: 'string'},
-                            power: {type: 'number'},
-                        },
-                        default: null
-                    }
-                }) } } }, async (request, reply) => {
-        try {
-            const {type, limit: limitStr} = request.params
-            const limit = parseInt(limitStr)
-            if (!["area", "building", "room"].includes(type))
-                throw new fastify.spError('非法输入', 101, `${type} not in ["area", "building", "room"]`)
-            if (limit.toString() !== limitStr)
-                throw new fastify.spError('非法输入', 101, `${limit} !== "${limitStr}"`)
-            if (limit <= 0 || limit > 20)
-                throw new fastify.spError('非法输入', 101, `${limit} <= 0 || ${limit} > 10`)
-
-            const roomInfo = await knex('sp_room')
-                .where('sp_room.is_show', true)
-                .where('sp_room.avg_day_this_week', '<', 0)
-                .groupBy(`sp_room.${type}`)
-                .orderBy('power', 'asc') // alias后的`power`
-                .limit(limit)
-                .select('sp_room.area as area', 'sp_room.building as building', 'sp_room.room as room')
-                .select(knex.raw('round(avg(sp_room.avg_day_this_week), 2) as power'))
-
-            return {code: 1, data: roomInfo}
-        } catch (error) {
-            return fastify.sp_error.ApiErrorReturn(error)
+        if (range === 'area') {
+            return await fastify.sp_db.getAreaSpendingDailyAvgRankInDuring(datum, to, limit)
+        } else if (range === 'building') {
+            return await fastify.sp_db.getBuildingSpendingDailyAvgRankInDuring(datum, to, limit)
+        } else if (range === 'room') {
+            return await fastify.sp_db.getRoomSpendingDailyAvgRankInDuring(datum, to, limit)
         }
     })
 
