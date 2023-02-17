@@ -1,4 +1,3 @@
-require('dotenv-flow').config()
 const fastify = require('fastify')({
     logger: true
 })

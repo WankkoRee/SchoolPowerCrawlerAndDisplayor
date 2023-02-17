@@ -1,66 +1,121 @@
 version: "3"
+name: "school_power"
 services:
+
+  school_power_db:
+    container_name: school_power_db
+    build:
+      context: ./db/
+      dockerfile: Dockerfile
+    image: wankkoree/school_power_db:3.0.2.5
+    expose:
+      - "6030"
+      - "6041-6049"
+      - "6041-6049/udp"
+    ports:
+      - "6030:6030"
+      - "6041-6049:6041-6049"
+      - "6041-6049:6041-6049/udp"
+    volumes:
+      - "./db/data/:/var/lib/taos/"
+#      - ./db/initdb.d/:/docker-entrypoint-initdb.d/
+    environment:
+      TAOS_FQDN: "school_power_db"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 1
+    networks:
+      school_power_net:
+        ipv4_address: 192.168.1.2
+
   school_power_api:
     container_name: school_power_api
     depends_on:
       - school_power_db
-    image: "node:17.4.0-slim"
+    build:
+      context: ./api/
+      dockerfile: Dockerfile
+    image: wankkoree/school_power_api:12.22.12-bullseye-slim
     expose:
       - "3000"
+    ports:
+      - "3000:3000"
     volumes:
-      - "./api:/home/school_power_api"
-    working_dir: "/home/school_power_api"
-    command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && npm install && npm run start"
+      - "./api/:/home/school_power_api/"
     environment:
       SP_PORT: 3000
+      SP_DEBUG: 0
       SP_DB_HOST: "school_power_db"
-      SP_DB_PORT: 3306
+      SP_DB_PORT: 6030
       SP_DB_USER: "root"
-      SP_DB_PASS: "123456"
+      SP_DB_PASS: "taosdata"
       SP_DB_NAME: "school_power"
     restart: unless-stopped
-  school_power_db:
-    container_name: school_power_db
-    image: "mariadb:10.5.3"
-    expose:
-      - "3306"
-    volumes:
-      - ./db/data:/var/lib/mysql
-      - ./db/initdb.d:/docker-entrypoint-initdb.d
-    environment:
-      MYSQL_ROOT_PASSWORD: "123456"
-      TZ: "Asia/Shanghai"
-    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 1
+    networks:
+      school_power_net:
+        ipv4_address: 192.168.1.3
+
   school_power_crawler:
     container_name: school_power_crawler
     depends_on:
-      - school_power_api
-    image: "python:3.9.10-slim"
+      - school_power_db
+    build:
+      context: ./crawler/
+      dockerfile: Dockerfile
+    image: wankkoree/school_power_crawler:3.9.10-slim
     volumes:
-      - "./crawler:/home/school_power_crawler"
-    working_dir: "/home/school_power_crawler"
-    command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && pip install --no-cache-dir -r requirements.txt && python main.py"
+      - "./crawler/:/home/school_power_crawler/"
     environment:
       SP_HOST: "https://dk.nynu.edu.cn"
       SP_SCHOOL_ID: 4
-      SP_AES_KEY: "31323334353637383930414243444546"
-      SP_USERNAME: ""
-      SP_PASSWORD: ""
+      SP_VPN_HOST: "https://vpn.nynu.edu.cn"
+      SP_VPN_KEY: "77726476706e69737468656265737421"
+      SP_VPN_IV: "77726476706e69737468656265737421"
+      SP_SSO_HOST: "https://authserver.nynu.edu.cn"
+      SP_SSO_USERNAME: ""
+      SP_SSO_PASSWORD: ""
       SP_DB_HOST: "school_power_db"
-      SP_DB_PORT: 3306
+      SP_DB_PORT: 6030
       SP_DB_USER: "root"
-      SP_DB_PASS: "123456"
+      SP_DB_PASS: "taosdata"
       SP_DB_NAME: "school_power"
+      SP_DEBUG: 0
     restart: unless-stopped
-  school_power_mirai:
-    container_name: school_power_mirai
-    depends_on:
-      - school_power_crawler
-    image: "openjdk:11.0.14.1-jre-buster"
-    expose:
-      - "80"
-    volumes:
-      - "./mirai:/home/school_power_mirai"
-    working_dir: "/home/school_power_mirai"
-    command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && wget -P /tmp https://github.com/WankkoRee/WatchDoger/releases/download/v1.0.0/WatchDoger_v1.0.0_linux_amd64.tar.gz && tar -xzvf /tmp/WatchDoger_v1.0.0_linux_amd64.tar.gz -C ./ && wget -P /tmp https://github.com/iTXTech/mirai-console-loader/releases/download/v1.2.2/mcl-1.2.2.zip && unzip -o -d ./ /tmp/mcl-1.2.2.zip && chmod +x ./server && chmod +x ./client && chmod +x ./mcl && ./server ./mcl"
-    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 1
+    networks:
+      school_power_net:
+        ipv4_address: 192.168.1.4
+
+#  school_power_mirai:
+#    container_name: school_power_mirai
+#    depends_on:
+#      - school_power_crawler
+#    image: "openjdk:11.0.14.1-jre-buster"
+#    expose:
+#      - "80"
+#    volumes:
+#      - "./mirai:/home/school_power_mirai"
+#    working_dir: "/home/school_power_mirai"
+#    command: /bin/bash -c "ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && wget -P /tmp https://github.com/WankkoRee/WatchDoger/releases/download/v1.0.0/WatchDoger_v1.0.0_linux_amd64.tar.gz && tar -xzvf /tmp/WatchDoger_v1.0.0_linux_amd64.tar.gz -C ./ && wget -P /tmp https://github.com/iTXTech/mirai-console-loader/releases/download/v1.2.2/mcl-1.2.2.zip && unzip -o -d ./ /tmp/mcl-1.2.2.zip && chmod +x ./server && chmod +x ./client && chmod +x ./mcl && ./server ./mcl"
+#    restart: unless-stopped
+
+networks:
+  school_power_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1

@@ -6,7 +6,6 @@ import urllib.parse
 
 import ddddocr
 from decimal import Decimal
-from dotenv import load_dotenv
 import schedule
 from requests import Session
 import taos
@@ -351,6 +350,4 @@ def main():
 
 
 if __name__ == '__main__':
-    load_dotenv('.env', override=True)
-    load_dotenv('.env.local', override=True)
     main()
