@@ -20,7 +20,7 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
 
     sp_host, sp_school_id, sp_vpn_host, sp_vpn_key, sp_vpn_iv, sp_sso_host, sp_sso_username, sp_sso_password, sp_db_host, sp_db_port, sp_db_user, sp_db_pass, sp_db_name, sp_debug = sp_env
 
-    # 通过 VPN 登录 SSO，解析登录页面
+    log("通过 VPN 登录 SSO，解析登录页面")
     ret = ss.get(
         url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
         params={
@@ -31,7 +31,7 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
     salt = re.search(r'<div id="pwdLoginDiv" style="display: none">[\s\S]*?<input type="hidden" id="pwdEncryptSalt" value="([A-Za-z0-9]+)" />', ret.text).group(1)
     execution = re.search(r'<div id="pwdLoginDiv" style="display: none">[\s\S]*?<input type="hidden" id="execution" name="execution" value="([A-Za-z0-9-_/+=]+)" />', ret.text).group(1)
 
-    # 通过 VPN 登录 SSO，判断是否需要验证码
+    log("通过 VPN 登录 SSO，判断是否需要验证码")
     ret = ss.get(
         url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/checkNeedCaptcha.htl",
         params={
@@ -41,7 +41,7 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
     )
     assert ret.status_code == 200, f"无法得知是否需要验证码, HTTP {ret.status_code}"
     if ret.json()["isNeed"]:
-        # 通过 VPN 登录 SSO，识别验证码
+        log("通过 VPN 登录 SSO，识别验证码")
         ret = ss.get(
             url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/getCaptcha.htl",
             params=str(int(time.time()*1000)),
@@ -53,7 +53,7 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
     else:
         captcha = ""
 
-    # 通过 VPN 登录 SSO，发起登录
+    log("通过 VPN 登录 SSO，发起登录")
     ret = ss.post(
         url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
         params={
@@ -72,7 +72,7 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
     )
     assert ret.status_code == 200, "登录失败, "+re.search(r'<span id="showErrorTip" class="form-error"><span>(.+)</span></span>', ret.text).group(1)
 
-    # 通过 SSO 登录随行校园
+    log("通过 SSO 登录随行校园")
     ret = ss.get(
         url=f"{sp_vpn_host}/{vpn_host_encode(sp_sso_host, sp_vpn_key, sp_vpn_iv)}/authserver/login",
         params={
@@ -82,9 +82,9 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
     assert ret.status_code == 200, "登录失败, 无法通过SSO登录"
 
     if "电费充值" in ret.text:
-        # 通过 VPN 访问的方式，手动获取随行校园的 Cookies
+        log("通过 VPN 访问的方式，手动获取随行校园的 Cookies")
 
-        # 获取随行校园的 Cookies
+        log("获取随行校园的 Cookies")
         ret = ss.post(
             url=f"{sp_vpn_host}/wengine-vpn/cookie",
             params={
@@ -97,14 +97,14 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
         )
         assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的随行校园Cookies失败"
 
-        # 解析随行校园的 Cookies 并应用
+        log("解析随行校园的 Cookies 并应用")
         for cookie_str in ret.text.split('; '):
             cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()
             ss.cookies.set(cookie[0], cookie[1], domain=urllib.parse.urlparse(sp_host).hostname)
     elif "访问出错" in ret.text:
-        # 通过 SSO 访问的方式，自动获取随行校园的 Cookies
+        log("通过 SSO 访问的方式，自动获取随行校园的 Cookies")
 
-        # 获取 SSO 的 Cookies
+        log("获取 SSO 的 Cookies")
         ret = ss.post(
             url=f"{sp_vpn_host}/wengine-vpn/cookie",
             params={
@@ -117,12 +117,12 @@ def login(ss: Session, sp_env: tuple[str, int, str, bytes, bytes, str, str, str,
         )
         assert ret.status_code == 200 and len(ret.text) > 0, "登录失败, 获取通过SSO登录后的SSO Cookie失败"
 
-        # 解析 SSO 的 Cookies 并应用
+        log("解析 SSO 的 Cookies 并应用")
         for cookie_str in ret.text.split('; '):
             cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()
             ss.cookies.set(cookie[0], cookie[1], domain=urllib.parse.urlparse(sp_sso_host).hostname)
 
-        # 访问外网随行校园，将跳转 SSO 获取登录状态并跳转回随行校园，此时随行校园 Cookies 已自动应用
+        log("访问外网随行校园，将跳转 SSO 获取登录状态并跳转回随行校园，此时随行校园 Cookies 已自动应用")
         ret = ss.get(
             url=f"{sp_host}/outIndex/power",
         )
@@ -168,15 +168,16 @@ def task():
         data: dict[dict[dict[tuple[float, str]]]] = {}
         ret = None
 
-        # 尝试登录
+        log("尝试登录")
         try:
             login(ss, sp_env)
         except Exception as e:
             log("登录异常", e)
             log(*traceback.format_tb(e.__traceback__))
             return  # 前往 finally
+        log("登录成功")
 
-        # 尝试获取校区
+        log("尝试获取校区")
         try:
             ret = ss.post(
                 url=f"{sp_host}/member/power/selectArea",
@@ -192,13 +193,13 @@ def task():
         ret = ret.json()
         areas = ret['data']
 
-        # 尝试解析每个校区
+        log("尝试解析每个校区")
         for area in areas:
             area_name = area['areaName']
             area_id = area['areaID']
             data[area_name] = {}
 
-            # 尝试获取宿舍楼
+            log("尝试获取宿舍楼")
             try:
                 ret = ss.post(
                     url=f"{sp_host}/member/power/buildings",
@@ -218,13 +219,13 @@ def task():
             ret = ret.json()
             buildings = ret['data']
 
-            # 尝试解析每个宿舍楼
+            log("尝试解析每个宿舍楼")
             for building in buildings:
                 building_name = building['title']
                 building_id, _, comp_code = building['value'].partition(",")
                 data[area_name][building_name] = {}
 
-                # 尝试获取寝室
+                log("尝试获取寝室")
                 try:
                     ret = ss.post(
                         url=f"{sp_host}/member/power/rooms",
@@ -247,7 +248,7 @@ def task():
                 rooms = ret['data']
                 ts = time.time()
 
-                # 尝试解析每个寝室
+                log("尝试解析每个寝室")
                 for room in rooms:
                     room_name = room['title']
                     room_id, _, power = room['value'].partition(",")
@@ -256,6 +257,7 @@ def task():
                     # 调试模式则将数据打印
                     if sp_debug:
                         log(area_name, building_name, room_name, power)
+        log("爬取数据成功")
 
         # 非调试模式则将数据入库
         if not sp_debug:
@@ -319,6 +321,8 @@ def task():
             stmt.execute()
             stmt.close()
             conn.close()
+
+            log("数据入库成功")
 
         need_retry = False
         if util.retry_task is not None:  # 本次是定时重试任务，而非常规定时任务
