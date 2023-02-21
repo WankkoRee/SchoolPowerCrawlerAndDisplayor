@@ -413,6 +413,9 @@ export default {
           const roomAvgWeekRequest = axios.get(`./api/data/${roomPath}/avg/week`)
           const {result: roomAvgWeekResult, err: roomAvgWeekErr} = await checkRequest(roomAvgWeekRequest)
           if (roomAvgWeekErr) continue
+          const roomAvgMonthRequest = axios.get(`./api/data/${roomPath}/avg/month`)
+          const {result: roomAvgMonthResult, err: roomAvgMonthErr} = await checkRequest(roomAvgMonthRequest)
+          if (roomAvgMonthErr) continue
           const roomLogsRequest = axios.get(`./api/data/${roomPath}/logs`)
           const {result: roomLogsResult, err: roomLogsErr} = await checkRequest(roomLogsRequest)
           if (roomLogsErr) continue
@@ -433,6 +436,7 @@ export default {
               power: roomInfoResult.power,
               spendingDay: roomAvgDayResult,
               avgWeek: roomAvgWeekResult,
+              avgMonth: roomAvgMonthResult,
             },
             roomLogs: roomLogsResult.map(({ts, power}) => ({ts, power})),
             roomSpendings: roomLogsResult.filter(({spending}) => spending >= 0).map(({ts, spending}) => ({ts, power: spending})),
