@@ -163,7 +163,8 @@ function spDb (fastify, options, next) {
                     const roomLogs = (await cur.query(`
                         SELECT
                             ts,
-                            power
+                            power,
+                            spending
                         FROM ${SqlString.escapeId(area+building+room)}
                         WHERE
                             is_show=true
@@ -173,8 +174,39 @@ function spDb (fastify, options, next) {
                             ts<${to.getTime()}
                     `, true))
                         .data.map(record => {
-                            const [ts, power] = record.data
-                            return {ts, power}
+                            const [ts, power, spending] = record.data
+                            return {ts, power, spending}
+                        })
+                    if (roomLogs.length === 0)
+                        throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
+                    return {code: 1, data: roomLogs}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getRoomSpendingDaily: async function (area, building, room, from, to) {
+                const cur = tde.cursor()
+                try {
+                    const roomLogs = (await cur.query(`
+                        SELECT
+                            _WSTART ts,
+                            SUM(spending) spending_daily
+                        FROM ${SqlString.escapeId(area+building+room)}
+                        WHERE
+                            is_show=true
+                          AND
+                            spending>=0
+                          AND
+                            ts>=${from.getTime()}
+                          AND
+                            ts<${to.getTime()}
+                        INTERVAL(1d)
+                    `, true))
+                        .data.map(record => {
+                            const [ts, spending_daily] = record.data
+                            return {ts, spending: spending_daily}
                         })
                     if (roomLogs.length === 0)
                         throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
