@@ -22,9 +22,9 @@ export default {
   name: "RoomsChart",
   props: {
     theme: String,
-    roomsName: Array,
-    roomsLog: Array,
     chartName: String,
+    roomsName: Array,
+    roomsLogs: Array,
   },
   components: {
     NCard,
@@ -32,9 +32,9 @@ export default {
   },
   setup(props) {
     const generateSeries = () => {
-      return props.roomsName.map((roomName, i) => { return {roomName, roomLog: props.roomsLog[i]} }).map((room) => { return {
+      return props.roomsName.map((roomName, i) => { return {roomName, roomLogs: props.roomsLogs[i]} }).map((room) => { return {
         name: room.roomName,
-        data: room.roomLog.map(log => [log.log_time, log.power]),
+        data: room.roomLogs.map(log => [log.ts, log.power]),
         type: 'line',
         smooth: true,
         animationDuration: 500,
@@ -81,26 +81,26 @@ export default {
       backgroundColor: 'rgba(255,255,255,0)' // 透明
     }
 
-    const roomsLogChart = shallowRef(null)
+    const roomsLogsChart = shallowRef(null)
     echarts.use([SVGRenderer, LineChart, TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent, UniversalTransition])
     const initChart = (theme) => {
-      if (roomsLogChart.value)
-        echarts.dispose(roomsLogChart.value)
-      roomsLogChart.value = echarts.init(document.getElementById(props.chartName), theme)
+      if (roomsLogsChart.value)
+        echarts.dispose(roomsLogsChart.value)
+      roomsLogsChart.value = echarts.init(document.getElementById(props.chartName), theme)
       options.legend.data = props.roomsName
       options.series = generateSeries()
-      roomsLogChart.value.setOption(options)
+      roomsLogsChart.value.setOption(options)
     }
 
     watch(() => props.theme, (theme) => {
       initChart({light: 'vintage', dark: 'dark'}[theme])
     })
 
-    watch(() => JSON.stringify([props.roomsName, props.roomsLog]), () => {
-      // roomsLogChart.value.clear()
+    watch(() => JSON.stringify([props.roomsName, props.roomsLogs]), () => {
+      // roomsLogsChart.value.clear()
       options.legend.data = props.roomsName
       options.series = generateSeries()
-      roomsLogChart.value.setOption(options, true, false)
+      roomsLogsChart.value.setOption(options, true, false)
     })
 
     onMounted(() => {
@@ -109,8 +109,8 @@ export default {
 
     return {
       handleResize () {
-        if (roomsLogChart.value)
-          roomsLogChart.value.resize()
+        if (roomsLogsChart.value)
+          roomsLogsChart.value.resize()
       }
     }
   },

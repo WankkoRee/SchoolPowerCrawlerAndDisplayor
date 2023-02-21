@@ -1,15 +1,28 @@
 <template>
   <n-space vertical>
-    <n-card :title="roomName" hoverable>
+    <n-card :title="roomInfo.fullName" hoverable>
       <template #header-extra>
-        <n-time :time="roomInfo.update_time" type="relative" />
+        <n-time :time="roomData.ts" type="relative" />
       </template>
       <n-space justify="space-around">
         <n-statistic label="剩余电量" tabular-nums>
           <n-number-animation
               ref="remainingPower"
               :from="0"
-              :to="roomInfo.power"
+              :to="roomData.power"
+              :duration="500"
+              :active="true"
+              :precision="2"
+          />
+          <template #suffix>
+            kWh
+          </template>
+        </n-statistic>
+        <n-statistic label="今日用电量" tabular-nums>
+          <n-number-animation
+              ref="spendingDay"
+              :from="0"
+              :to="roomData.spendingDay"
               :duration="500"
               :active="true"
               :precision="2"
@@ -22,7 +35,7 @@
           <n-number-animation
               ref="avgUsed"
               :from="0"
-              :to="-roomInfo.avg_day_this_week"
+              :to="roomData.avgWeek"
               :duration="500"
               :active="true"
               :precision="2"
@@ -42,10 +55,10 @@ import {
 } from 'naive-ui'
 
 export default {
-  name: "RoomStatic",
+  name: "RoomInfo",
   props: {
     roomInfo: Object,
-    roomName: String,
+    roomData: Object,
   },
   components: {
     NSpace, NStatistic, NNumberAnimation, NCard, NTime,

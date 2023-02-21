@@ -1,11 +1,11 @@
 <template>
   <n-grid :x-gap="8" :y-gap="8" cols="1">
-    <n-grid-item v-for="(roomInfo, index) in data" :key="index">
+    <n-grid-item v-for="(roomData, index) in data" :key="index">
       <span>
-        {{ {0: '🥇', 1: '🥈', 2:'🥉'}[index] || '' }} {{ ["area", "building", "room"].includes(type)?roomInfo.area:'' }}{{ ["building", "room"].includes(type)?` の ${roomInfo.building}`:'' }}{{ ["room"].includes(type)?` の ${roomInfo.room}`:'' }}
+        {{ {0: '🥇', 1: '🥈', 2:'🥉'}[index] || '' }} {{ ["area", "building", "room"].includes(type)?roomData.area:'' }}{{ ["building", "room"].includes(type)?` の ${roomData.building}`:'' }}{{ ["room"].includes(type)?` の ${roomData.room}`:'' }}
       </span>
-      <n-progress type="line" :processing="true" :color="{0: '#ffd666', 1: '#bfbfbf', 2: '#d46b08'}[index] || '#66ccff'" indicator-placement="outside" :percentage="roomInfo.power / data[0].power * 100">
-        {{ -roomInfo.power }} {{ unit }}
+      <n-progress type="line" :processing="true" :color="{0: '#ffd666', 1: '#bfbfbf', 2: '#d46b08'}[index] || '#66ccff'" indicator-placement="outside" :percentage="roomData.spending / data[0].spending * 100">
+        {{ roomData.spending }} {{ unit }}
       </n-progress>
     </n-grid-item>
   </n-grid>

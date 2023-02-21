@@ -16,7 +16,7 @@
                 check-strategy="child"
                 clearable
                 remote
-                separator=" の "
+                separator=" / "
                 max-tag-count="responsive"
                 v-model:value="roomsSelect"
                 @load="handleRoomsLoad"
@@ -65,20 +65,20 @@
         </div>
         <n-space v-if="roomsSelected.length" vertical>
           <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
-            <n-grid-item v-for="roomId in roomsSelected" :key="roomId">
-              <RoomStatic :roomInfo="roomsData[roomId].roomInfo" :roomName="roomsData[roomId].roomName" />
+            <n-grid-item v-for="roomPath in roomsSelected" :key="roomPath">
+              <RoomInfo :roomInfo="roomsData[roomPath].roomInfo" :roomData="roomsData[roomPath].roomData" />
             </n-grid-item>
           </n-grid>
           <div>
             <n-grid :x-gap="8" :y-gap="8" cols="1">
               <n-grid-item>
-                <RoomsChart chartName="历史电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomLog)" />
+                <RoomsChart chartName="电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomPath => roomsData[roomPath].roomInfo.fullName)" :roomsLogs="roomsSelected.map(roomPath => roomsData[roomPath].roomLogs)" />
               </n-grid-item>
               <n-grid-item>
-                <RoomsChart chartName="每日用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomDaily)" />
+                <RoomsChart chartName="用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomPath => roomsData[roomPath].roomInfo.fullName)" :roomsLogs="roomsSelected.map(roomPath => roomsData[roomPath].roomSpendings)" />
               </n-grid-item>
               <n-grid-item>
-                <RoomsChart chartName="每小时用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomId => roomsData[roomId].roomName)" :roomsLog="roomsSelected.map(roomId => roomsData[roomId].roomHourlyUsed)" />
+                <RoomsChart chartName="日均用电量" :theme="themeSwitch" :roomsName="roomsSelected.map(roomPath => roomsData[roomPath].roomInfo.fullName)" :roomsLogs="roomsSelected.map(roomPath => roomsData[roomPath].roomDailys)" />
               </n-grid-item>
             </n-grid>
           </div>
@@ -102,7 +102,7 @@
                     check-strategy="child"
                     clearable
                     remote
-                    separator=" の "
+                    separator=" / "
                     max-tag-count="responsive"
                     v-model:value="roomsSelect"
                     @load="handleRoomsLoad"
@@ -235,7 +235,7 @@ import {
 } from 'naive-ui'
 import axios from "axios"
 
-import RoomStatic from "@/components/RoomStatic"
+import RoomInfo from "@/components/RoomInfo"
 import RoomsChart from "@/components/RoomsChart"
 import RoomsRank from "@/components/RoomsRank"
 
@@ -246,7 +246,7 @@ export default {
   },
   components: {
     NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty, NCard, NRadioGroup, NRadioButton, NInputNumber,
-    RoomStatic, RoomsChart, RoomsRank,
+    RoomInfo, RoomsChart, RoomsRank,
   },
   setup(props) {
     const message = useMessage()
@@ -284,9 +284,10 @@ export default {
     const showMenu = ref(false)
 
 
-    const getDate = (time) => {
-      return time.setHours(0,0,0,0) // ret integer
-    }
+    // const getDate = (time) => {
+    //   return time.setHours(0,0,0,0) // ret integer
+    // }
+
     // 排行
     const showRank = ref(false)
     const dailyTopUsed = ref([])
@@ -299,7 +300,9 @@ export default {
     const weeklyTopAvgType = ref("room")
     const weeklyTopAvgLimit = ref(3)
     async function getDailyTopUsed() {
-      const dailyTopUsedRequest = axios.get(`./api/rank/daily/${getDate(new Date())}/topUsed/${dailyTopUsedType.value}/${dailyTopUsedLimit.value}`)
+      const dailyTopUsedRequest = axios.get(`./api/rank/sum/${dailyTopUsedType.value}/day`, { params: {
+        limit: dailyTopUsedLimit.value,
+      } })
       const {result, err} = await checkRequest(dailyTopUsedRequest)
       if (!err) {
         return result
@@ -307,7 +310,9 @@ export default {
       return []
     }
     async function getWeeklyTopUsed() {
-      const weeklyTopUsedRequest = axios.get(`./api/rank/weekly/${getDate(new Date())}/topUsed/${weeklyTopUsedType.value}/${weeklyTopUsedLimit.value}`)
+      const weeklyTopUsedRequest = axios.get(`./api/rank/sum/${dailyTopUsedType.value}/week`, { params: {
+        limit: dailyTopUsedLimit.value,
+      } })
       const {result, err} = await checkRequest(weeklyTopUsedRequest)
       if (!err) {
         return result
@@ -315,7 +320,9 @@ export default {
       return []
     }
     async function getWeeklyTopAvg() {
-      const weeklyTopAvgRequest = axios.get(`./api/rank/weekly/topAvg/${weeklyTopAvgType.value}/${weeklyTopAvgLimit.value}`)
+      const weeklyTopAvgRequest = axios.get(`./api/rank/dailyAvg/${weeklyTopAvgType.value}/week`, { params: {
+        limit: dailyTopUsedLimit.value,
+      } })
       const {result, err} = await checkRequest(weeklyTopAvgRequest)
       if (!err) {
         return result
@@ -329,15 +336,16 @@ export default {
     const roomsSelected = ref([])
     const roomsSelectLoading = ref(false)
     const roomsData = {}
+
     async function getAreas() {
-      const areasRequest = axios.get("./api/area")
+      const areasRequest = axios.get("./api/info")
       const areas = []
       const {result, err} = await checkRequest(areasRequest)
       if (!err) {
         result.forEach(area => {
           areas.push({
             label: area,
-            value: area,
+            value: `${area}`,
             depth: 1,
             isLeaf: false
           })
@@ -346,14 +354,14 @@ export default {
       return areas.sort((a, b) => a.label.localeCompare(b.label, undefined, {numeric: true, sensitivity: 'base'}))
     }
     async function getBuildings(area) {
-      const buildingsRequest = axios.get(`./api/area/${area}`)
+      const buildingsRequest = axios.get(`./api/info/${area}`)
       const buildings = []
       const {result, err} = await checkRequest(buildingsRequest)
       if (!err) {
         result.forEach(building => {
           buildings.push({
             label: building,
-            value: building,
+            value: `${area}/${building}`,
             depth: 2,
             isLeaf: false
           })
@@ -361,15 +369,15 @@ export default {
       }
       return buildings.sort((a, b) => a.label.localeCompare(b.label, undefined, {numeric: true, sensitivity: 'base'}))
     }
-    async function getRooms(building) {
-      const roomsRequest = axios.get(`./api/building/${building}`)
+    async function getRooms(area_building) {
+      const roomsRequest = axios.get(`./api/info/${area_building}`)
       const rooms = []
       const {result, err} = await checkRequest(roomsRequest)
       if (!err) {
         result.forEach(room => {
           rooms.push({
-            label: room.room,
-            value: room.id,
+            label: room,
+            value: `${area_building}/${room}`,
             depth: 3,
             isLeaf: true
           })
@@ -387,72 +395,52 @@ export default {
       weeklyTopAvg.value = await getWeeklyTopAvg()
     })
 
-    function calcTotalUsed(roomLog, everyMs) {
-      if (everyMs == null)
-        everyMs = 1000 * 3600 * 24 // 计算每1天的用电情况
+    async function showRooms(rooms) {
+      const deleted = roomsSelected.value.filter(roomPath => !rooms.includes(roomPath))
+      const added = rooms.filter(roomPath => !roomsSelected.value.includes(roomPath))
 
-      const timezone = new Date().getTimezoneOffset() * 60 * 1000
+      roomsSelected.value = roomsSelected.value.filter(roomPath => !deleted.includes(roomPath)) // delete取消选中的寝室
+      roomsSelect.value = roomsSelect.value.filter(roomPath => !deleted.includes(roomPath))
 
-      const eachLog = {}
+      for (const roomPath of added) {
+        if (Object.keys(roomsData).indexOf(roomPath) === -1) {
+          const roomInfoRequest = axios.get(`./api/info/${roomPath}`)
+          const {result: roomInfoResult, err: roomInfoErr} = await checkRequest(roomInfoRequest)
+          if (roomInfoErr) continue
+          const roomAvgDayRequest = axios.get(`./api/data/${roomPath}/avg/day`)
+          const {result: roomAvgDayResult, err: roomAvgDayErr} = await checkRequest(roomAvgDayRequest)
+          if (roomAvgDayErr) continue
+          const roomAvgWeekRequest = axios.get(`./api/data/${roomPath}/avg/week`)
+          const {result: roomAvgWeekResult, err: roomAvgWeekErr} = await checkRequest(roomAvgWeekRequest)
+          if (roomAvgWeekErr) continue
+          const roomLogsRequest = axios.get(`./api/data/${roomPath}/logs`)
+          const {result: roomLogsResult, err: roomLogsErr} = await checkRequest(roomLogsRequest)
+          if (roomLogsErr) continue
+          const roomDailyRequest = axios.get(`./api/data/${roomPath}/daily`)
+          const {result: roomDailyResult, err: roomDailyErr} = await checkRequest(roomDailyRequest)
+          if (roomDailyErr) continue
 
-      roomLog.forEach(log => {
-        const range = log.log_time - (log.log_time - timezone) % everyMs
-        if (!Object.keys(eachLog).includes(range.toString()))
-          eachLog[range] = {oldest: log, latest: log}
-
-        if (eachLog[range].latest.log_time < log.log_time)
-          eachLog[range].latest = log
-      })
-
-      const everyLog = []
-      for (const [range, {oldest, latest}] of Object.entries(eachLog)) {
-        const prevRange = (parseInt(range) - everyMs).toString()
-        const nextRange = (parseInt(range) + everyMs).toString()
-
-        const prev = Object.keys(eachLog).includes(prevRange) ?
-            (oldest.power - eachLog[prevRange].latest.power) / (oldest.log_time - eachLog[prevRange].latest.log_time) * (oldest.log_time - parseInt(range))
-            : 0
-        const now = latest.power - oldest.power
-        const next = Object.keys(eachLog).includes(nextRange) ?
-            (eachLog[nextRange].oldest.power - latest.power) / (eachLog[nextRange].oldest.log_time - latest.log_time) * (parseInt(range) + everyMs - latest.log_time)
-            : 0
-        everyLog.push({
-          power: -Math.round((prev + now + next) * 100) / 100,
-          log_time: new Date(parseInt(range)),
-        })
-      }
-
-      return everyLog
-    }
-
-    async function showRooms(roomsId) {
-      const deleted = roomsSelected.value.filter(roomId => !roomsId.includes(roomId))
-      const added = roomsId.filter(roomId => !roomsSelected.value.includes(roomId))
-
-      roomsSelected.value = roomsSelected.value.filter(roomId => !deleted.includes(roomId)) // delete取消选中的寝室
-      roomsSelect.value = roomsSelect.value.filter(roomId => !deleted.includes(roomId))
-
-      for (const roomId of added) {
-        if (Object.keys(roomsData).indexOf(roomId.toString()) === -1) {
-          const roomRequest = axios.get(`./api/room/${roomId}`)
-          const {result, err} = await checkRequest(roomRequest)
-          if (!err) {
-            roomsData[roomId] = {
-              roomInfo: result.roomInfo,
-              roomName: `${result.roomInfo.area} の ${result.roomInfo.building} の ${result.roomInfo.room}`,
-              roomLog: result.roomLog.map(log => { return {power: log.power, log_time: new Date(log.log_time)} }).sort((a, b) => a.log_time.getTime() - b.log_time.getTime()),
-              roomDaily: result.roomDaily.map(log => { return {power: -log.power, log_time: new Date(log.date)} }),
-            }
-            roomsData[roomId].roomInfo.update_time = new Date(roomsData[roomId].roomInfo.update_time)
-            roomsData[roomId].roomHourlyUsed = calcTotalUsed(roomsData[roomId].roomLog, 1000 * 3600)
-
-            roomsSelected.value.push(roomId) // add新选中的寝室
-            roomsSelect.value.push(roomId)
+          roomsData[roomPath] = {
+            roomInfo: {
+              area: roomInfoResult.area,
+              building: roomInfoResult.building,
+              room: roomInfoResult.room,
+              path: roomPath,
+              fullName: `${roomInfoResult.area} / ${roomInfoResult.building} / ${roomInfoResult.room}`,
+            },
+            roomData: {
+              ts: new Date(roomInfoResult.ts),
+              power: roomInfoResult.power,
+              spendingDay: roomAvgDayResult,
+              avgWeek: roomAvgWeekResult,
+            },
+            roomLogs: roomLogsResult.map(({ts, power}) => ({ts, power})),
+            roomSpendings: roomLogsResult.filter(({spending}) => spending >= 0).map(({ts, spending}) => ({ts, power: spending})),
+            roomDailys: roomDailyResult.map(({ts, spending}) => ({ts, power: spending})),
           }
-        } else {
-          roomsSelected.value.push(roomId) // add新选中的寝室
-          roomsSelect.value.push(roomId)
         }
+        roomsSelected.value.push(roomPath) // add新选中的寝室
+        roomsSelect.value.push(roomPath)
       }
     }
 
@@ -509,7 +497,7 @@ export default {
 
         const tmpSelected = [...value]
 
-        roomsSelect.value.splice(0, roomsSelect.value.length) // roomsSelect.value.clear()
+        roomsSelect.value.splice(0, roomsSelect.value.length) // == roomsSelect.value.clear()
         roomsSelect.value.push(...roomsSelected.value)
 
         const maxLimit = 8
