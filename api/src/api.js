@@ -107,7 +107,7 @@ async function api (fastify, options) {
                 area: {type: 'string'},
                 building: {type: 'string'},
                 room: {type: 'string'},
-                during: {type: 'string'},
+                during: {type: 'string', enum: ["day", "week", "month", ""]},
             },
             query: {
               datum: {type: 'integer'},
@@ -256,12 +256,12 @@ async function api (fastify, options) {
         schema: {
             params: {
                 range: {type: 'string', enum: ['area', 'building', 'room']},
-                during: {type: 'string'},
+                during: {type: 'string', enum: ["day", "week", "month", ""]},
             },
             query: {
               datum: {type: 'integer'},
               to: {type: 'integer'},
-              limit: {type: 'integer', minimum: 1, default: 20, maxmem: 30},
+              limit: {type: 'integer', minimum: 1, default: 3, maximum: 20},
             },
             response: {
                 200: fastify.sp_util.getApiSchema({
@@ -301,7 +301,7 @@ async function api (fastify, options) {
         } else if (during === 'month') {
             datum.setDate(1) // 设置为 月初
             to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
-        } else {
+        } else { // 无 to 传入时则等价于 during === 'day'
             if (to_timestamp !== undefined) {
                 to = new Date(to_timestamp) // 设置为 指定时间
             }
@@ -324,12 +324,12 @@ async function api (fastify, options) {
         schema: {
             params: {
                 range: {type: 'string', enum: ['area', 'building', 'room']},
-                during: {type: 'string'},
+                during: {type: 'string', enum: ["day", "week", "month", ""]},
             },
             query: {
               datum: {type: 'integer'},
               to: {type: 'integer'},
-              limit: {type: 'integer', minimum: 1, default: 20, maxmem: 30},
+              limit: {type: 'integer', minimum: 1, default: 3, maximum: 20},
             },
             response: {
                 200: fastify.sp_util.getApiSchema({
@@ -369,7 +369,7 @@ async function api (fastify, options) {
         } else if (during === 'month') {
             datum.setDate(1) // 设置为 月初
             to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
-        } else {
+        } else { // 无 to 传入时则等价于 during === 'day'
             if (to_timestamp !== undefined) {
                 to = new Date(to_timestamp) // 设置为 指定时间
             }
