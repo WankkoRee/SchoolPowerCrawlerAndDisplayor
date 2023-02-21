@@ -311,7 +311,7 @@ export default {
     }
     async function getWeeklyTopUsed() {
       const weeklyTopUsedRequest = axios.get(`./api/rank/sum/${dailyTopUsedType.value}/week`, { params: {
-        limit: dailyTopUsedLimit.value,
+        limit: weeklyTopUsedLimit.value,
       } })
       const {result, err} = await checkRequest(weeklyTopUsedRequest)
       if (!err) {
@@ -321,7 +321,7 @@ export default {
     }
     async function getWeeklyTopAvg() {
       const weeklyTopAvgRequest = axios.get(`./api/rank/dailyAvg/${weeklyTopAvgType.value}/week`, { params: {
-        limit: dailyTopUsedLimit.value,
+        limit: weeklyTopAvgLimit.value,
       } })
       const {result, err} = await checkRequest(weeklyTopAvgRequest)
       if (!err) {
