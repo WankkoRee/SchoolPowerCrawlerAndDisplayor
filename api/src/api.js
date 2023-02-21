@@ -80,7 +80,7 @@ async function api (fastify, options) {
                     type: 'object',
                     properties: {
                         ts: {type: 'integer'},
-                        power: {type: 'integer'},
+                        power: {type: 'number'},
                         area: {type: 'string'},
                         building: {type: 'string'},
                         room: {type: 'string'},
@@ -173,8 +173,8 @@ async function api (fastify, options) {
                         type: 'object',
                         properties: {
                             ts: {type: 'integer'},
-                            power: {type: 'integer'},
-                            spending: {type: 'integer'},
+                            power: {type: 'number'},
+                            spending: {type: 'number'},
                         },
                     },
                     default: null
@@ -222,7 +222,7 @@ async function api (fastify, options) {
                         type: 'object',
                         properties: {
                             ts: {type: 'integer'},
-                            spending: {type: 'integer'},
+                            spending: {type: 'number'},
                         },
                     },
                     default: null

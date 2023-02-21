@@ -111,7 +111,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [ts, power, area, building, room] = record.data
-                            return {ts, power, area, building, room}
+                            return {ts, power: power / 100, area, building, room}
                         })[0]
                     if (roomInfo === undefined)
                         throw new fastify.spError('非法输入', 101, `area="${area}" AND building="${building}" AND room="${room}" not in database`)
@@ -146,11 +146,11 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [spending_daily_avg] = record.data
-                            return {spending_daily_avg}
+                            return {spending: spending_daily_avg / 100}
                         })[0]
                     if (roomSpendingDailyAvgInDuring === undefined)
                         throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
-                    return {code: 1, data: roomSpendingDailyAvgInDuring.spending_daily_avg}
+                    return {code: 1, data: roomSpendingDailyAvgInDuring.spending}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
                 } finally {
@@ -175,7 +175,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [ts, power, spending] = record.data
-                            return {ts, power, spending}
+                            return {ts, power: power / 100, spending: spending / 100}
                         })
                     if (roomLogs.length === 0)
                         throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
@@ -206,7 +206,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [ts, spending_daily] = record.data
-                            return {ts, spending: spending_daily}
+                            return {ts, spending: Number(spending_daily) / 100}
                         })
                     if (roomLogs.length === 0)
                         throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
@@ -239,7 +239,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [area, spending] = record.data
-                            return {area, spending}
+                            return {area, spending: Number(spending) / 100}
                         })
                     if (areaSpendingRankInDuring.length === 0)
                         throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
@@ -273,7 +273,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [area, building, spending] = record.data
-                            return {area, building, spending}
+                            return {area, building, spending: Number(spending) / 100}
                         })
                     if (buildingSpendingRankInDuring.length === 0)
                         throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
@@ -308,7 +308,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [area, building, room, spending] = record.data
-                            return {area, building, room, spending}
+                            return {area, building, room, spending: Number(spending) / 100}
                         })
                     if (roomSpendingRankInDuring.length === 0)
                         throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
@@ -349,7 +349,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [area, spending] = record.data
-                            return {area, spending}
+                            return {area, spending: spending / 100}
                         })
                     if (areaSpendingDailyAvgRankInDuring.length === 0)
                         throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
@@ -392,7 +392,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [area, building, spending] = record.data
-                            return {area, building, spending}
+                            return {area, building, spending: spending / 100}
                         })
                     if (buildingSpendingDailyAvgRankInDuring.length === 0)
                         throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
@@ -437,7 +437,7 @@ function spDb (fastify, options, next) {
                     `, true))
                         .data.map(record => {
                             const [area, building, room, spending] = record.data
-                            return {area, building, room, spending}
+                            return {area, building, room, spending: spending / 100}
                         })
                     if (roomSpendingDailyAvgRankInDuring.length === 0)
                         throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
