@@ -16,7 +16,7 @@
                 check-strategy="child"
                 clearable
                 remote
-                separator=" / "
+                separator=" > "
                 max-tag-count="responsive"
                 v-model:value="roomsSelect"
                 @load="handleRoomsLoad"
@@ -102,7 +102,7 @@
                     check-strategy="child"
                     clearable
                     remote
-                    separator=" / "
+                    separator=" > "
                     max-tag-count="responsive"
                     v-model:value="roomsSelect"
                     @load="handleRoomsLoad"
@@ -426,7 +426,7 @@ export default {
               building: roomInfoResult.building,
               room: roomInfoResult.room,
               path: roomPath,
-              fullName: `${roomInfoResult.area} / ${roomInfoResult.building} / ${roomInfoResult.room}`,
+              fullName: `${roomInfoResult.area} > ${roomInfoResult.building} > ${roomInfoResult.room}`,
             },
             roomData: {
               ts: new Date(roomInfoResult.ts),
