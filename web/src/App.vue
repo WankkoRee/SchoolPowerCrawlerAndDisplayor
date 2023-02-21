@@ -12,6 +12,7 @@
             <n-cascader
                 placeholder="请选择要查询的寝室"
                 :options="rooms"
+                :cascade="true"
                 multiple
                 check-strategy="child"
                 clearable
@@ -95,13 +96,14 @@
           <n-grid :x-gap="8" :y-gap="8" cols="1">
             <n-grid-item span="1">
               <n-space align="center" justify="center" style="width: 100%; height: 100%; margin-top: 0; margin-bottom: 0;" item-style="width: 100%">
-                <n-cascader
+                <n-tree-select
                     placeholder="请选择要查询的寝室"
                     :options="rooms"
+                    checkable
+                    :cascade="false"
                     multiple
                     check-strategy="child"
                     clearable
-                    remote
                     separator=" > "
                     max-tag-count="responsive"
                     v-model:value="roomsSelect"
@@ -230,7 +232,7 @@
 <script>
 import { ref, onBeforeMount } from "vue"
 import {
-  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty, NCard, NRadioGroup, NRadioButton, NInputNumber,
+  NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NTreeSelect, NDrawer, NEmpty, NCard, NRadioGroup, NRadioButton, NInputNumber,
   useMessage,
 } from 'naive-ui'
 import axios from "axios"
@@ -245,7 +247,7 @@ export default {
     switchTheme: Function,
   },
   components: {
-    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NDrawer, NEmpty, NCard, NRadioGroup, NRadioButton, NInputNumber,
+    NLayout, NLayoutHeader, NLayoutFooter, NSwitch, NGrid, NGridItem, NSpace, NButton, NCascader, NTreeSelect, NDrawer, NEmpty, NCard, NRadioGroup, NRadioButton, NInputNumber,
     RoomInfo, RoomsChart, RoomsRank,
   },
   setup(props) {
@@ -346,6 +348,7 @@ export default {
           areas.push({
             label: area,
             value: `${area}`,
+            key: `${area}`,
             depth: 1,
             isLeaf: false
           })
@@ -362,6 +365,7 @@ export default {
           buildings.push({
             label: building,
             value: `${area}/${building}`,
+            key: `${area}/${building}`,
             depth: 2,
             isLeaf: false
           })
@@ -378,6 +382,7 @@ export default {
           rooms.push({
             label: room,
             value: `${area_building}/${room}`,
+            key: `${area_building}/${room}`,
             depth: 3,
             isLeaf: true
           })
