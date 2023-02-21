@@ -148,7 +148,7 @@
         <div style="padding: 8px">
           <n-grid :x-gap="8" :y-gap="8" cols="3" item-responsive>
             <n-grid-item span="3 900:1">
-              <n-card title="今日用电量Top3" hoverable>
+              <n-card title="今日用电量Top" hoverable>
                 <rooms-rank :data="dailyTopUsed" :type="dailyTopUsedType" unit="kWh" />
                 <template #header-extra>
                   <n-input-number style="width: 80px" v-model:value="dailyTopUsedLimit" :update-value-on-input="false" :show-button="false" placeholder="" :min="1" :max="20" @update:value="dailyTopUsedTypeUpdate">
@@ -168,7 +168,7 @@
               </n-card>
             </n-grid-item>
             <n-grid-item span="3 900:1">
-              <n-card title="本周用电量Top3" hoverable>
+              <n-card title="本周用电量Top" hoverable>
                 <rooms-rank :data="weeklyTopUsed" :type="weeklyTopUsedType" unit="kWh" />
                 <template #header-extra>
                   <n-input-number style="width: 80px" v-model:value="weeklyTopUsedLimit" :update-value-on-input="false" :show-button="false" placeholder="" :min="1" :max="20" @update:value="weeklyTopUsedTypeUpdate">
@@ -188,7 +188,7 @@
               </n-card>
             </n-grid-item>
             <n-grid-item span="3 900:1">
-              <n-card title="本周日均用电量Top3" hoverable>
+              <n-card title="本周日均用电量Top" hoverable>
                 <rooms-rank :data="weeklyTopAvg" :type="weeklyTopAvgType" unit="kWh/d" />
                 <template #header-extra>
                   <n-input-number style="width: 80px" v-model:value="weeklyTopAvgLimit" :update-value-on-input="false" :show-button="false" placeholder="" :min="1" :max="20" @update:value="weeklyTopAvgTypeUpdate">
@@ -310,7 +310,7 @@ export default {
       return []
     }
     async function getWeeklyTopUsed() {
-      const weeklyTopUsedRequest = axios.get(`./api/rank/sum/${dailyTopUsedType.value}/week`, { params: {
+      const weeklyTopUsedRequest = axios.get(`./api/rank/sum/${weeklyTopUsedType.value}/week`, { params: {
         limit: weeklyTopUsedLimit.value,
       } })
       const {result, err} = await checkRequest(weeklyTopUsedRequest)
