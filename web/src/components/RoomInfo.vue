@@ -2,6 +2,13 @@
   <n-space vertical>
     <n-card :title="roomInfo.fullName" :header-style="cardStyle" hoverable>
       <template #header-extra>
+        <n-button text style="font-size: 24px" @click="emit('remove')">
+          <n-icon>
+            <eye-off-outline />
+          </n-icon>
+        </n-button>
+      </template>
+      <template #footer>
         <n-popover trigger="hover">
           <template #trigger>
             <n-time :time="roomData.ts" type="relative" />
@@ -58,7 +65,8 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { NSpace, NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem } from "naive-ui";
+import { NSpace, NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem, NButton, NIcon } from "naive-ui";
+import { EyeOffOutline } from "@vicons/ionicons5";
 
 const props = defineProps<{
   cardStyle: string;
@@ -78,6 +86,9 @@ const props = defineProps<{
     avgWeek: number;
     avgMonth: number;
   };
+}>();
+const emit = defineEmits<{
+  (e: "remove"): void;
 }>();
 </script>
 

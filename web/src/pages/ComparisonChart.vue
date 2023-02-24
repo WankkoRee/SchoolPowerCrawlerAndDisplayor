@@ -28,6 +28,7 @@
             #ffffff00)`"
             :roomInfo="roomsData[roomPath].roomInfo"
             :roomData="roomsData[roomPath].roomData"
+            @remove="removeRooms([roomPath])"
           />
         </n-grid-item>
       </n-grid>
@@ -142,7 +143,7 @@ async function handleRoomsLoad(option: Option) {
   }
 }
 
-async function handleRoomsSelect(value: string[]) {
+async function handleRoomsSelect() {
   // 预处理
   roomsSelectLoading.value = true;
   roomsOption.value.forEach((buildings) => {
@@ -157,8 +158,9 @@ async function handleRoomsSelect(value: string[]) {
       });
   });
   // 处理
-  const tmpSelected = [...value];
+  const tmpSelected = [...roomsSelect.value];
 
+  // 先取消选中，直接改动 roomsSelect 不会触发本事件
   roomsSelect.value.splice(0, roomsSelect.value.length); // == roomsSelect.value.clear()
   roomsSelect.value.push(...roomsSelected.value);
 
@@ -166,8 +168,15 @@ async function handleRoomsSelect(value: string[]) {
   if (tmpSelected.length > maxLimit) {
     messageApi.value!.warning(`最多选择${maxLimit}个，你尝试选择的寝室有${tmpSelected.length}个，已超出范围`, { keepAliveOnHover: true });
   } else {
-    await showRooms(tmpSelected);
+    // 对比选中情况
+    const removedRooms = roomsSelected.value.filter((roomPath) => !tmpSelected.includes(roomPath));
+    const addedRooms = tmpSelected.filter((roomPath) => !roomsSelected.value.includes(roomPath));
+    // 处理 removed
+    removeRooms(removedRooms);
+    // 处理 added
+    await addRooms(addedRooms);
   }
+
   // 后处理
   roomsOption.value.forEach((buildings) => {
     buildings.disabled = false;
@@ -183,16 +192,8 @@ async function handleRoomsSelect(value: string[]) {
   roomsSelectLoading.value = false;
 }
 
-async function showRooms(rooms: string[]) {
-  const deleted = roomsSelected.value.filter((roomPath) => !rooms.includes(roomPath));
-  const added = rooms.filter((roomPath) => !roomsSelected.value.includes(roomPath));
-
-  // 处理 deleted
-  roomsSelected.value = roomsSelected.value.filter((roomPath) => !deleted.includes(roomPath));
-  roomsSelect.value = roomsSelect.value.filter((roomPath) => !deleted.includes(roomPath));
-
-  // 处理 added
-  for (const roomPath of added) {
+async function addRooms(addedRooms: string[]) {
+  for (const roomPath of addedRooms) {
     if (Object.keys(roomsData).indexOf(roomPath) === -1) {
       try {
         const [roomInfo, roomSumDay, roomSumWeek, roomSumMonth, roomAvgWeek, roomAvgMonth, roomLogs, roomDailys] = await Promise.all([
@@ -234,6 +235,11 @@ async function showRooms(rooms: string[]) {
     roomsSelected.value.push(roomPath); // add新选中的寝室
     roomsSelect.value.push(roomPath);
   }
+}
+
+function removeRooms(removedRooms: string[]) {
+  roomsSelected.value = roomsSelected.value.filter((roomPath) => !removedRooms.includes(roomPath));
+  roomsSelect.value = roomsSelect.value.filter((roomPath) => !removedRooms.includes(roomPath));
 }
 </script>
 
