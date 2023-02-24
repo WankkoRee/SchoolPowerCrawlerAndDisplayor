@@ -17,7 +17,7 @@ import { LineChart } from "echarts/charts";
 import type { LineSeriesOption } from "echarts/charts";
 import { TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent } from "echarts/components";
 import type { TitleComponentOption, GridComponentOption, TooltipComponentOption, ToolboxComponentOption, LegendComponentOption } from "echarts/components";
-import { SVGRenderer } from "echarts/renderers";
+import { CanvasRenderer } from "echarts/renderers";
 import { UniversalTransition } from "echarts/features";
 
 import { colors } from "@/utils";
@@ -27,7 +27,7 @@ type Option = echarts.ComposeOption<
   LineSeriesOption | TitleComponentOption | GridComponentOption | TooltipComponentOption | ToolboxComponentOption | LegendComponentOption
 >;
 
-echarts.use([SVGRenderer, LineChart, TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent, UniversalTransition]);
+echarts.use([CanvasRenderer, LineChart, TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent, UniversalTransition]);
 
 function generateSeries(roomsName: string[], roomsLogs: { ts: Date; power: number }[][]): LineSeriesOption[] {
   return roomsName
