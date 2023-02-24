@@ -57,7 +57,7 @@ import { NGrid, NGridItem, NSpace, NH2, NMenu, NButton, NDrawer } from "naive-ui
 import { BookOutline as BookOutlineIcon } from "@vicons/ionicons5";
 
 import { loadingBarApi, messageApi } from "@/utils";
-import ThemeSwitch from "@/components/themeSwitch.vue";
+import ThemeSwitch from "@/components/ThemeSwitch.vue";
 
 loadingBarApi.value = new LoadingBarApi(useLoadingBar());
 messageApi.value = useMessage();

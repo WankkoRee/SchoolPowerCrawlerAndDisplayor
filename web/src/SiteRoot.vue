@@ -48,20 +48,9 @@ const locale = createLocale(
   zhCN
 );
 const theme = ref(lightTheme);
-const themeName = ref("light");
+const themeName = ref<"light" | "dark">("light");
 const themeOverrides = {};
-function switchTheme(newThemeName?: string | null): string {
-  if (newThemeName === "light" || newThemeName === "dark") {
-    themeName.value = newThemeName;
-  } else if (newThemeName === "switch") {
-    if (themeName.value === "light") {
-      themeName.value = "dark";
-    } else if (themeName.value === "dark") {
-      themeName.value = "light";
-    }
-  }
-  return themeName.value;
-}
+
 watch(themeName, (newThemeName) => {
   if (newThemeName === "light") {
     theme.value = lightTheme;
@@ -69,16 +58,14 @@ watch(themeName, (newThemeName) => {
     theme.value = darkTheme;
   }
 });
-provide("function_switchTheme", switchTheme);
+provide("v_themeName", themeName);
 
 // 自动使用系统主题
-switchTheme(useOsTheme().value);
-watch(
-  () => useOsTheme().value,
-  (newThemeName) => {
-    switchTheme(newThemeName);
-  }
-);
+const osTheme = useOsTheme();
+if (osTheme.value) themeName.value = osTheme.value;
+watch(osTheme, (newOsName) => {
+  if (newOsName) themeName.value = newOsName;
+});
 </script>
 
 <style scoped></style>

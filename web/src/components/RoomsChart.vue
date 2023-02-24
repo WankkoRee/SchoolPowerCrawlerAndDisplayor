@@ -10,8 +10,8 @@ export default {
   name: "RoomsChart",
 };
 
-import { shallowRef, onMounted, watch } from "vue";
-import type { ShallowRef } from "vue";
+import { shallowRef, onMounted, watch, inject } from "vue";
+import type { Ref, ShallowRef } from "vue";
 import * as echarts from "echarts/core";
 import { LineChart } from "echarts/charts";
 import type { LineSeriesOption } from "echarts/charts";
@@ -55,6 +55,7 @@ const props = defineProps<{
   roomsName: string[];
   roomsLogs: { ts: Date; power: number }[][];
 }>();
+const themeName = inject<Ref<"light" | "dark">>("v_themeName")!;
 
 const options: Option = {
   title: {
@@ -100,14 +101,11 @@ const options: Option = {
 const chartInstance = shallowRef<ECharts>();
 
 onMounted(() => {
-  initChart(chartInstance, document.getElementById(props.chartName)!, { light: "vintage", dark: "dark" }["light"], options);
+  initChart(chartInstance, document.getElementById(props.chartName)!, { light: "vintage", dark: "dark" }[themeName.value], options);
 });
-watch(
-  () => "light",
-  (theme) => {
-    initChart(chartInstance, document.getElementById(props.chartName)!, { light: "vintage", dark: "dark" }["light"], options);
-  }
-);
+watch(themeName, (newThemeName) => {
+  initChart(chartInstance, document.getElementById(props.chartName)!, { light: "vintage", dark: "dark" }[newThemeName], options);
+});
 watch(
   () => JSON.stringify({ roomsName: props.roomsName, roomsLogs: props.roomsLogs }),
   () => {
