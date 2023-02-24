@@ -1,6 +1,6 @@
 <template>
   <n-space vertical>
-    <n-card :title="roomInfo.fullName" :content-style="cardStyle" :header-style="cardStyle" hoverable>
+    <n-card :title="roomInfo.fullName" :header-style="cardStyle" hoverable>
       <template #header-extra>
         <n-popover trigger="hover">
           <template #trigger>
