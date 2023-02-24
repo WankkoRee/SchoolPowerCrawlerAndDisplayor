@@ -127,6 +127,8 @@ function spDb (fastify, options, next) {
                 try {
                     const roomSpendingSumInDuring = (await cur.query(`
                         SELECT
+                            first(ts) \`from\`,
+                            last(ts) \`to\`,
                             SUM(spending) spending_range
                         FROM ${SqlString.escapeId(area+building+room)}
                         WHERE
@@ -139,12 +141,12 @@ function spDb (fastify, options, next) {
                             ts<${to.getTime()}
                     `, true))
                         .data.map(record => {
-                            const [spending_range] = record.data
-                            return {spending: Number(spending_range) / 100}
+                            const [from, to, spending_range] = record.data
+                            return {from, to, spending: Number(spending_range) / 100}
                         })[0]
                     if (roomSpendingSumInDuring === undefined)
                         throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
-                    return {code: 1, data: roomSpendingSumInDuring.spending}
+                    return {code: 1, data: roomSpendingSumInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
                 } finally {
@@ -156,10 +158,13 @@ function spDb (fastify, options, next) {
                 try {
                     const roomSpendingDailyAvgInDuring = (await cur.query(`
                         SELECT
-                            AVG(spending_daily)
+                            first (ts_from) \`from\`,
+                            last (ts_to) \`to\`,
+                            AVG(spending_daily) spending_daily_avg
                         FROM (
                             SELECT
---                                 _WSTART ts,
+                                _WSTART ts_from,
+                                _WEND ts_to,
                                 SUM(spending) spending_daily
                             FROM ${SqlString.escapeId(area+building+room)}
                             WHERE
@@ -174,12 +179,12 @@ function spDb (fastify, options, next) {
                         )
                     `, true))
                         .data.map(record => {
-                            const [spending_daily_avg] = record.data
-                            return {spending: spending_daily_avg / 100}
+                            const [from, to, spending_daily_avg] = record.data
+                            return {from, to, spending: spending_daily_avg / 100}
                         })[0]
                     if (roomSpendingDailyAvgInDuring === undefined)
                         throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
-                    return {code: 1, data: roomSpendingDailyAvgInDuring.spending}
+                    return {code: 1, data: roomSpendingDailyAvgInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
                 } finally {

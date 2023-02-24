@@ -5,7 +5,7 @@ function spUtil (fastify, options, next) {
         return next(new Error('fastify.spUtil has already been registered'))
     } else {
         fastify.sp_util = {
-            getMondayOffset: function (date) {
+            getMondayDate: function (date) {
                 const target = new Date(date)
                 return target.getDate() - target.getDay() + (target.getDay() === 0 ? -6 : 1)
             },

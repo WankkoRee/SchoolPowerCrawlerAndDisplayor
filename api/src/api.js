@@ -107,7 +107,7 @@ async function api (fastify, options) {
                 area: {type: 'string'},
                 building: {type: 'string'},
                 room: {type: 'string'},
-                during: {type: 'string', enum: ["day", "week", "month", ""]},
+                during: {type: 'string', enum: ["day", "week", "month", "last7d", "last30d", ""]},
             },
             query: {
               datum: {type: 'integer'},
@@ -115,7 +115,12 @@ async function api (fastify, options) {
             },
             response: {
                 200: fastify.sp_util.getApiSchema({
-                    type: 'number',
+                    type: 'object',
+                    properties: {
+                        from: {type: 'integer'},
+                        to: {type: 'integer'},
+                        spending: {type: 'number'},
+                    },
                 }),
             },
         },
@@ -131,17 +136,23 @@ async function api (fastify, options) {
             to: to_timestamp,
         } = request.query
         const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
-        datum.setHours(0, 0, 0, 0) // 设置为 当天00:00:00.000
-        let to = new Date(datum) // 设置为 当天
+        datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
+        let to = new Date(datum) // 设置为 当天 00:00:00.000
 
         if (during === 'day') {
-            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+            to.setHours(24) // 设置为 1天后
         } else if (during === 'week') {
-            datum.setDate(fastify.sp_util.getMondayOffset(datum)) // 设置为周一
-            to.setHours(7*24, 0, 0, 0) // 设置为 7天后00:00:00.000
+            datum.setDate(fastify.sp_util.getMondayDate(datum)) // 设置为周一
+            to.setDate(fastify.sp_util.getMondayDate(to)+7) // 设置为 7天后
         } else if (during === 'month') {
             datum.setDate(1) // 设置为 月初
-            to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
+            to.setMonth(to.getMonth()+1, 1) // 设置为 1月后 1日
+        } else if (during === 'last7d') {
+            datum.setHours(-6 * 24) // 设置为 7天前
+            to.setHours(24) // 设置为 1天后
+        } else if (during === 'last30d') {
+            datum.setHours(-29 * 24) // 设置为 30天前
+            to.setHours(24) // 设置为 1天后
         } else { // 无 to 传入时则等价于 during === 'day'
             if (to_timestamp !== undefined) {
                 to = new Date(to_timestamp) // 设置为 指定时间
@@ -161,7 +172,7 @@ async function api (fastify, options) {
                 area: {type: 'string'},
                 building: {type: 'string'},
                 room: {type: 'string'},
-                during: {type: 'string', enum: ["day", "week", "month", ""]},
+                during: {type: 'string', enum: ["day", "week", "month", "last7d", "last30d", ""]},
             },
             query: {
               datum: {type: 'integer'},
@@ -169,7 +180,12 @@ async function api (fastify, options) {
             },
             response: {
                 200: fastify.sp_util.getApiSchema({
-                    type: 'number',
+                    type: 'object',
+                    properties: {
+                        from: {type: 'integer'},
+                        to: {type: 'integer'},
+                        spending: {type: 'number'},
+                    },
                 }),
             },
         },
@@ -185,17 +201,23 @@ async function api (fastify, options) {
             to: to_timestamp,
         } = request.query
         const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
-        datum.setHours(0, 0, 0, 0) // 设置为 当天00:00:00.000
-        let to = new Date(datum) // 设置为 当天
+        datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
+        let to = new Date(datum) // 设置为 当天 00:00:00.000
 
         if (during === 'day') {
-            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+            to.setHours(24) // 设置为 1天后
         } else if (during === 'week') {
-            datum.setDate(fastify.sp_util.getMondayOffset(datum)) // 设置为周一
-            to.setHours(7*24, 0, 0, 0) // 设置为 7天后00:00:00.000
+            datum.setDate(fastify.sp_util.getMondayDate(datum)) // 设置为周一
+            to.setDate(fastify.sp_util.getMondayDate(to)+7) // 设置为 7天后
         } else if (during === 'month') {
             datum.setDate(1) // 设置为 月初
-            to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
+            to.setMonth(to.getMonth()+1, 1) // 设置为 1月后 1日
+        } else if (during === 'last7d') {
+            datum.setHours(-6 * 24) // 设置为 7天前
+            to.setHours(24) // 设置为 1天后
+        } else if (during === 'last30d') {
+            datum.setHours(-29 * 24) // 设置为 30天前
+            to.setHours(24) // 设置为 1天后
         } else { // 无 to 传入时则等价于 during === 'day'
             if (to_timestamp !== undefined) {
                 to = new Date(to_timestamp) // 设置为 指定时间
@@ -310,7 +332,7 @@ async function api (fastify, options) {
         schema: {
             params: {
                 range: {type: 'string', enum: ['area', 'building', 'room']},
-                during: {type: 'string', enum: ["day", "week", "month", ""]},
+                during: {type: 'string', enum: ["day", "week", "month", "last7d", "last30d", ""]},
             },
             query: {
               datum: {type: 'integer'},
@@ -344,17 +366,23 @@ async function api (fastify, options) {
             limit: limit,
         } = request.query
         const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
-        datum.setHours(0, 0, 0, 0) // 设置为 当天00:00:00.000
-        let to = new Date(datum)
+        datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
+        let to = new Date(datum) // 设置为 当天 00:00:00.000
 
         if (during === 'day') {
-            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+            to.setHours(24) // 设置为 1天后
         } else if (during === 'week') {
-            datum.setDate(fastify.sp_util.getMondayOffset(datum)) // 设置为周一
-            to.setHours(7*24, 0, 0, 0) // 设置为 7天后00:00:00.000
+            datum.setDate(fastify.sp_util.getMondayDate(datum)) // 设置为周一
+            to.setDate(fastify.sp_util.getMondayDate(to)+7) // 设置为 7天后
         } else if (during === 'month') {
             datum.setDate(1) // 设置为 月初
-            to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
+            to.setMonth(to.getMonth()+1, 1) // 设置为 1月后 1日
+        } else if (during === 'last7d') {
+            datum.setHours(-6 * 24) // 设置为 7天前
+            to.setHours(24) // 设置为 1天后
+        } else if (during === 'last30d') {
+            datum.setHours(-29 * 24) // 设置为 30天前
+            to.setHours(24) // 设置为 1天后
         } else { // 无 to 传入时则等价于 during === 'day'
             if (to_timestamp !== undefined) {
                 to = new Date(to_timestamp) // 设置为 指定时间
@@ -378,7 +406,7 @@ async function api (fastify, options) {
         schema: {
             params: {
                 range: {type: 'string', enum: ['area', 'building', 'room']},
-                during: {type: 'string', enum: ["day", "week", "month", ""]},
+                during: {type: 'string', enum: ["day", "week", "month", "last7d", "last30d", ""]},
             },
             query: {
               datum: {type: 'integer'},
@@ -412,17 +440,23 @@ async function api (fastify, options) {
             limit: limit,
         } = request.query
         const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
-        datum.setHours(0, 0, 0, 0) // 设置为 当天00:00:00.000
-        let to = new Date(datum)
+        datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
+        let to = new Date(datum) // 设置为 当天 00:00:00.000
 
         if (during === 'day') {
-            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+            to.setHours(24) // 设置为 1天后
         } else if (during === 'week') {
-            datum.setDate(fastify.sp_util.getMondayOffset(datum)) // 设置为周一
-            to.setHours(7*24, 0, 0, 0) // 设置为 7天后00:00:00.000
+            datum.setDate(fastify.sp_util.getMondayDate(datum)) // 设置为周一
+            to.setDate(fastify.sp_util.getMondayDate(to)+7) // 设置为 7天后
         } else if (during === 'month') {
             datum.setDate(1) // 设置为 月初
-            to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
+            to.setMonth(to.getMonth()+1, 1) // 设置为 1月后 1日
+        } else if (during === 'last7d') {
+            datum.setHours(-6 * 24) // 设置为 7天前
+            to.setHours(24) // 设置为 1天后
+        } else if (during === 'last30d') {
+            datum.setHours(-29 * 24) // 设置为 30天前
+            to.setHours(24) // 设置为 1天后
         } else { // 无 to 传入时则等价于 during === 'day'
             if (to_timestamp !== undefined) {
                 to = new Date(to_timestamp) // 设置为 指定时间
