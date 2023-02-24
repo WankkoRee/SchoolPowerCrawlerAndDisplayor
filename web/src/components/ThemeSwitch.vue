@@ -1,11 +1,16 @@
 <template>
-  <n-switch checked-value="dark" unchecked-value="light" v-model:value="themeName" size="medium">
-    <template #icon>
-      {{ { light: "☀️", dark: "🌙" }[themeName] }}
+  <n-tooltip :show-arrow="false" trigger="hover">
+    <template #trigger>
+      <n-switch checked-value="dark" unchecked-value="light" v-model:value="themeName" size="medium">
+        <template #icon>
+          {{ { light: "☀️", dark: "🌙" }[themeName] }}
+        </template>
+        <template #checked>夜间</template>
+        <template #unchecked>日间</template>
+      </n-switch>
     </template>
-    <template #checked>夜间</template>
-    <template #unchecked>日间</template>
-  </n-switch>
+    切换到 {{ { light: "夜间", dark: "日间" }[themeName] }} 模式
+  </n-tooltip>
 </template>
 
 <script lang="ts">
@@ -17,7 +22,7 @@ import type { Ref } from "vue";
 </script>
 
 <script lang="ts" setup>
-import { NSwitch } from "naive-ui";
+import { NSwitch, NTooltip } from "naive-ui";
 
 const themeName = inject<Ref<"light" | "dark">>("v_themeName")!;
 </script>

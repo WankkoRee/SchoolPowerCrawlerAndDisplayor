@@ -49,7 +49,7 @@
         </n-grid-item>
         <n-grid-item>
           <RoomsChart
-            chartName="日均用电量"
+            chartName="每日用电量"
             :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].roomInfo.fullName)"
             :roomsLogs="roomsSelected.map((roomPath) => roomsData[roomPath].roomDailys)"
           />
@@ -95,11 +95,12 @@ const roomsData: {
     roomData: {
       ts: Date;
       power: number;
-      spendingDay: number;
-      spendingWeek: number;
-      spendingMonth: number;
-      avgWeek: number;
-      avgMonth: number;
+      spendingDay: { from: number; to: number; spending: number };
+      spendingWeek: { from: number; to: number; spending: number };
+      spendingMonth: { from: number; to: number; spending: number };
+      avgWeek: { from: number; to: number; spending: number };
+      avgMonth: { from: number; to: number; spending: number };
+      avgLast30d: { from: number; to: number; spending: number };
     };
     roomLogs: { ts: Date; power: number }[];
     roomSpendings: { ts: Date; power: number }[];
@@ -196,13 +197,14 @@ async function addRooms(addedRooms: string[]) {
   for (const roomPath of addedRooms) {
     if (Object.keys(roomsData).indexOf(roomPath) === -1) {
       try {
-        const [roomInfo, roomSumDay, roomSumWeek, roomSumMonth, roomAvgWeek, roomAvgMonth, roomLogs, roomDailys] = await Promise.all([
+        const [roomInfo, roomSumDay, roomSumWeek, roomSumMonth, roomAvgWeek, roomAvgMonth, roomAvgLast30d, roomLogs, roomDailys] = await Promise.all([
           getRoomInfo(roomPath),
           getRoomSumDuring(roomPath, "day"),
           getRoomSumDuring(roomPath, "week"),
           getRoomSumDuring(roomPath, "month"),
           getRoomAvgDuring(roomPath, "week"),
           getRoomAvgDuring(roomPath, "month"),
+          getRoomAvgDuring(roomPath, "last30d"),
           getRoomLogs(roomPath),
           getRoomDailys(roomPath),
         ]);
@@ -223,6 +225,7 @@ async function addRooms(addedRooms: string[]) {
             spendingMonth: roomSumMonth,
             avgWeek: roomAvgWeek,
             avgMonth: roomAvgMonth,
+            avgLast30d: roomAvgLast30d,
           },
           roomLogs: roomLogs.map(({ ts, power }) => ({ ts: new Date(ts), power })),
           roomSpendings: roomLogs.filter(({ spending }) => spending >= 0).map(({ ts, spending }) => ({ ts: new Date(ts), power: spending })),

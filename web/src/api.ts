@@ -67,14 +67,14 @@ export async function getRoomInfo(roomPath: string): Promise<GetRoomInfoResult> 
   return result;
 }
 
-type GetRoomSumDuringResult = number;
+type GetRoomSumDuringResult = { from: number; to: number; spending: number };
 export async function getRoomSumDuring(roomPath: string, during: string = ""): Promise<GetRoomSumDuringResult> {
   const roomSumDuringRequest = axios.get<AppResponse<GetRoomSumDuringResult>>(`./api/data/${roomPath}/sum/${during}`);
   const result = await checkRequest(roomSumDuringRequest);
   return result;
 }
 
-type GetRoomAvgDuringResult = number;
+type GetRoomAvgDuringResult = { from: number; to: number; spending: number };
 export async function getRoomAvgDuring(roomPath: string, during: string = ""): Promise<GetRoomAvgDuringResult> {
   const roomAvgDuringRequest = axios.get<AppResponse<GetRoomAvgDuringResult>>(`./api/data/${roomPath}/avg/${during}`);
   const result = await checkRequest(roomAvgDuringRequest);
