@@ -9,81 +9,80 @@
           <n-time :time="roomData.ts" type="datetime" />
         </n-popover>
       </template>
-      <n-space justify="space-between">
-        <n-space vertical>
+      <n-grid :cols="3">
+        <n-grid-item>
+          <n-statistic label="今日用电" tabular-nums>
+            <n-number-animation ref="spendingDay" :from="0" :to="roomData.spendingDay" :duration="500" :active="true" :precision="2" />
+            <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
+          </n-statistic>
+        </n-grid-item>
+        <n-grid-item>
+          <n-statistic label="本周用电" tabular-nums>
+            <n-number-animation ref="remainingPower" :from="0" :to="roomData.spendingWeek" :duration="500" :active="true" :precision="2" />
+            <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
+          </n-statistic>
+        </n-grid-item>
+        <n-grid-item>
+          <n-statistic label="本月用电" tabular-nums>
+            <n-number-animation ref="spendingDay" :from="0" :to="roomData.spendingMonth" :duration="500" :active="true" :precision="2" />
+            <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
+          </n-statistic>
+        </n-grid-item>
+        <n-grid-item>
           <n-statistic label="剩余电量" tabular-nums>
-            <n-number-animation
-                ref="remainingPower"
-                :from="0"
-                :to="roomData.power"
-                :duration="500"
-                :active="true"
-                :precision="2"
-            />
-            <template #suffix>kWh</template>
+            <n-number-animation ref="remainingPower" :from="0" :to="roomData.power" :duration="500" :active="true" :precision="2" />
+            <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
           </n-statistic>
-          <n-statistic label="今日用电量" tabular-nums>
-            <n-number-animation
-                ref="spendingDay"
-                :from="0"
-                :to="roomData.spendingDay"
-                :duration="500"
-                :active="true"
-                :precision="2"
-            />
-            <template #suffix>kWh</template>
+        </n-grid-item>
+        <n-grid-item>
+          <n-statistic label="本周日均用电" tabular-nums>
+            <n-number-animation ref="avgWeek" :from="0" :to="roomData.avgWeek" :duration="500" :active="true" :precision="2" />
+            <template #suffix><span style="font-size: var(--n-label-font-size)">kWh/d</span></template>
           </n-statistic>
-        </n-space>
-        <n-space vertical>
-          <n-statistic label="本周日均用电量" tabular-nums>
-            <n-number-animation
-                ref="avgWeek"
-                :from="0"
-                :to="roomData.avgWeek"
-                :duration="500"
-                :active="true"
-                :precision="2"
-            />
-            <template #suffix>kWh/d</template>
+        </n-grid-item>
+        <n-grid-item>
+          <n-statistic label="本月日均用电" tabular-nums>
+            <n-number-animation ref="avgMonth" :from="0" :to="roomData.avgMonth" :duration="500" :active="true" :precision="2" />
+            <template #suffix><span style="font-size: var(--n-label-font-size)">kWh/d</span></template>
           </n-statistic>
-          <n-statistic label="本月日均用电量" tabular-nums>
-            <n-number-animation
-                ref="avgMonth"
-                :from="0"
-                :to="roomData.avgMonth"
-                :duration="500"
-                :active="true"
-                :precision="2"
-            />
-            <template #suffix>kWh/d</template>
-          </n-statistic>
-        </n-space>
+        </n-grid-item>
+      </n-grid>
+      <n-space align="center" justify="space-between">
+        <n-space vertical align="end"> </n-space>
+        <n-space vertical align="end"> </n-space>
+        <n-space vertical align="end"> </n-space>
       </n-space>
     </n-card>
   </n-space>
 </template>
 
-<script>
-import {
-  NSpace, NStatistic, NNumberAnimation, NCard, NTime, NPopover,
-} from 'naive-ui'
-
+<script lang="ts">
 export default {
   name: "RoomInfo",
-  props: {
-    roomInfo: Object,
-    roomData: Object,
-  },
-  components: {
-    NSpace, NStatistic, NNumberAnimation, NCard, NTime, NPopover,
-  },
-  setup() {
-    return {
-    }
-  },
-}
+};
 </script>
 
-<style scoped>
+<script lang="ts" setup>
+import { NSpace, NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem } from "naive-ui";
 
-</style>
+const props = defineProps<{
+  roomInfo: {
+    area: string;
+    building: string;
+    room: string;
+    path: string;
+    fullName: string;
+  };
+  roomData: {
+    ts: Date;
+    power: number;
+    spendingDay: number;
+    spendingWeek: number;
+    spendingMonth: number;
+    avgWeek: number;
+    avgMonth: number;
+  };
+}>();
+</script>
+
+<style scoped></style>

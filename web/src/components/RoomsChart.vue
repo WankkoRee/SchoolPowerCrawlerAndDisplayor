@@ -1,122 +1,126 @@
 <template>
   <n-card hoverable>
-    <div :id="chartName" style="height: 320px;">
-    </div>
-    <ResizeObserver @notify="handleResize" :showTrigger="true"/>
+    <div :id="chartName" style="height: 320px"></div>
+    <resize-observer @notify="handleResize" :showTrigger="true" />
   </n-card>
 </template>
 
-<script>
-import {shallowRef, onMounted, watch} from "vue"
-import {
-  NCard,
-} from 'naive-ui'
-import { ResizeObserver } from 'vue3-resize'
-import * as echarts from 'echarts/core'
-import { SVGRenderer } from 'echarts/renderers'
-import { LineChart } from 'echarts/charts'
-import { TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent } from 'echarts/components'
-import { UniversalTransition } from 'echarts/features';
-
+<script lang="ts">
 export default {
   name: "RoomsChart",
-  props: {
-    theme: String,
-    chartName: String,
-    roomsName: Array,
-    roomsLogs: Array,
-  },
-  components: {
-    NCard,
-    ResizeObserver,
-  },
-  setup(props) {
-    const generateSeries = () => {
-      return props.roomsName.map((roomName, i) => { return {roomName, roomLogs: props.roomsLogs[i]} }).map((room) => { return {
-        name: room.roomName,
-        data: room.roomLogs.map(log => [log.ts, log.power]),
-        type: 'line',
-        smooth: true,
-        animationDuration: 500,
-      } })
-    }
-    const options = {
-      title: {
-        text: props.chartName
-      },
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'cross',
-          label: {
-            backgroundColor: '#6a7985'
-          }
-        }
-      },
-      legend: {
-        data: null,
-        type: 'scroll',
-        x:'center',
-        y:'bottom',
-      },
-      toolbox: {
-        feature: {
-          saveAsImage: {}
-        }
-      },
-      xAxis: {
-        type: 'time',
-        boundaryGap: false,
-      },
-      yAxis: {
-        type: 'value'
-      },
-      series: null,
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '10%',
-        containLabel: true
-      },
-      backgroundColor: 'rgba(255,255,255,0)' // 透明
-    }
+};
 
-    const roomsLogsChart = shallowRef(null)
-    echarts.use([SVGRenderer, LineChart, TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent, UniversalTransition])
-    const initChart = (theme) => {
-      if (roomsLogsChart.value)
-        echarts.dispose(roomsLogsChart.value)
-      roomsLogsChart.value = echarts.init(document.getElementById(props.chartName), theme)
-      options.legend.data = props.roomsName
-      options.series = generateSeries()
-      roomsLogsChart.value.setOption(options)
-    }
+import { shallowRef, onMounted, watch } from "vue";
+import type { ShallowRef } from "vue";
+import * as echarts from "echarts/core";
+import { LineChart } from "echarts/charts";
+import type { LineSeriesOption } from "echarts/charts";
+import { TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent } from "echarts/components";
+import type { TitleComponentOption, GridComponentOption, TooltipComponentOption, ToolboxComponentOption, LegendComponentOption } from "echarts/components";
+import { SVGRenderer } from "echarts/renderers";
+import { UniversalTransition } from "echarts/features";
 
-    watch(() => props.theme, (theme) => {
-      initChart({light: 'vintage', dark: 'dark'}[theme])
-    })
+type ECharts = ReturnType<typeof echarts.init>;
+type Option = echarts.ComposeOption<
+  LineSeriesOption | TitleComponentOption | GridComponentOption | TooltipComponentOption | ToolboxComponentOption | LegendComponentOption
+>;
 
-    watch(() => JSON.stringify([props.roomsName, props.roomsLogs]), () => {
-      // roomsLogsChart.value.clear()
-      options.legend.data = props.roomsName
-      options.series = generateSeries()
-      roomsLogsChart.value.setOption(options, true, false)
-    })
+echarts.use([SVGRenderer, LineChart, TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent, UniversalTransition]);
 
-    onMounted(() => {
-      initChart({light: 'vintage', dark: 'dark'}[props.theme])
-    })
+function generateSeries(roomsName: string[], roomsLogs: { ts: Date; power: number }[][]): LineSeriesOption[] {
+  return roomsName
+    .map((roomName, i) => ({ roomName, roomLogs: roomsLogs[i] }))
+    .map((room) => ({
+      name: room.roomName,
+      data: room.roomLogs.map((log) => [log.ts, log.power]),
+      type: "line",
+      smooth: true,
+      animationDuration: 500,
+    }));
+}
 
-    return {
-      handleResize () {
-        if (roomsLogsChart.value)
-          roomsLogsChart.value.resize()
-      }
-    }
-  },
+function initChart(chartInstance: ShallowRef<ECharts | undefined>, dom: HTMLElement, theme: string, options: Option) {
+  if (chartInstance.value) echarts.dispose(chartInstance.value);
+  chartInstance.value = echarts.init(dom, theme);
+  chartInstance.value.setOption(options);
 }
 </script>
 
-<style scoped>
-@import 'vue3-resize/dist/vue3-resize.css';
-</style>
+<script lang="ts" setup>
+import { NCard } from "naive-ui";
+import { ResizeObserver } from "vue3-resize";
+
+const props = defineProps<{
+  chartName: string;
+  roomsName: string[];
+  roomsLogs: { ts: Date; power: number }[][];
+}>();
+
+const options: Option = {
+  title: {
+    text: props.chartName,
+  },
+  tooltip: {
+    trigger: "axis",
+    axisPointer: {
+      type: "cross",
+      label: {
+        backgroundColor: "#6a7985",
+      },
+    },
+  },
+  legend: <LegendComponentOption>{
+    data: props.roomsName,
+    type: "scroll",
+    left: "center",
+    top: "bottom",
+  },
+  toolbox: {
+    feature: {
+      saveAsImage: {},
+    },
+  },
+  xAxis: {
+    type: "time",
+    boundaryGap: false,
+  },
+  yAxis: {
+    type: "value",
+  },
+  series: generateSeries(props.roomsName, props.roomsLogs),
+  grid: {
+    left: "3%",
+    right: "4%",
+    bottom: "10%",
+    containLabel: true,
+  },
+  backgroundColor: "rgba(255,255,255,0)", // 透明
+};
+
+const chartInstance = shallowRef<ECharts>();
+
+onMounted(() => {
+  initChart(chartInstance, document.getElementById(props.chartName)!, { light: "vintage", dark: "dark" }["light"], options);
+});
+watch(
+  () => "light",
+  (theme) => {
+    initChart(chartInstance, document.getElementById(props.chartName)!, { light: "vintage", dark: "dark" }["light"], options);
+  }
+);
+watch(
+  () => JSON.stringify({ roomsName: props.roomsName, roomsLogs: props.roomsLogs }),
+  () => {
+    // chartInstance.value.clear()
+    (options.legend! as LegendComponentOption).data = props.roomsName;
+    options.series = generateSeries(props.roomsName, props.roomsLogs);
+    chartInstance.value!.setOption(options, true, false);
+  }
+);
+
+function handleResize() {
+  chartInstance.value?.resize();
+}
+</script>
+
+<style scoped></style>
