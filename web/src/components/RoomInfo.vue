@@ -1,6 +1,6 @@
 <template>
   <n-space vertical>
-    <n-card :title="roomInfo.fullName" hoverable>
+    <n-card :title="roomInfo.fullName" :content-style="cardStyle" :header-style="cardStyle" hoverable>
       <template #header-extra>
         <n-popover trigger="hover">
           <template #trigger>
@@ -47,11 +47,6 @@
           </n-statistic>
         </n-grid-item>
       </n-grid>
-      <n-space align="center" justify="space-between">
-        <n-space vertical align="end"> </n-space>
-        <n-space vertical align="end"> </n-space>
-        <n-space vertical align="end"> </n-space>
-      </n-space>
     </n-card>
   </n-space>
 </template>
@@ -66,6 +61,7 @@ export default {
 import { NSpace, NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem } from "naive-ui";
 
 const props = defineProps<{
+  cardStyle: string;
   roomInfo: {
     area: string;
     building: string;

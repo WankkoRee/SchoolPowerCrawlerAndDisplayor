@@ -1,5 +1,5 @@
 <template>
-  <n-card hoverable>
+  <n-card>
     <div :id="chartName" style="height: 320px"></div>
     <resize-observer @notify="handleResize" :showTrigger="true" />
   </n-card>
@@ -19,6 +19,8 @@ import { TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, Lege
 import type { TitleComponentOption, GridComponentOption, TooltipComponentOption, ToolboxComponentOption, LegendComponentOption } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
 import { UniversalTransition } from "echarts/features";
+
+import { colors } from "@/utils";
 
 type ECharts = ReturnType<typeof echarts.init>;
 type Option = echarts.ComposeOption<
@@ -95,6 +97,7 @@ const options: Option = {
     bottom: "10%",
     containLabel: true,
   },
+  color: colors,
   backgroundColor: "rgba(255,255,255,0)", // 透明
 };
 

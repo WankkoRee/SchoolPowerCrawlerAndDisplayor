@@ -19,8 +19,12 @@
     <n-empty v-if="!roomsSelected.length" description="要不咱先选几个寝室看看数据？" />
     <n-space v-if="roomsSelected.length" vertical>
       <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
-        <n-grid-item v-for="roomPath in roomsSelected" :key="roomPath">
-          <RoomInfo :roomInfo="roomsData[roomPath].roomInfo" :roomData="roomsData[roomPath].roomData" />
+        <n-grid-item v-for="(roomPath, index) in roomsSelected" :key="roomPath">
+          <RoomInfo
+            :cardStyle="`background-color: ${colors[index % colors.length]}77`"
+            :roomInfo="roomsData[roomPath].roomInfo"
+            :roomData="roomsData[roomPath].roomData"
+          />
         </n-grid-item>
       </n-grid>
       <n-grid :x-gap="8" :y-gap="8" cols="1">
@@ -68,6 +72,7 @@ import { NSpace, NCascader, NEmpty, NGrid, NGridItem } from "naive-ui";
 
 import RoomInfo from "@/components/RoomInfo.vue";
 import RoomsChart from "@/components/RoomsChart.vue";
+import { colors } from "@/utils";
 
 const roomsOption = ref<Option[]>([]);
 const roomsSelect = ref<string[]>([]);
