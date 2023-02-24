@@ -91,9 +91,9 @@
                 <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
               </n-statistic>
             </template>
-            过去30天日均用电量为 {{ roomData.avgLast30d.spending.toFixed(2) }} kWh/d
+            过去30天日均用电量为 <b>{{ roomData.avgLast30d.spending.toFixed(2) }}</b> kWh/d
             <br />
-            预计可用 {{ Math.floor(roomData.power / roomData.avgLast30d.spending) }} 天
+            预计可用 <b>{{ Math.floor(roomData.power / roomData.avgLast30d.spending) }}</b> 天
           </n-popover>
         </n-grid-item>
         <n-grid-item>
