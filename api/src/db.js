@@ -122,6 +122,35 @@ function spDb (fastify, options, next) {
                     cur.close()
                 }
             },
+            getRoomSpendingSumInDuring: async function (area, building, room, from, to) {
+                const cur = tde.cursor()
+                try {
+                    const roomSpendingSumInDuring = (await cur.query(`
+                        SELECT
+                            SUM(spending) spending_range
+                        FROM ${SqlString.escapeId(area+building+room)}
+                        WHERE
+                            is_show=true
+                          AND
+                            spending>=0
+                          AND
+                            ts>=${from.getTime()}
+                          AND
+                            ts<${to.getTime()}
+                    `, true))
+                        .data.map(record => {
+                            const [spending_range] = record.data
+                            return {spending: Number(spending_range) / 100}
+                        })[0]
+                    if (roomSpendingSumInDuring === undefined)
+                        throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
+                    return {code: 1, data: roomSpendingSumInDuring.spending}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
             getRoomSpendingDailyAvgInDuring: async function (area, building, room, from, to) {
                 const cur = tde.cursor()
                 try {

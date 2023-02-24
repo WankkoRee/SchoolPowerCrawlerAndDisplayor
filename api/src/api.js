@@ -99,6 +99,60 @@ async function api (fastify, options) {
     })
 
     /*
+    获取指定寝室`room`的`during`周期内用电情况，可设置指定日期`date`
+     */
+    fastify.get('/data/:area/:building/:room/sum/:during', {
+        schema: {
+            params: {
+                area: {type: 'string'},
+                building: {type: 'string'},
+                room: {type: 'string'},
+                during: {type: 'string', enum: ["day", "week", "month", ""]},
+            },
+            query: {
+              datum: {type: 'integer'},
+              to: {type: 'integer'},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'number',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            area: area,
+            building: building,
+            room: room,
+            during: during,
+        } = request.params
+        const {
+            datum: datum_timestamp,
+            to: to_timestamp,
+        } = request.query
+        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        datum.setHours(0, 0, 0, 0) // 设置为 当天00:00:00.000
+        let to = new Date(datum) // 设置为 当天
+
+        if (during === 'day') {
+            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+        } else if (during === 'week') {
+            datum.setDate(fastify.sp_util.getMondayOffset(datum)) // 设置为周一
+            to.setHours(7*24, 0, 0, 0) // 设置为 7天后00:00:00.000
+        } else if (during === 'month') {
+            datum.setDate(1) // 设置为 月初
+            to.setMonth(to.getMonth()+1) // 设置为 1月后00:00:00.000
+        } else { // 无 to 传入时则等价于 during === 'day'
+            if (to_timestamp !== undefined) {
+                to = new Date(to_timestamp) // 设置为 指定时间
+            }
+            to.setHours(24, 0, 0, 0) // 设置为 1天后00:00:00.000
+        }
+
+        return await fastify.sp_db.getRoomSpendingSumInDuring(area, building, room, datum, to)
+    })
+
+    /*
     获取指定寝室`room`的`during`周期内日均用电情况，可设置指定日期`date`
      */
     fastify.get('/data/:area/:building/:room/avg/:during', {
