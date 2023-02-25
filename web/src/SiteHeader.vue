@@ -44,6 +44,7 @@ import { useRoute } from "vue-router";
 import { RouterLink } from "vue-router";
 import { useLoadingBar, useMessage } from "naive-ui";
 import { NIcon } from "naive-ui";
+import { EaselOutline, LayersOutline, BarChartOutline, HomeOutline } from "@vicons/ionicons5";
 
 import { LoadingBarApi } from "@/utils";
 
@@ -52,9 +53,8 @@ const renderIcon = (icon: Component) => {
 };
 </script>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { NGrid, NGridItem, NSpace, NH2, NMenu, NButton, NDrawer } from "naive-ui";
-import { BookOutline as BookOutlineIcon } from "@vicons/ionicons5";
 
 import { loadingBarApi, messageApi } from "@/utils";
 import ThemeSwitch from "@/components/ThemeSwitch.vue";
@@ -75,7 +75,7 @@ watch(
 const menuOptions = [
   {
     key: "DashBoard",
-    icon: renderIcon(BookOutlineIcon),
+    icon: renderIcon(EaselOutline),
     label: () =>
       h(
         RouterLink,
@@ -87,7 +87,7 @@ const menuOptions = [
   },
   {
     key: "ComparisonChart",
-    icon: renderIcon(BookOutlineIcon),
+    icon: renderIcon(LayersOutline),
     label: () =>
       h(
         RouterLink,
@@ -99,7 +99,7 @@ const menuOptions = [
   },
   {
     key: "SpendingRank",
-    icon: renderIcon(BookOutlineIcon),
+    icon: renderIcon(BarChartOutline),
     label: () =>
       h(
         RouterLink,
@@ -111,7 +111,7 @@ const menuOptions = [
   },
   {
     key: "MyRoom",
-    icon: renderIcon(BookOutlineIcon),
+    icon: renderIcon(HomeOutline),
     label: () =>
       h(
         RouterLink,
