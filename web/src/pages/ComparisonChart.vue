@@ -72,7 +72,7 @@
         </n-grid-item>
         <n-grid-item>
           <RoomsChart
-            chartName="每日用电量"
+            chartName="日用电量"
             :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].roomInfo.fullName)"
             :roomsLogs="roomsSelected.map((roomPath) => roomsData[roomPath].roomDailys)"
           />

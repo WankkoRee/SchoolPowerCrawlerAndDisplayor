@@ -1,7 +1,7 @@
 <template>
   <n-tooltip :show-arrow="false" trigger="hover">
     <template #trigger>
-      <n-switch checked-value="dark" unchecked-value="light" v-model:value="themeName" size="medium">
+      <n-switch :style="style" checked-value="dark" unchecked-value="light" v-model:value="themeName" size="medium">
         <template #icon>
           {{ { light: "☀️", dark: "🌙" }[themeName] }}
         </template>
@@ -18,11 +18,16 @@ export default {
   name: "ThemeSwitch",
 };
 import { inject } from "vue";
+import type { CSSProperties } from "vue";
 import type { Ref } from "vue";
 </script>
 
 <script lang="ts" setup>
 import { NSwitch, NTooltip } from "naive-ui";
+
+const props = defineProps<{
+  style?: CSSProperties;
+}>();
 
 const themeName = inject<Ref<"light" | "dark">>("v_themeName")!;
 </script>

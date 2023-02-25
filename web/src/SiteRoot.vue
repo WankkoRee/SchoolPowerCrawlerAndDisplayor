@@ -11,7 +11,7 @@
               <n-layout-content content-style="min-height: calc(100vh - 64px * 2); padding: 16px">
                 <router-view />
               </n-layout-content>
-              <n-layout-footer style="height: 64px; padding: 8px" bordered>
+              <n-layout-footer style="height: 1px; min-height: 64px; padding: 8px" bordered>
                 <site-footer />
               </n-layout-footer>
             </n-layout>

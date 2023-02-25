@@ -178,7 +178,6 @@ function timeInterval(from: number, to: number): string {
     result += "-";
     interval = -interval;
   }
-  console.log(interval);
   result += [
     { s: "毫秒", v: 1000 },
     { s: "秒", v: 60 },
@@ -187,7 +186,6 @@ function timeInterval(from: number, to: number): string {
   ]
     .map(({ s, v }, u) => {
       const vv = interval % v;
-      console.log(`${vv}${s}`);
       interval = Math.floor(interval / v);
       if (vv > 0) return `${vv}${s}`;
       else return "";
