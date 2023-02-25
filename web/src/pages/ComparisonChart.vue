@@ -1,21 +1,44 @@
 <template>
   <n-space vertical>
-    <n-cascader
-      placeholder="请选择要查询的寝室"
-      :options="roomsOption"
-      :cascade="true"
-      multiple
-      check-strategy="child"
-      clearable
-      remote
-      separator=" > "
-      size="large"
-      max-tag-count="responsive"
-      v-model:value="roomsSelect"
-      @load="handleRoomsLoad"
-      @update:value="handleRoomsSelect"
-      :disabled="roomsSelectLoading"
-    />
+    <n-grid :cols="1" item-responsive>
+      <n-grid-item span="0 904:1">
+        <n-cascader
+          placeholder="请选择要查询的寝室"
+          :options="roomsOption"
+          :cascade="true"
+          multiple
+          check-strategy="child"
+          clearable
+          remote
+          :show-path="false"
+          separator=" > "
+          size="large"
+          max-tag-count="responsive"
+          v-model:value="roomsSelect"
+          @load="handleRoomsLoad"
+          @update:value="handleRoomsSelect"
+          :disabled="roomsSelectLoading"
+        />
+      </n-grid-item>
+      <n-grid-item span="1 904:0">
+        <n-tree-select
+          placeholder="请选择要查询的寝室"
+          :options="roomsOption"
+          checkable
+          :cascade="false"
+          multiple
+          check-strategy="child"
+          clearable
+          :show-path="false"
+          separator=" > "
+          max-tag-count="responsive"
+          v-model:value="roomsSelect"
+          @load="handleRoomsLoad"
+          @update:value="handleRoomsSelect"
+          :disabled="roomsSelectLoading"
+        />
+      </n-grid-item>
+    </n-grid>
     <n-empty v-if="!roomsSelected.length" description="要不咱先选几个寝室看看数据？" />
     <n-space v-if="roomsSelected.length" vertical>
       <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
@@ -73,7 +96,7 @@ type Option = CascaderOption | TreeSelectOption;
 </script>
 
 <script setup lang="ts">
-import { NSpace, NCascader, NEmpty, NGrid, NGridItem } from "naive-ui";
+import { NSpace, NCascader, NTreeSelect, NEmpty, NGrid, NGridItem } from "naive-ui";
 
 import RoomInfo from "@/components/RoomInfo.vue";
 import RoomsChart from "@/components/RoomsChart.vue";
@@ -167,13 +190,13 @@ async function handleRoomsLoad(option: Option) {
     }
     option.children.push(
       ...Array.from(roomClassified).map(([b, l_]) => ({
-        label: `${b}`,
+        label: `${b}栋`,
         value: `${buildingPath}/${b}`,
         key: `${buildingPath}/${b}`,
         depth: 3,
         isLeaf: false,
         children: Array.from(l_).map(([l, r_]) => ({
-          label: `${b}-${l}`,
+          label: `${b}-${l}层`,
           value: `${buildingPath}/${b}-${l}`,
           key: `${buildingPath}/${b}-${l}`,
           depth: 4,
