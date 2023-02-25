@@ -134,13 +134,60 @@ async function handleRoomsLoad(option: Option) {
   } else if (option.depth === 2) {
     const buildingPath = (option.value || option.key)!.toString();
     const rooms = await getRooms(buildingPath);
-    option.children = rooms.map<Option>((room) => ({
-      label: room,
-      value: `${buildingPath}/${room}`,
-      key: `${buildingPath}/${room}`,
-      depth: 3,
-      isLeaf: true,
-    }));
+    const roomClassified = new Map<string, Map<string, string[]>>();
+    const roomUnclassified: string[] = [];
+    rooms.forEach((room) => {
+      const roomRegexResult = room.match(/^([A-Z\d]+)-(\d+?)(\d{2}(?:-.+?)?)$/);
+      if (roomRegexResult === null) {
+        console.warn(`${room} 无法匹配正则表达式 /^([A-Z\\d]+)-(\\d+?)(\\d{2}(?:-.+?)?)$/`);
+        roomUnclassified.push(room);
+      } else {
+        const [b, l, r] = roomRegexResult.slice(1, 4);
+        if (!roomClassified.has(b)) roomClassified.set(b, new Map());
+        if (!roomClassified.get(b)!.has(l)) roomClassified.get(b)!.set(l, []);
+        roomClassified.get(b)!.get(l)!.push(r);
+      }
+    });
+    option.children = <Option[]>[];
+    if (roomUnclassified.length > 0) {
+      option.children.push({
+        label: "未分类",
+        value: `${buildingPath}/未分类`,
+        key: `${buildingPath}/未分类`,
+        depth: 3,
+        isLeaf: false,
+        children: roomUnclassified.map((room) => ({
+          label: room,
+          value: `${buildingPath}/${room}`,
+          key: `${buildingPath}/${room}`,
+          depth: 4,
+          isLeaf: true,
+        })),
+      });
+    }
+    option.children.push(
+      ...Array.from(roomClassified).map(([b, l_]) => ({
+        label: `${b}`,
+        value: `${buildingPath}/${b}`,
+        key: `${buildingPath}/${b}`,
+        depth: 3,
+        isLeaf: false,
+        children: Array.from(l_).map(([l, r_]) => ({
+          label: `${b}-${l}`,
+          value: `${buildingPath}/${b}-${l}`,
+          key: `${buildingPath}/${b}-${l}`,
+          depth: 4,
+          isLeaf: false,
+          children: Array.from(r_).map((r) => ({
+            label: `${b}-${l}${r}`,
+            value: `${buildingPath}/${b}-${l}${r}`,
+            key: `${buildingPath}/${b}-${l}${r}`,
+            depth: 5,
+            isLeaf: true,
+          })),
+        })),
+      }))
+    );
   }
 }
 
