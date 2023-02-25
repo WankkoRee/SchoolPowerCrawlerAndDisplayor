@@ -4,7 +4,7 @@
       <n-space align="center" justify="start" style="width: 100%; height: 100%">
         <router-link :to="{ name: 'Index' }" #="{ navigate, href }" custom>
           <n-button style="display: flex; height: 100%" text tag="a" :href="href" @click="navigate">
-            <img src="./assets/images/logo.png" style="width: 36px; height: 36px; display: block" alt="logo" />
+            <img src="@/assets/images/logo.png" style="width: 36px; height: 36px; display: block" alt="logo" />
             <n-h2 style="margin: 0">{{ title }}</n-h2>
           </n-button>
         </router-link>
