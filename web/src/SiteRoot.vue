@@ -27,8 +27,19 @@ export default {
   name: "SiteRoot",
 };
 import { ref, watch, provide } from "vue";
+import type { Ref } from "vue";
+import { useStorage } from "@vueuse/core";
 import { createLocale, useOsTheme } from "naive-ui";
 import { zhCN, lightTheme, darkTheme } from "naive-ui";
+import type { GlobalTheme } from "naive-ui";
+
+function changeTheme(themeRef: Ref<GlobalTheme>, themeName: string) {
+  if (themeName === "light") {
+    themeRef.value = lightTheme;
+  } else if (themeName === "dark") {
+    themeRef.value = darkTheme;
+  }
+}
 </script>
 
 <script setup lang="ts">
@@ -47,22 +58,16 @@ const locale = createLocale(
   },
   zhCN
 );
+const osTheme = useOsTheme();
 const theme = ref(lightTheme);
-const themeName = ref<"light" | "dark">("light");
+const themeName = useStorage<"light" | "dark">("SiteRoot_themeName", osTheme.value ?? "light");
 const themeOverrides = {};
 
-watch(themeName, (newThemeName) => {
-  if (newThemeName === "light") {
-    theme.value = lightTheme;
-  } else if (newThemeName === "dark") {
-    theme.value = darkTheme;
-  }
-});
+changeTheme(theme, themeName.value);
+watch(themeName, (newThemeName) => changeTheme(theme, newThemeName));
 provide("v_themeName", themeName);
 
 // 自动使用系统主题
-const osTheme = useOsTheme();
-if (osTheme.value) themeName.value = osTheme.value;
 watch(osTheme, (newOsName) => {
   if (newOsName) themeName.value = newOsName;
 });

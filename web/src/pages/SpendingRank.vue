@@ -98,6 +98,7 @@ export default {
   name: "SpendingRank",
 };
 import { onMounted, ref } from "vue";
+import { useStorage } from "@vueuse/core";
 
 import { getRankSumRangeDuring, getRankDailyAvgRangeDuring } from "@/api";
 
@@ -111,14 +112,14 @@ import { NGrid, NGridItem, NCard, NInputNumber, NRadioGroup, NRadioButton, NSpac
 import RoomsRank from "@/components/RoomsRank.vue";
 
 const dailyTopUsed = ref<RankData[]>([]);
-const dailyTopUsedType = ref<Range>("room");
-const dailyTopUsedLimit = ref(3);
+const dailyTopUsedType = useStorage<Range>("SpendingRank_dailyTopUsedType", "room");
+const dailyTopUsedLimit = useStorage("SpendingRank_dailyTopUsedLimit", 3);
 const weeklyTopUsed = ref<RankData[]>([]);
-const weeklyTopUsedType = ref<Range>("room");
-const weeklyTopUsedLimit = ref(3);
+const weeklyTopUsedType = useStorage<Range>("SpendingRank_weeklyTopUsedType", "room");
+const weeklyTopUsedLimit = useStorage("SpendingRank_weeklyTopUsedLimit", 3);
 const weeklyTopAvg = ref<RankData[]>([]);
-const weeklyTopAvgType = ref<Range>("room");
-const weeklyTopAvgLimit = ref(3);
+const weeklyTopAvgType = useStorage<Range>("SpendingRank_weeklyTopAvgType", "room");
+const weeklyTopAvgLimit = useStorage("SpendingRank_weeklyTopAvgLimit", 3);
 
 async function dailyTopUsedTypeUpdate() {
   dailyTopUsed.value = await getRankSumRangeDuring(dailyTopUsedType.value, "day", dailyTopUsedLimit.value);
