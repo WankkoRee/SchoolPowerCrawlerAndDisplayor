@@ -39,6 +39,20 @@ async function checkRequest<T>(request: Promise<AxiosResponse<AppResponse<T>>>):
   }
 }
 
+type GetLastTimeResult = number;
+export async function getLastTime(): Promise<GetLastTimeResult> {
+  const lastTimeRequest = axios.get<AppResponse<GetLastTimeResult>>("./api/dash/time/last");
+  const result = await checkRequest(lastTimeRequest);
+  return result;
+}
+
+type GetRangeCountResult = number;
+export async function getRangeCount(range: "area" | "building" | "room"): Promise<GetRangeCountResult> {
+  const rangeCountRequest = axios.get<AppResponse<GetRangeCountResult>>(`./api/dash/count/${range}`);
+  const result = await checkRequest(rangeCountRequest);
+  return result;
+}
+
 type GetAreasResult = string[];
 export async function getAreas(): Promise<GetAreasResult> {
   const areasRequest = axios.get<AppResponse<GetAreasResult>>("./api/info");

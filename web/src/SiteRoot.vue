@@ -9,7 +9,7 @@
             </n-layout-header>
             <n-layout id="container" position="absolute" style="top: 64px" :native-scrollbar="false">
               <n-layout-content content-style="min-height: calc(100vh - 64px * 2); padding: 16px">
-                <router-view />
+                <router-view v-if="reloadFlag" />
               </n-layout-content>
               <n-layout-footer style="height: 64px; padding: 8px" bordered>
                 <site-footer />
@@ -26,7 +26,7 @@
 export default {
   name: "SiteRoot",
 };
-import { ref, watch, provide } from "vue";
+import { ref, watch, provide, nextTick } from "vue";
 import type { Ref } from "vue";
 import { useStorage } from "@vueuse/core";
 import { createLocale, useOsTheme } from "naive-ui";
@@ -62,6 +62,7 @@ const osTheme = useOsTheme();
 const theme = ref(lightTheme);
 const themeName = useStorage<"light" | "dark">("SiteRoot_themeName", osTheme.value ?? "light");
 const themeOverrides = {};
+const reloadFlag = ref(true);
 
 changeTheme(theme, themeName.value);
 watch(themeName, (newThemeName) => changeTheme(theme, newThemeName));
@@ -71,6 +72,13 @@ provide("v_themeName", themeName);
 watch(osTheme, (newOsName) => {
   if (newOsName) themeName.value = newOsName;
 });
+function reload() {
+  reloadFlag.value = false;
+  nextTick(() => {
+    reloadFlag.value = true;
+  });
+}
+provide("f_reload", reload);
 </script>
 
 <style scoped></style>
