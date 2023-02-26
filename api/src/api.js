@@ -4,6 +4,48 @@ async function api (fastify, options) {
     await fastify.register(require('./util'))
 
     /*
+    获取范围`range`的数量
+     */
+    fastify.get('/dash/count/:range', {
+        schema: {
+            params: {
+                range: { type: 'string', enum: ['area', 'building', 'room'] },
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'integer',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            range: range,
+        } = request.params
+        if (range === 'area') {
+            return await fastify.sp_db.getAreasCount()
+        } else if (range === 'building') {
+            return await fastify.sp_db.getBuildingsCount()
+        } else if (range === 'room') {
+            return await fastify.sp_db.getRoomsCount()
+        }
+    })
+
+    /*
+    获取范围`range`的数量
+     */
+    fastify.get('/dash/time/last', {
+        schema: {
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'integer',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        return await fastify.sp_db.getLastTime()
+    })
+
+    /*
     获取所有校区`area`
      */
     fastify.get('/info', {

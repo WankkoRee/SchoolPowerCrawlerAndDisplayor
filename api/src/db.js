@@ -17,6 +17,114 @@ function spDb (fastify, options, next) {
             done()
         })
         fastify.sp_db = {
+            getLastTime: async function () {
+                const cur = tde.cursor()
+                try {
+                    const lastTime = (await cur.query(`
+                        SELECT DISTINCT
+                            last_row(ts) last_time
+                        FROM powers
+                        WHERE
+                            is_show=true
+                    `, true))
+                        .data.map(record => {
+                            const [last_time] = record.data
+                            return {last_time}
+                        })[0]
+                    return {code: 1, data: lastTime.last_time}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getAreasCount: async function () {
+                const cur = tde.cursor()
+                try {
+                    const areasCount = (await cur.query(`
+                        SELECT count(*) area_count
+                        FROM (
+                            SELECT DISTINCT
+                                area
+                            FROM (
+                                SELECT DISTINCT
+                                    tbname,
+                                    area
+                                FROM powers
+                                WHERE
+                                    is_show=true
+                            )
+                        )
+                    `, true))
+                        .data.map(record => {
+                            const [area_count] = record.data
+                            return {area_count}
+                        })[0]
+                    return {code: 1, data: areasCount.area_count}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getBuildingsCount: async function () {
+                const cur = tde.cursor()
+                try {
+                    const buildingsCount = (await cur.query(`
+                        SELECT count(*) building_count
+                        FROM (
+                            SELECT DISTINCT
+                                building
+                            FROM (
+                                SELECT DISTINCT
+                                    tbname,
+                                    building
+                                FROM powers
+                                WHERE
+                                    is_show=true
+                            )
+                        )
+                    `, true))
+                        .data.map(record => {
+                            const [building_count] = record.data
+                            return {building_count}
+                        })[0]
+                    return {code: 1, data: buildingsCount.building_count}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getRoomsCount: async function () {
+                const cur = tde.cursor()
+                try {
+                    const roomsCount = (await cur.query(`
+                        SELECT count(*) room_count
+                        FROM (
+                            SELECT DISTINCT
+                                room
+                            FROM (
+                                SELECT DISTINCT
+                                    tbname,
+                                    room
+                                FROM powers
+                                WHERE
+                                    is_show=true
+                            )
+                        )
+                    `, true))
+                        .data.map(record => {
+                            const [room_count] = record.data
+                            return {room_count}
+                        })[0]
+                    return {code: 1, data: roomsCount.room_count}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
             getAreas: async function () {
                 const cur = tde.cursor()
                 try {
