@@ -65,11 +65,16 @@
               :duration="new Date(lastTime).setMinutes(lastTime.getMinutes() + 60) - new Date().getTime()"
               @finish="showRefresh = true"
             />
-            <n-button text style="font-size: 24px" v-if="showRefresh" @click="reload()">
-              <n-icon>
-                <ArrowClockwise24Regular />
-              </n-icon>
-            </n-button>
+            <n-tooltip v-if="showRefresh" :show-arrow="false" trigger="hover">
+              <template #trigger>
+                <n-button text style="font-size: 24px" @click="reload()">
+                  <n-icon>
+                    <ArrowClockwise24Regular />
+                  </n-icon>
+                </n-button>
+              </template>
+              刷新页面
+            </n-tooltip>
           </n-statistic>
         </n-card>
       </n-grid-item>
@@ -87,7 +92,7 @@ import { getLastTime, getRangeCount } from "@/api";
 </script>
 
 <script lang="ts" setup>
-import { NSpace, NGrid, NGridItem, NCard, NStatistic, NNumberAnimation, NIcon, NCountdown, NTime, NButton } from "naive-ui";
+import { NSpace, NGrid, NGridItem, NCard, NStatistic, NNumberAnimation, NIcon, NCountdown, NTime, NButton, NTooltip } from "naive-ui";
 import {
   Board24Regular,
   Building24Regular,
