@@ -1,14 +1,16 @@
-# School Power Crawler & Displayor [校园电费爬]
+# School Power Crawler & Displayor [电宝]
 
-一个学校电费的爬虫项目，用于爬取并展示本学校各个宿舍各个时间的电费情况，了解用电规律。
+一个学校电费的 爬虫+数分+预测+消息推送 项目，用于爬取并展示本学校各个宿舍各个时间的用电情况和低电量预警，了解用电规律，并避免因欠费导致的突然断电。
 
-demo: [校园电费爬 - 南阳师范学院](https://school.power.daixia.hu/)
+demo: [电宝 power.daixia.hu](http://power.daixia.hu/)（当前在校园网中，外网不可访问）
 
 ## 运行
 
+> 项目快速迭代中，本段内容暂无时效性，所以想跑请看具体的`docker-compose.yml`文件。
+
 ### Docker 容器化启动
 
-1. 为本项目点亮`star`并`clone`本项目到服务器
+1. `clone`本项目到服务器
    ```shell
    git clone https://github.com/WankkoRee/SchoolPowerCrawlerAndDisplayor.git
    ```
@@ -76,16 +78,16 @@ demo: [校园电费爬 - 南阳师范学院](https://school.power.daixia.hu/)
 ## 用到的技术
 
 - 爬虫
-  - 纯`requests`**爬虫**
-  - `MariaDB`**数据落地**
+  - `requests`**爬虫**（因为只需要定时爬取，无速度要求，故不上异步）
+  - `TDengine`**数据落地**（高性能**时序数据库库**，辣柿针滴牛啤）
   - `schedule`**定时任务**和错误处理任务
 - 前端
-  - `Vue 3`**单页面**实现
+  - `Vue 3`+`TypeScript`+`Vite`+`Vue Router`+`VueUse`**单页面**实现
   - `Naive UI`作为**界面库**
   - `ECharts`作为**图表库**
 - 后端
+  - `Node.js`+`JavaScript`**语言层**实现
   - `Fastify`作为**api快速构建**工具
-  - `knex`作为**数据库查询**语句自动生成工具
 - 机器人
   - `Mirai`提供**机器人核心**
   - 自写`Mirai Console Plugin`项目`SchoolPowerBot`作为**机器人功能实现**
