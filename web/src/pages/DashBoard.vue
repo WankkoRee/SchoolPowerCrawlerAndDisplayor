@@ -102,7 +102,7 @@ import {
   ArrowClockwise24Regular,
 } from "@vicons/fluent";
 
-const reload = inject<() => void>("f_reload");
+const reload = inject<() => void>("f_reload")!;
 
 const areasCount = ref(0);
 const buildingsCount = ref(0);
