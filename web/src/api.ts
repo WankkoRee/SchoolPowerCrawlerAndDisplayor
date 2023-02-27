@@ -119,6 +119,27 @@ export async function getRankSumRangeDuring(
   const result = await checkRequest(rankSumDuringRequest);
   return result;
 }
+export async function getRankSumRangeDuringInArea(
+  range: "area" | "building" | "room",
+  during: "day" | "week" | "month" | "",
+  limit: number,
+  area: string
+): Promise<GetRankSumDuringResult> {
+  const rankSumDuringRequest = axios.get<AppResponse<GetRankSumDuringResult>>(`./api/rank/sum/${range}/${during}`, { params: { limit, area } });
+  const result = await checkRequest(rankSumDuringRequest);
+  return result;
+}
+export async function getRankSumRangeDuringInBuilding(
+  range: "area" | "building" | "room",
+  during: "day" | "week" | "month" | "",
+  limit: number,
+  area: string,
+  building: string
+): Promise<GetRankSumDuringResult> {
+  const rankSumDuringRequest = axios.get<AppResponse<GetRankSumDuringResult>>(`./api/rank/sum/${range}/${during}`, { params: { limit, area, building } });
+  const result = await checkRequest(rankSumDuringRequest);
+  return result;
+}
 
 type GetRankDailyAvgDuringResult = { area: string; building?: string; room?: string; spending: number }[];
 export async function getRankDailyAvgRangeDuring(
