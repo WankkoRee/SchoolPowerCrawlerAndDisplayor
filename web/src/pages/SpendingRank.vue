@@ -5,7 +5,7 @@
         <rooms-rank :data="dayRankSum" :range="dayRankSumRange" unit="kWh" />
         <template #header>
           <n-space align="center" justify="space-between">
-            <span>今日用电量Top</span>
+            <span>今日用电</span>
             <n-grid :cols="1">
               <n-grid-item :span="1">
                 <n-tree-select
@@ -53,7 +53,7 @@
         <rooms-rank :data="weekRankSum" :range="weekRankSumRange" unit="kWh" />
         <template #header>
           <n-space align="center" justify="space-between">
-            <span>本周用电量Top</span>
+            <span>本周用电</span>
             <n-grid :cols="1">
               <n-grid-item :span="1">
                 <n-tree-select
@@ -101,7 +101,7 @@
         <rooms-rank :data="monthRankSum" :range="monthRankSumRange" unit="kWh" />
         <template #header>
           <n-space align="center" justify="space-between">
-            <span>本月用电量Top</span>
+            <span>本月用电</span>
             <n-grid :cols="1">
               <n-grid-item :span="1">
                 <n-tree-select
@@ -149,7 +149,7 @@
         <rooms-rank :data="weekRankDailyAvg" :range="weekRankDailyAvgRange" unit="kWh/d" />
         <template #header>
           <n-space align="center" justify="space-between">
-            <span>本周日均用电量Top</span>
+            <span>本周日均用电</span>
             <n-grid :cols="1">
               <n-grid-item :span="1">
                 <n-tree-select
@@ -197,7 +197,7 @@
         <rooms-rank :data="monthRankDailyAvg" :range="monthRankDailyAvgRange" unit="kWh/d" />
         <template #header>
           <n-space align="center" justify="space-between">
-            <span>本月日均用电量Top</span>
+            <span>本月日均用电</span>
             <n-grid :cols="1">
               <n-grid-item :span="1">
                 <n-tree-select
