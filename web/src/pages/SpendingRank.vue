@@ -98,6 +98,54 @@
     </n-grid-item>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
+        <rooms-rank :data="monthRankSum" :range="monthRankSumRange" unit="kWh" />
+        <template #header>
+          <n-space align="center" justify="space-between">
+            <span>本月用电量Top</span>
+            <n-grid :cols="1">
+              <n-grid-item :span="1">
+                <n-tree-select
+                  placeholder="在 ... 中"
+                  :options="rangeOption"
+                  :cascade="false"
+                  check-strategy="all"
+                  remote
+                  :show-path="false"
+                  separator=" > "
+                  v-model:value="monthRankSumRangeSelect"
+                  @load="rangeLoad"
+                  @update:value="handleMonthRankSumRangeSelect"
+                />
+              </n-grid-item>
+              <n-grid-item :span="1">
+                <n-space align="center" justify="end" :size="[0, 0]">
+                  <n-input-number
+                    style="width: 72px"
+                    v-model:value="monthRankSumLimit"
+                    :update-value-on-input="false"
+                    :show-button="false"
+                    placeholder="3"
+                    :min="1"
+                    :max="20"
+                    @update:value="monthRankSumRangeUpdate"
+                  >
+                    <template #prefix>前</template>
+                    <template #suffix>的</template>
+                  </n-input-number>
+                  <n-radio-group v-model:value="monthRankSumRange" @update:value="monthRankSumRangeUpdate">
+                    <n-radio-button value="area" :disabled="monthRankSumRangeAreaDisabled">校区</n-radio-button>
+                    <n-radio-button value="building" :disabled="monthRankSumRangeBuildingDisabled">宿舍楼</n-radio-button>
+                    <n-radio-button value="room">寝室</n-radio-button>
+                  </n-radio-group>
+                </n-space>
+              </n-grid-item>
+            </n-grid>
+          </n-space>
+        </template>
+      </n-card>
+    </n-grid-item>
+    <n-grid-item span="6 600:3 900:2">
+      <n-card hoverable>
         <rooms-rank :data="weekRankDailyAvg" :range="weekRankDailyAvgRange" unit="kWh/d" />
         <template #header>
           <n-space align="center" justify="space-between">
@@ -192,6 +240,14 @@ const weekRankSumRangeSelectDepth = ref(1);
 const weekRankSumRangeAreaDisabled = ref(false);
 const weekRankSumRangeBuildingDisabled = ref(false);
 
+const monthRankSum = ref<RankData[]>([]);
+const monthRankSumRange = useStorage<Range>("SpendingRank_monthRankSumRange", "room");
+const monthRankSumLimit = useStorage("SpendingRank_monthRankSumLimit", 3);
+const monthRankSumRangeSelect = ref("学校");
+const monthRankSumRangeSelectDepth = ref(1);
+const monthRankSumRangeAreaDisabled = ref(false);
+const monthRankSumRangeBuildingDisabled = ref(false);
+
 const weekRankDailyAvg = ref<RankData[]>([]);
 const weekRankDailyAvgRange = useStorage<Range>("SpendingRank_weekRankDailyAvgRange", "room");
 const weekRankDailyAvgLimit = useStorage("SpendingRank_weekRankDailyAvgLimit", 3);
@@ -263,6 +319,26 @@ async function handleWeekRankSumRangeSelect(value: string, option: TreeSelectOpt
     await weekRankSumRangeUpdate();
   }
 }
+async function handleMonthRankSumRangeSelect(value: string, option: TreeSelectOption) {
+  if (option.depth === 1) {
+    monthRankSumRangeSelectDepth.value = 1;
+    monthRankSumRangeAreaDisabled.value = false;
+    monthRankSumRangeBuildingDisabled.value = false;
+    await monthRankSumRangeUpdate();
+  } else if (option.depth === 2) {
+    monthRankSumRangeSelectDepth.value = 2;
+    monthRankSumRangeAreaDisabled.value = true;
+    monthRankSumRangeBuildingDisabled.value = false;
+    if (monthRankSumRange.value === "area") monthRankSumRange.value = "building";
+    await monthRankSumRangeUpdate();
+  } else if (option.depth === 3) {
+    monthRankSumRangeSelectDepth.value = 3;
+    monthRankSumRangeAreaDisabled.value = true;
+    monthRankSumRangeBuildingDisabled.value = true;
+    if (monthRankSumRange.value === "area" || monthRankSumRange.value === "building") monthRankSumRange.value = "room";
+    await monthRankSumRangeUpdate();
+  }
+}
 async function handleWeekRankDailyAvgRangeSelect(value: string, option: TreeSelectOption) {
   if (option.depth === 1) {
     weekRankDailyAvgRangeSelectDepth.value = 1;
@@ -304,6 +380,16 @@ async function weekRankSumRangeUpdate() {
     weekRankSum.value = await getRankSumRangeDuringInBuilding(weekRankSumRange.value, "week", weekRankSumLimit.value, area, building);
   }
 }
+async function monthRankSumRangeUpdate() {
+  if (monthRankSumRangeSelectDepth.value === 1) {
+    monthRankSum.value = await getRankSumRangeDuring(monthRankSumRange.value, "month", monthRankSumLimit.value);
+  } else if (monthRankSumRangeSelectDepth.value === 2) {
+    monthRankSum.value = await getRankSumRangeDuringInArea(monthRankSumRange.value, "month", monthRankSumLimit.value, monthRankSumRangeSelect.value);
+  } else if (monthRankSumRangeSelectDepth.value === 3) {
+    const [area, building] = monthRankSumRangeSelect.value.split("/");
+    monthRankSum.value = await getRankSumRangeDuringInBuilding(monthRankSumRange.value, "month", monthRankSumLimit.value, area, building);
+  }
+}
 async function weekRankDailyAvgRangeUpdate() {
   if (weekRankDailyAvgRangeSelectDepth.value === 1) {
     weekRankDailyAvg.value = await getRankDailyAvgRangeDuring(weekRankDailyAvgRange.value, "week", weekRankDailyAvgLimit.value);
@@ -321,7 +407,7 @@ async function weekRankDailyAvgRangeUpdate() {
 }
 
 onMounted(async () => {
-  await Promise.all([dayRankSumRangeUpdate(), weekRankSumRangeUpdate(), weekRankDailyAvgRangeUpdate()]);
+  await Promise.all([dayRankSumRangeUpdate(), weekRankSumRangeUpdate(), monthRankSumRangeUpdate(), weekRankDailyAvgRangeUpdate()]);
 });
 </script>
 
