@@ -380,6 +380,8 @@ async function api (fastify, options) {
               datum: {type: 'integer'},
               to: {type: 'integer'},
               limit: {type: 'integer', minimum: 1, default: 3, maximum: 20},
+              area: {type: 'string'},
+              building: {type: 'string'},
             },
             response: {
                 200: fastify.sp_util.getApiSchema({
@@ -406,6 +408,8 @@ async function api (fastify, options) {
             datum: datum_timestamp,
             to: to_timestamp,
             limit: limit,
+            area: area,
+            building: building,
         } = request.query
         const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
         datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
@@ -433,11 +437,23 @@ async function api (fastify, options) {
         }
 
         if (range === 'area') {
+            // area 和 building 必为空
             return await fastify.sp_db.getAreaSpendingRankInDuring(datum, to, limit)
         } else if (range === 'building') {
-            return await fastify.sp_db.getBuildingSpendingRankInDuring(datum, to, limit)
+            // building 必为空
+            if (area !== undefined) {
+                return await fastify.sp_db.getBuildingSpendingRankInDuringWhereArea(datum, to, limit, area)
+            } else {
+                return await fastify.sp_db.getBuildingSpendingRankInDuring(datum, to, limit)
+            }
         } else if (range === 'room') {
-            return await fastify.sp_db.getRoomSpendingRankInDuring(datum, to, limit)
+            if (building !== undefined && area !== undefined) {
+                return await fastify.sp_db.getRoomSpendingRankInDuringWhereBuilding(datum, to, limit, area, building)
+            } else if (area !== undefined) {
+                return await fastify.sp_db.getRoomSpendingRankInDuringWhereArea(datum, to, limit, area)
+            } else {
+                return await fastify.sp_db.getRoomSpendingRankInDuring(datum, to, limit)
+            }
         }
     })
 
@@ -454,6 +470,8 @@ async function api (fastify, options) {
               datum: {type: 'integer'},
               to: {type: 'integer'},
               limit: {type: 'integer', minimum: 1, default: 3, maximum: 20},
+              area: {type: 'string'},
+              building: {type: 'string'},
             },
             response: {
                 200: fastify.sp_util.getApiSchema({
@@ -480,6 +498,8 @@ async function api (fastify, options) {
             datum: datum_timestamp,
             to: to_timestamp,
             limit: limit,
+            area: area,
+            building: building,
         } = request.query
         const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
         datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
@@ -507,11 +527,23 @@ async function api (fastify, options) {
         }
 
         if (range === 'area') {
+            // area 和 building 必为空
             return await fastify.sp_db.getAreaSpendingDailyAvgRankInDuring(datum, to, limit)
         } else if (range === 'building') {
-            return await fastify.sp_db.getBuildingSpendingDailyAvgRankInDuring(datum, to, limit)
+            // building 必为空
+            if (area !== undefined) {
+                return await fastify.sp_db.getBuildingSpendingDailyAvgRankInDuringWhereArea(datum, to, limit, area)
+            } else {
+                return await fastify.sp_db.getBuildingSpendingDailyAvgRankInDuring(datum, to, limit)
+            }
         } else if (range === 'room') {
-            return await fastify.sp_db.getRoomSpendingDailyAvgRankInDuring(datum, to, limit)
+            if (building !== undefined && area !== undefined) {
+                return await fastify.sp_db.getRoomSpendingDailyAvgRankInDuringWhereBuilding(datum, to, limit, area, building)
+            } else if (area !== undefined) {
+                return await fastify.sp_db.getRoomSpendingDailyAvgRankInDuringWhereArea(datum, to, limit, area)
+            } else {
+                return await fastify.sp_db.getRoomSpendingDailyAvgRankInDuring(datum, to, limit)
+            }
         }
     })
 

@@ -426,6 +426,42 @@ function spDb (fastify, options, next) {
                     cur.close()
                 }
             },
+            getBuildingSpendingRankInDuringWhereArea: async function (from, to, limit, area) {
+                const cur = tde.cursor()
+                try {
+                    const buildingSpendingRankInDuring = (await cur.query(`
+                        SELECT
+                            area,
+                            building,
+                            SUM(spending) spending_sum
+                        FROM powers
+                        WHERE
+                            is_show=true
+                          AND
+                            spending>=0
+                          AND
+                            ts>=${from.getTime()}
+                          AND
+                            ts<${to.getTime()}
+                          AND
+                            area=${SqlString.escape(area)}
+                        PARTITION BY area, building
+                        ORDER BY spending_sum DESC
+                        LIMIT ${limit}
+                    `, true))
+                        .data.map(record => {
+                            const [area, building, spending] = record.data
+                            return {area, building, spending: Number(spending) / 100}
+                        })
+                    if (buildingSpendingRankInDuring.length === 0)
+                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
+                    return {code: 1, data: buildingSpendingRankInDuring}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
             getRoomSpendingRankInDuring: async function (from, to, limit) {
                 const cur = tde.cursor()
                 try {
@@ -444,6 +480,82 @@ function spDb (fastify, options, next) {
                             ts>=${from.getTime()}
                           AND
                             ts<${to.getTime()}
+                        PARTITION BY area, building, room
+                        ORDER BY spending_sum DESC
+                        LIMIT ${limit}
+                    `, true))
+                        .data.map(record => {
+                            const [area, building, room, spending] = record.data
+                            return {area, building, room, spending: Number(spending) / 100}
+                        })
+                    if (roomSpendingRankInDuring.length === 0)
+                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
+                    return {code: 1, data: roomSpendingRankInDuring}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getRoomSpendingRankInDuringWhereArea: async function (from, to, limit, area) {
+                const cur = tde.cursor()
+                try {
+                    const roomSpendingRankInDuring = (await cur.query(`
+                        SELECT
+                            area,
+                            building,
+                            room,
+                            SUM(spending) spending_sum
+                        FROM powers
+                        WHERE
+                            is_show=true
+                          AND
+                            spending>=0
+                          AND
+                            ts>=${from.getTime()}
+                          AND
+                            ts<${to.getTime()}
+                          AND
+                            area=${SqlString.escape(area)}
+                        PARTITION BY area, building, room
+                        ORDER BY spending_sum DESC
+                        LIMIT ${limit}
+                    `, true))
+                        .data.map(record => {
+                            const [area, building, room, spending] = record.data
+                            return {area, building, room, spending: Number(spending) / 100}
+                        })
+                    if (roomSpendingRankInDuring.length === 0)
+                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
+                    return {code: 1, data: roomSpendingRankInDuring}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getRoomSpendingRankInDuringWhereBuilding: async function (from, to, limit, area, building) {
+                const cur = tde.cursor()
+                try {
+                    const roomSpendingRankInDuring = (await cur.query(`
+                        SELECT
+                            area,
+                            building,
+                            room,
+                            SUM(spending) spending_sum
+                        FROM powers
+                        WHERE
+                            is_show=true
+                          AND
+                            spending>=0
+                          AND
+                            ts>=${from.getTime()}
+                          AND
+                            ts<${to.getTime()}
+                          AND
+                            area=${SqlString.escape(area)}
+                          AND
+                            building=${SqlString.escape(building)}
                         PARTITION BY area, building, room
                         ORDER BY spending_sum DESC
                         LIMIT ${limit}
@@ -545,6 +657,51 @@ function spDb (fastify, options, next) {
                     cur.close()
                 }
             },
+            getBuildingSpendingDailyAvgRankInDuringWhereArea: async function (from, to, limit, area) {
+                const cur = tde.cursor()
+                try {
+                    const buildingSpendingDailyAvgRankInDuring = (await cur.query(`
+                        SELECT
+                            area,
+                            building,
+                            AVG(spending_daily) spending_daily_avg
+                        FROM (
+                            SELECT
+                                area,
+                                building,
+--                                 _WSTART ts,
+                                SUM(spending) spending_daily
+                            FROM powers
+                            WHERE
+                                is_show=true
+                              AND
+                                spending>=0
+                              AND
+                                ts>=${from.getTime()}
+                              AND
+                                ts<${to.getTime()}
+                              AND
+                                area=${SqlString.escape(area)}
+                            PARTITION BY area, building
+                            INTERVAL(1d)
+                        )
+                        GROUP BY area, building
+                        ORDER BY spending_daily_avg DESC
+                        LIMIT ${limit}
+                    `, true))
+                        .data.map(record => {
+                            const [area, building, spending] = record.data
+                            return {area, building, spending: spending / 100}
+                        })
+                    if (buildingSpendingDailyAvgRankInDuring.length === 0)
+                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
+                    return {code: 1, data: buildingSpendingDailyAvgRankInDuring}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
             getRoomSpendingDailyAvgRankInDuring: async function (from, to, limit) {
                 const cur = tde.cursor()
                 try {
@@ -570,6 +727,102 @@ function spDb (fastify, options, next) {
                                 ts>=${from.getTime()}
                               AND
                                 ts<${to.getTime()}
+                            PARTITION BY area, building, room
+                            INTERVAL(1d)
+                        )
+                        GROUP BY area, building, room
+                        ORDER BY spending_daily_avg DESC
+                        LIMIT ${limit}
+                    `, true))
+                        .data.map(record => {
+                            const [area, building, room, spending] = record.data
+                            return {area, building, room, spending: spending / 100}
+                        })
+                    if (roomSpendingDailyAvgRankInDuring.length === 0)
+                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
+                    return {code: 1, data: roomSpendingDailyAvgRankInDuring}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getRoomSpendingDailyAvgRankInDuringWhereArea: async function (from, to, limit, area) {
+                const cur = tde.cursor()
+                try {
+                    const roomSpendingDailyAvgRankInDuring = (await cur.query(`
+                        SELECT
+                            area,
+                            building,
+                            room,
+                            AVG(spending_daily) spending_daily_avg
+                        FROM (
+                            SELECT
+                                area,
+                                building,
+                                room,
+--                                 _WSTART ts,
+                                SUM(spending) spending_daily
+                            FROM powers
+                            WHERE
+                                is_show=true
+                              AND
+                                spending>=0
+                              AND
+                                ts>=${from.getTime()}
+                              AND
+                                ts<${to.getTime()}
+                              AND
+                                area=${SqlString.escape(area)}
+                            PARTITION BY area, building, room
+                            INTERVAL(1d)
+                        )
+                        GROUP BY area, building, room
+                        ORDER BY spending_daily_avg DESC
+                        LIMIT ${limit}
+                    `, true))
+                        .data.map(record => {
+                            const [area, building, room, spending] = record.data
+                            return {area, building, room, spending: spending / 100}
+                        })
+                    if (roomSpendingDailyAvgRankInDuring.length === 0)
+                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
+                    return {code: 1, data: roomSpendingDailyAvgRankInDuring}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getRoomSpendingDailyAvgRankInDuringWhereBuilding: async function (from, to, limit, area, building) {
+                const cur = tde.cursor()
+                try {
+                    const roomSpendingDailyAvgRankInDuring = (await cur.query(`
+                        SELECT
+                            area,
+                            building,
+                            room,
+                            AVG(spending_daily) spending_daily_avg
+                        FROM (
+                            SELECT
+                                area,
+                                building,
+                                room,
+--                                 _WSTART ts,
+                                SUM(spending) spending_daily
+                            FROM powers
+                            WHERE
+                                is_show=true
+                              AND
+                                spending>=0
+                              AND
+                                ts>=${from.getTime()}
+                              AND
+                                ts<${to.getTime()}
+                              AND
+                                area=${SqlString.escape(area)}
+                              AND
+                                building=${SqlString.escape(building)}
                             PARTITION BY area, building, room
                             INTERVAL(1d)
                         )
