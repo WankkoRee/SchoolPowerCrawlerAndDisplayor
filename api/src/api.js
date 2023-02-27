@@ -177,7 +177,7 @@ async function api (fastify, options) {
             datum: datum_timestamp,
             to: to_timestamp,
         } = request.query
-        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
         datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
         let to = new Date(datum) // 设置为 当天 00:00:00.000
 
@@ -242,7 +242,7 @@ async function api (fastify, options) {
             datum: datum_timestamp,
             to: to_timestamp,
         } = request.query
-        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
         datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
         let to = new Date(datum) // 设置为 当天 00:00:00.000
 
@@ -309,9 +309,9 @@ async function api (fastify, options) {
             datum: datum_timestamp,
             from: from_timestamp,
         } = request.query
-        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
         datum.setHours(24, 0, 0, 0)
-        const from = from_timestamp ? new Date(from_timestamp) : new Date(datum)
+        const from = from_timestamp !== undefined ? new Date(from_timestamp) : new Date(datum)
         from.setHours(0, 0, 0, 0)
         if (from_timestamp === undefined) {
             from.setHours(-24 * 30)
@@ -357,9 +357,9 @@ async function api (fastify, options) {
             datum: datum_timestamp,
             from: from_timestamp,
         } = request.query
-        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
         datum.setHours(24, 0, 0, 0)
-        const from = from_timestamp ? new Date(from_timestamp) : new Date(datum)
+        const from = from_timestamp !== undefined ? new Date(from_timestamp) : new Date(datum)
         from.setHours(0, 0, 0, 0)
         if (from_timestamp === undefined) {
             from.setHours(-24 * 30)
@@ -407,7 +407,7 @@ async function api (fastify, options) {
             to: to_timestamp,
             limit: limit,
         } = request.query
-        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
         datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
         let to = new Date(datum) // 设置为 当天 00:00:00.000
 
@@ -481,7 +481,7 @@ async function api (fastify, options) {
             to: to_timestamp,
             limit: limit,
         } = request.query
-        const datum = datum_timestamp ? new Date(datum_timestamp) : new Date()
+        const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
         datum.setHours(0, 0, 0, 0) // 设置为 当天 00:00:00.000
         let to = new Date(datum) // 设置为 当天 00:00:00.000
 
