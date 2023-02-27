@@ -2,10 +2,10 @@
   <n-grid :x-gap="8" :y-gap="8" cols="1">
     <n-grid-item v-for="(roomData, index) in data" :key="index">
       <span>
+        {{ index + 1 }}.
         {{ roomData.area ? roomData.area : "" }}
         {{ roomData.building ? ` > ${roomData.building}` : "" }}
         {{ roomData.room ? ` > ${roomData.room}` : "" }}
-        {{ { 0: "🥇", 1: "🥈", 2: "🥉" }[index] || "" }}
       </span>
       <n-progress
         type="line"
