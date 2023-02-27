@@ -2,7 +2,7 @@
   <n-grid :x-gap="8" :y-gap="8" cols="6" item-responsive>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
-        <rooms-rank :data="dailyTopUsed" :range="dailyTopUsedType" unit="kWh" />
+        <rooms-rank :data="dayRankSum" :range="dayRankSumRange" unit="kWh" />
         <template #header>
           <n-space align="center" justify="space-between">
             <span>今日用电量Top</span>
@@ -16,29 +16,29 @@
                   remote
                   :show-path="false"
                   separator=" > "
-                  v-model:value="dailyTopUsedRangeSelect"
+                  v-model:value="dayRankSumRangeSelect"
                   @load="rangeLoad"
-                  @update:value="handleDailyTopUsedRangeSelect"
+                  @update:value="handleDayRankSumRangeSelect"
                 />
               </n-grid-item>
               <n-grid-item :span="1">
                 <n-space align="center" justify="end" :size="[0, 0]">
                   <n-input-number
                     style="width: 72px"
-                    v-model:value="dailyTopUsedLimit"
+                    v-model:value="dayRankSumLimit"
                     :update-value-on-input="false"
                     :show-button="false"
                     placeholder="3"
                     :min="1"
                     :max="20"
-                    @update:value="dailyTopUsedTypeUpdate"
+                    @update:value="dayRankSumRangeUpdate"
                   >
                     <template #prefix>前</template>
                     <template #suffix>的</template>
                   </n-input-number>
-                  <n-radio-group v-model:value="dailyTopUsedType" @update:value="dailyTopUsedTypeUpdate">
-                    <n-radio-button value="area" :disabled="dailyTopUsedTypeAreaDisabled">校区</n-radio-button>
-                    <n-radio-button value="building" :disabled="dailyTopUsedTypeBuildingDisabled">宿舍楼</n-radio-button>
+                  <n-radio-group v-model:value="dayRankSumRange" @update:value="dayRankSumRangeUpdate">
+                    <n-radio-button value="area" :disabled="dayRankSumRangeAreaDisabled">校区</n-radio-button>
+                    <n-radio-button value="building" :disabled="dayRankSumRangeBuildingDisabled">宿舍楼</n-radio-button>
                     <n-radio-button value="room">寝室</n-radio-button>
                   </n-radio-group>
                 </n-space>
@@ -50,7 +50,7 @@
     </n-grid-item>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
-        <rooms-rank :data="weeklyTopUsed" :range="weeklyTopUsedType" unit="kWh" />
+        <rooms-rank :data="weekRankSum" :range="weekRankSumRange" unit="kWh" />
         <template #header>
           <n-space align="center" justify="space-between">
             <span>本周用电量Top</span>
@@ -64,29 +64,29 @@
                   remote
                   :show-path="false"
                   separator=" > "
-                  v-model:value="weeklyTopUsedRangeSelect"
+                  v-model:value="weekRankSumRangeSelect"
                   @load="rangeLoad"
-                  @update:value="handleWeeklyTopUsedRangeSelect"
+                  @update:value="handleWeekRankSumRangeSelect"
                 />
               </n-grid-item>
               <n-grid-item :span="1">
                 <n-space align="center" justify="end" :size="[0, 0]">
                   <n-input-number
                     style="width: 72px"
-                    v-model:value="weeklyTopUsedLimit"
+                    v-model:value="weekRankSumLimit"
                     :update-value-on-input="false"
                     :show-button="false"
                     placeholder="3"
                     :min="1"
                     :max="20"
-                    @update:value="weeklyTopUsedTypeUpdate"
+                    @update:value="weekRankSumRangeUpdate"
                   >
                     <template #prefix>前</template>
                     <template #suffix>的</template>
                   </n-input-number>
-                  <n-radio-group v-model:value="weeklyTopUsedType" @update:value="weeklyTopUsedTypeUpdate">
-                    <n-radio-button value="area" :disabled="weeklyTopUsedTypeAreaDisabled">校区</n-radio-button>
-                    <n-radio-button value="building" :disabled="weeklyTopUsedTypeBuildingDisabled">宿舍楼</n-radio-button>
+                  <n-radio-group v-model:value="weekRankSumRange" @update:value="weekRankSumRangeUpdate">
+                    <n-radio-button value="area" :disabled="weekRankSumRangeAreaDisabled">校区</n-radio-button>
+                    <n-radio-button value="building" :disabled="weekRankSumRangeBuildingDisabled">宿舍楼</n-radio-button>
                     <n-radio-button value="room">寝室</n-radio-button>
                   </n-radio-group>
                 </n-space>
@@ -98,7 +98,7 @@
     </n-grid-item>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
-        <rooms-rank :data="weeklyTopAvg" :range="weeklyTopAvgType" unit="kWh/d" />
+        <rooms-rank :data="weekRankDailyAvg" :range="weekRankDailyAvgRange" unit="kWh/d" />
         <template #header>
           <n-space align="center" justify="space-between">
             <span>本周日均用电量Top</span>
@@ -112,29 +112,29 @@
                   remote
                   :show-path="false"
                   separator=" > "
-                  v-model:value="weeklyTopAvgRangeSelect"
+                  v-model:value="weekRankDailyAvgRangeSelect"
                   @load="rangeLoad"
-                  @update:value="handleWeeklyTopAvgRangeSelect"
+                  @update:value="handleWeekRankDailyAvgRangeSelect"
                 />
               </n-grid-item>
               <n-grid-item :span="1">
                 <n-space align="center" justify="end" :size="[0, 0]">
                   <n-input-number
                     style="width: 72px"
-                    v-model:value="weeklyTopAvgLimit"
+                    v-model:value="weekRankDailyAvgLimit"
                     :update-value-on-input="false"
                     :show-button="false"
                     placeholder="3"
                     :min="1"
                     :max="20"
-                    @update:value="weeklyTopAvgTypeUpdate"
+                    @update:value="weekRankDailyAvgRangeUpdate"
                   >
                     <template #prefix>前</template>
                     <template #suffix>的</template>
                   </n-input-number>
-                  <n-radio-group v-model:value="weeklyTopAvgType" @update:value="weeklyTopAvgTypeUpdate">
-                    <n-radio-button value="area" :disabled="weeklyTopAvgTypeAreaDisabled">校区</n-radio-button>
-                    <n-radio-button value="building" :disabled="weeklyTopAvgTypeBuildingDisabled">宿舍楼</n-radio-button>
+                  <n-radio-group v-model:value="weekRankDailyAvgRange" @update:value="weekRankDailyAvgRangeUpdate">
+                    <n-radio-button value="area" :disabled="weekRankDailyAvgRangeAreaDisabled">校区</n-radio-button>
+                    <n-radio-button value="building" :disabled="weekRankDailyAvgRangeBuildingDisabled">宿舍楼</n-radio-button>
                     <n-radio-button value="room">寝室</n-radio-button>
                   </n-radio-group>
                 </n-space>
@@ -176,29 +176,29 @@ const rangeOption = ref<TreeSelectOption[]>([
   },
 ]);
 
-const dailyTopUsed = ref<RankData[]>([]);
-const dailyTopUsedType = useStorage<Range>("SpendingRank_dailyTopUsedType", "room");
-const dailyTopUsedLimit = useStorage("SpendingRank_dailyTopUsedLimit", 3);
-const dailyTopUsedRangeSelect = ref("学校");
-const dailyTopUsedRangeSelectDepth = ref(1);
-const dailyTopUsedTypeAreaDisabled = ref(false);
-const dailyTopUsedTypeBuildingDisabled = ref(false);
+const dayRankSum = ref<RankData[]>([]);
+const dayRankSumRange = useStorage<Range>("SpendingRank_dayRankSumRange", "room");
+const dayRankSumLimit = useStorage("SpendingRank_dayRankSumLimit", 3);
+const dayRankSumRangeSelect = ref("学校");
+const dayRankSumRangeSelectDepth = ref(1);
+const dayRankSumRangeAreaDisabled = ref(false);
+const dayRankSumRangeBuildingDisabled = ref(false);
 
-const weeklyTopUsed = ref<RankData[]>([]);
-const weeklyTopUsedType = useStorage<Range>("SpendingRank_weeklyTopUsedType", "room");
-const weeklyTopUsedLimit = useStorage("SpendingRank_weeklyTopUsedLimit", 3);
-const weeklyTopUsedRangeSelect = ref("学校");
-const weeklyTopUsedRangeSelectDepth = ref(1);
-const weeklyTopUsedTypeAreaDisabled = ref(false);
-const weeklyTopUsedTypeBuildingDisabled = ref(false);
+const weekRankSum = ref<RankData[]>([]);
+const weekRankSumRange = useStorage<Range>("SpendingRank_weekRankSumRange", "room");
+const weekRankSumLimit = useStorage("SpendingRank_weekRankSumLimit", 3);
+const weekRankSumRangeSelect = ref("学校");
+const weekRankSumRangeSelectDepth = ref(1);
+const weekRankSumRangeAreaDisabled = ref(false);
+const weekRankSumRangeBuildingDisabled = ref(false);
 
-const weeklyTopAvg = ref<RankData[]>([]);
-const weeklyTopAvgType = useStorage<Range>("SpendingRank_weeklyTopAvgType", "room");
-const weeklyTopAvgLimit = useStorage("SpendingRank_weeklyTopAvgLimit", 3);
-const weeklyTopAvgRangeSelect = ref("学校");
-const weeklyTopAvgRangeSelectDepth = ref(1);
-const weeklyTopAvgTypeAreaDisabled = ref(false);
-const weeklyTopAvgTypeBuildingDisabled = ref(false);
+const weekRankDailyAvg = ref<RankData[]>([]);
+const weekRankDailyAvgRange = useStorage<Range>("SpendingRank_weekRankDailyAvgRange", "room");
+const weekRankDailyAvgLimit = useStorage("SpendingRank_weekRankDailyAvgLimit", 3);
+const weekRankDailyAvgRangeSelect = ref("学校");
+const weekRankDailyAvgRangeSelectDepth = ref(1);
+const weekRankDailyAvgRangeAreaDisabled = ref(false);
+const weekRankDailyAvgRangeBuildingDisabled = ref(false);
 
 async function rangeLoad(option: TreeSelectOption) {
   if (option.depth === 1) {
@@ -223,102 +223,105 @@ async function rangeLoad(option: TreeSelectOption) {
   }
 }
 
-async function handleDailyTopUsedRangeSelect(value: string, option: TreeSelectOption) {
+async function handleDayRankSumRangeSelect(value: string, option: TreeSelectOption) {
   if (option.depth === 1) {
-    dailyTopUsedRangeSelectDepth.value = 1;
-    dailyTopUsedTypeAreaDisabled.value = false;
-    dailyTopUsedTypeBuildingDisabled.value = false;
-    await dailyTopUsedTypeUpdate();
+    dayRankSumRangeSelectDepth.value = 1;
+    dayRankSumRangeAreaDisabled.value = false;
+    dayRankSumRangeBuildingDisabled.value = false;
+    await dayRankSumRangeUpdate();
   } else if (option.depth === 2) {
-    dailyTopUsedRangeSelectDepth.value = 2;
-    dailyTopUsedTypeAreaDisabled.value = true;
-    dailyTopUsedTypeBuildingDisabled.value = false;
-    if (dailyTopUsedType.value === "area") dailyTopUsedType.value = "building";
-    await dailyTopUsedTypeUpdate();
+    dayRankSumRangeSelectDepth.value = 2;
+    dayRankSumRangeAreaDisabled.value = true;
+    dayRankSumRangeBuildingDisabled.value = false;
+    if (dayRankSumRange.value === "area") dayRankSumRange.value = "building";
+    await dayRankSumRangeUpdate();
   } else if (option.depth === 3) {
-    dailyTopUsedRangeSelectDepth.value = 3;
-    dailyTopUsedTypeAreaDisabled.value = true;
-    dailyTopUsedTypeBuildingDisabled.value = true;
-    if (dailyTopUsedType.value === "area" || dailyTopUsedType.value === "building") dailyTopUsedType.value = "room";
-    await dailyTopUsedTypeUpdate();
+    dayRankSumRangeSelectDepth.value = 3;
+    dayRankSumRangeAreaDisabled.value = true;
+    dayRankSumRangeBuildingDisabled.value = true;
+    if (dayRankSumRange.value === "area" || dayRankSumRange.value === "building") dayRankSumRange.value = "room";
+    await dayRankSumRangeUpdate();
+  }
+}
+async function handleWeekRankSumRangeSelect(value: string, option: TreeSelectOption) {
+  if (option.depth === 1) {
+    weekRankSumRangeSelectDepth.value = 1;
+    weekRankSumRangeAreaDisabled.value = false;
+    weekRankSumRangeBuildingDisabled.value = false;
+    await weekRankSumRangeUpdate();
+  } else if (option.depth === 2) {
+    weekRankSumRangeSelectDepth.value = 2;
+    weekRankSumRangeAreaDisabled.value = true;
+    weekRankSumRangeBuildingDisabled.value = false;
+    if (weekRankSumRange.value === "area") weekRankSumRange.value = "building";
+    await weekRankSumRangeUpdate();
+  } else if (option.depth === 3) {
+    weekRankSumRangeSelectDepth.value = 3;
+    weekRankSumRangeAreaDisabled.value = true;
+    weekRankSumRangeBuildingDisabled.value = true;
+    if (weekRankSumRange.value === "area" || weekRankSumRange.value === "building") weekRankSumRange.value = "room";
+    await weekRankSumRangeUpdate();
+  }
+}
+async function handleWeekRankDailyAvgRangeSelect(value: string, option: TreeSelectOption) {
+  if (option.depth === 1) {
+    weekRankDailyAvgRangeSelectDepth.value = 1;
+    weekRankDailyAvgRangeAreaDisabled.value = false;
+    weekRankDailyAvgRangeBuildingDisabled.value = false;
+    await weekRankDailyAvgRangeUpdate();
+  } else if (option.depth === 2) {
+    weekRankDailyAvgRangeSelectDepth.value = 2;
+    weekRankDailyAvgRangeAreaDisabled.value = true;
+    weekRankDailyAvgRangeBuildingDisabled.value = false;
+    if (weekRankDailyAvgRange.value === "area") weekRankDailyAvgRange.value = "building";
+    await weekRankDailyAvgRangeUpdate();
+  } else if (option.depth === 3) {
+    weekRankDailyAvgRangeSelectDepth.value = 3;
+    weekRankDailyAvgRangeAreaDisabled.value = true;
+    weekRankDailyAvgRangeBuildingDisabled.value = true;
+    if (weekRankDailyAvgRange.value === "area" || weekRankDailyAvgRange.value === "building") weekRankDailyAvgRange.value = "room";
+    await weekRankDailyAvgRangeUpdate();
   }
 }
 
-async function handleWeeklyTopUsedRangeSelect(value: string, option: TreeSelectOption) {
-  if (option.depth === 1) {
-    weeklyTopUsedRangeSelectDepth.value = 1;
-    weeklyTopUsedTypeAreaDisabled.value = false;
-    weeklyTopUsedTypeBuildingDisabled.value = false;
-    await weeklyTopUsedTypeUpdate();
-  } else if (option.depth === 2) {
-    weeklyTopUsedRangeSelectDepth.value = 2;
-    weeklyTopUsedTypeAreaDisabled.value = true;
-    weeklyTopUsedTypeBuildingDisabled.value = false;
-    if (weeklyTopUsedType.value === "area") weeklyTopUsedType.value = "building";
-    await weeklyTopUsedTypeUpdate();
-  } else if (option.depth === 3) {
-    weeklyTopUsedRangeSelectDepth.value = 3;
-    weeklyTopUsedTypeAreaDisabled.value = true;
-    weeklyTopUsedTypeBuildingDisabled.value = true;
-    if (weeklyTopUsedType.value === "area" || weeklyTopUsedType.value === "building") weeklyTopUsedType.value = "room";
-    await weeklyTopUsedTypeUpdate();
+async function dayRankSumRangeUpdate() {
+  if (dayRankSumRangeSelectDepth.value === 1) {
+    dayRankSum.value = await getRankSumRangeDuring(dayRankSumRange.value, "day", dayRankSumLimit.value);
+  } else if (dayRankSumRangeSelectDepth.value === 2) {
+    dayRankSum.value = await getRankSumRangeDuringInArea(dayRankSumRange.value, "day", dayRankSumLimit.value, dayRankSumRangeSelect.value);
+  } else if (dayRankSumRangeSelectDepth.value === 3) {
+    const [area, building] = dayRankSumRangeSelect.value.split("/");
+    dayRankSum.value = await getRankSumRangeDuringInBuilding(dayRankSumRange.value, "day", dayRankSumLimit.value, area, building);
   }
 }
-
-async function handleWeeklyTopAvgRangeSelect(value: string, option: TreeSelectOption) {
-  if (option.depth === 1) {
-    weeklyTopAvgRangeSelectDepth.value = 1;
-    weeklyTopAvgTypeAreaDisabled.value = false;
-    weeklyTopAvgTypeBuildingDisabled.value = false;
-    await weeklyTopAvgTypeUpdate();
-  } else if (option.depth === 2) {
-    weeklyTopAvgRangeSelectDepth.value = 2;
-    weeklyTopAvgTypeAreaDisabled.value = true;
-    weeklyTopAvgTypeBuildingDisabled.value = false;
-    if (weeklyTopAvgType.value === "area") weeklyTopAvgType.value = "building";
-    await weeklyTopAvgTypeUpdate();
-  } else if (option.depth === 3) {
-    weeklyTopAvgRangeSelectDepth.value = 3;
-    weeklyTopAvgTypeAreaDisabled.value = true;
-    weeklyTopAvgTypeBuildingDisabled.value = true;
-    if (weeklyTopAvgType.value === "area" || weeklyTopAvgType.value === "building") weeklyTopAvgType.value = "room";
-    await weeklyTopAvgTypeUpdate();
+async function weekRankSumRangeUpdate() {
+  if (weekRankSumRangeSelectDepth.value === 1) {
+    weekRankSum.value = await getRankSumRangeDuring(weekRankSumRange.value, "week", weekRankSumLimit.value);
+  } else if (weekRankSumRangeSelectDepth.value === 2) {
+    weekRankSum.value = await getRankSumRangeDuringInArea(weekRankSumRange.value, "week", weekRankSumLimit.value, weekRankSumRangeSelect.value);
+  } else if (weekRankSumRangeSelectDepth.value === 3) {
+    const [area, building] = weekRankSumRangeSelect.value.split("/");
+    weekRankSum.value = await getRankSumRangeDuringInBuilding(weekRankSumRange.value, "week", weekRankSumLimit.value, area, building);
   }
 }
-
-async function dailyTopUsedTypeUpdate() {
-  if (dailyTopUsedRangeSelectDepth.value === 1) {
-    dailyTopUsed.value = await getRankSumRangeDuring(dailyTopUsedType.value, "day", dailyTopUsedLimit.value);
-  } else if (dailyTopUsedRangeSelectDepth.value === 2) {
-    dailyTopUsed.value = await getRankSumRangeDuringInArea(dailyTopUsedType.value, "day", dailyTopUsedLimit.value, dailyTopUsedRangeSelect.value);
-  } else if (dailyTopUsedRangeSelectDepth.value === 3) {
-    const [area, building] = dailyTopUsedRangeSelect.value.split("/");
-    dailyTopUsed.value = await getRankSumRangeDuringInBuilding(dailyTopUsedType.value, "day", dailyTopUsedLimit.value, area, building);
-  }
-}
-async function weeklyTopUsedTypeUpdate() {
-  if (weeklyTopUsedRangeSelectDepth.value === 1) {
-    weeklyTopUsed.value = await getRankSumRangeDuring(weeklyTopUsedType.value, "week", weeklyTopUsedLimit.value);
-  } else if (weeklyTopUsedRangeSelectDepth.value === 2) {
-    weeklyTopUsed.value = await getRankSumRangeDuringInArea(weeklyTopUsedType.value, "week", weeklyTopUsedLimit.value, weeklyTopUsedRangeSelect.value);
-  } else if (weeklyTopUsedRangeSelectDepth.value === 3) {
-    const [area, building] = weeklyTopUsedRangeSelect.value.split("/");
-    weeklyTopUsed.value = await getRankSumRangeDuringInBuilding(weeklyTopUsedType.value, "week", weeklyTopUsedLimit.value, area, building);
-  }
-}
-async function weeklyTopAvgTypeUpdate() {
-  if (weeklyTopAvgRangeSelectDepth.value === 1) {
-    weeklyTopAvg.value = await getRankDailyAvgRangeDuring(weeklyTopAvgType.value, "week", weeklyTopAvgLimit.value);
-  } else if (weeklyTopAvgRangeSelectDepth.value === 2) {
-    weeklyTopAvg.value = await getRankSumRangeDuringInArea(weeklyTopAvgType.value, "week", weeklyTopAvgLimit.value, weeklyTopAvgRangeSelect.value);
-  } else if (weeklyTopAvgRangeSelectDepth.value === 3) {
-    const [area, building] = weeklyTopAvgRangeSelect.value.split("/");
-    weeklyTopAvg.value = await getRankSumRangeDuringInBuilding(weeklyTopAvgType.value, "week", weeklyTopAvgLimit.value, area, building);
+async function weekRankDailyAvgRangeUpdate() {
+  if (weekRankDailyAvgRangeSelectDepth.value === 1) {
+    weekRankDailyAvg.value = await getRankDailyAvgRangeDuring(weekRankDailyAvgRange.value, "week", weekRankDailyAvgLimit.value);
+  } else if (weekRankDailyAvgRangeSelectDepth.value === 2) {
+    weekRankDailyAvg.value = await getRankSumRangeDuringInArea(
+      weekRankDailyAvgRange.value,
+      "week",
+      weekRankDailyAvgLimit.value,
+      weekRankDailyAvgRangeSelect.value
+    );
+  } else if (weekRankDailyAvgRangeSelectDepth.value === 3) {
+    const [area, building] = weekRankDailyAvgRangeSelect.value.split("/");
+    weekRankDailyAvg.value = await getRankSumRangeDuringInBuilding(weekRankDailyAvgRange.value, "week", weekRankDailyAvgLimit.value, area, building);
   }
 }
 
 onMounted(async () => {
-  await Promise.all([dailyTopUsedTypeUpdate(), weeklyTopUsedTypeUpdate(), weeklyTopAvgTypeUpdate()]);
+  await Promise.all([dayRankSumRangeUpdate(), weekRankSumRangeUpdate(), weekRankDailyAvgRangeUpdate()]);
 });
 </script>
 
