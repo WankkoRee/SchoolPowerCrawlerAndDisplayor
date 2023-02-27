@@ -151,3 +151,28 @@ export async function getRankDailyAvgRangeDuring(
   const result = await checkRequest(rankDailyAvgDuringRequest);
   return result;
 }
+
+export async function getRankDailyAvgRangeDuringInArea(
+  range: "area" | "building" | "room",
+  during: "day" | "week" | "month" | "",
+  limit: number,
+  area: string
+): Promise<GetRankDailyAvgDuringResult> {
+  const rankDailyAvgDuringRequest = axios.get<AppResponse<GetRankDailyAvgDuringResult>>(`./api/rank/dailyAvg/${range}/${during}`, { params: { limit, area } });
+  const result = await checkRequest(rankDailyAvgDuringRequest);
+  return result;
+}
+
+export async function getRankDailyAvgRangeDuringInBuilding(
+  range: "area" | "building" | "room",
+  during: "day" | "week" | "month" | "",
+  limit: number,
+  area: string,
+  building: string
+): Promise<GetRankDailyAvgDuringResult> {
+  const rankDailyAvgDuringRequest = axios.get<AppResponse<GetRankDailyAvgDuringResult>>(`./api/rank/dailyAvg/${range}/${during}`, {
+    params: { limit, area, building },
+  });
+  const result = await checkRequest(rankDailyAvgDuringRequest);
+  return result;
+}

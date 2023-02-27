@@ -251,7 +251,16 @@ import { onMounted, ref } from "vue";
 import { useStorage } from "@vueuse/core";
 import type { TreeSelectOption } from "naive-ui";
 
-import { getAreas, getBuildings, getRankSumRangeDuring, getRankSumRangeDuringInArea, getRankSumRangeDuringInBuilding, getRankDailyAvgRangeDuring } from "@/api";
+import {
+  getAreas,
+  getBuildings,
+  getRankSumRangeDuring,
+  getRankSumRangeDuringInArea,
+  getRankSumRangeDuringInBuilding,
+  getRankDailyAvgRangeDuring,
+  getRankDailyAvgRangeDuringInArea,
+  getRankDailyAvgRangeDuringInBuilding,
+} from "@/api";
 
 type Range = "area" | "building" | "room";
 type RankData = { area: string; building?: string; room?: string; spending: number };
@@ -470,7 +479,7 @@ async function weekRankDailyAvgRangeUpdate() {
   if (weekRankDailyAvgRangeSelectDepth.value === 1) {
     weekRankDailyAvg.value = await getRankDailyAvgRangeDuring(weekRankDailyAvgRange.value, "week", weekRankDailyAvgLimit.value);
   } else if (weekRankDailyAvgRangeSelectDepth.value === 2) {
-    weekRankDailyAvg.value = await getRankSumRangeDuringInArea(
+    weekRankDailyAvg.value = await getRankDailyAvgRangeDuringInArea(
       weekRankDailyAvgRange.value,
       "week",
       weekRankDailyAvgLimit.value,
@@ -478,14 +487,14 @@ async function weekRankDailyAvgRangeUpdate() {
     );
   } else if (weekRankDailyAvgRangeSelectDepth.value === 3) {
     const [area, building] = weekRankDailyAvgRangeSelect.value.split("/");
-    weekRankDailyAvg.value = await getRankSumRangeDuringInBuilding(weekRankDailyAvgRange.value, "week", weekRankDailyAvgLimit.value, area, building);
+    weekRankDailyAvg.value = await getRankDailyAvgRangeDuringInBuilding(weekRankDailyAvgRange.value, "week", weekRankDailyAvgLimit.value, area, building);
   }
 }
 async function monthRankDailyAvgRangeUpdate() {
   if (monthRankDailyAvgRangeSelectDepth.value === 1) {
     monthRankDailyAvg.value = await getRankDailyAvgRangeDuring(monthRankDailyAvgRange.value, "month", monthRankDailyAvgLimit.value);
   } else if (monthRankDailyAvgRangeSelectDepth.value === 2) {
-    monthRankDailyAvg.value = await getRankSumRangeDuringInArea(
+    monthRankDailyAvg.value = await getRankDailyAvgRangeDuringInArea(
       monthRankDailyAvgRange.value,
       "month",
       monthRankDailyAvgLimit.value,
@@ -493,7 +502,7 @@ async function monthRankDailyAvgRangeUpdate() {
     );
   } else if (monthRankDailyAvgRangeSelectDepth.value === 3) {
     const [area, building] = monthRankDailyAvgRangeSelect.value.split("/");
-    monthRankDailyAvg.value = await getRankSumRangeDuringInBuilding(monthRankDailyAvgRange.value, "month", monthRankDailyAvgLimit.value, area, building);
+    monthRankDailyAvg.value = await getRankDailyAvgRangeDuringInBuilding(monthRankDailyAvgRange.value, "month", monthRankDailyAvgLimit.value, area, building);
   }
 }
 
