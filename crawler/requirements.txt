@@ -1,5 +1,6 @@
 schedule~=1.1.0
 requests~=2.28.2
 pycryptodome~=3.17
-taospy~=2.7.2
+taospy==2.7.6
 ddddocr~=1.4.7
+APScheduler~=3.10.0

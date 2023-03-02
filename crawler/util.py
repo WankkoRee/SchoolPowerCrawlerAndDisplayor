@@ -1,17 +1,9 @@
 import base64
-import datetime
+import os
 import random
 import urllib.parse
 
 from Crypto.Cipher import AES
-
-
-retry_task = None
-last_powers = {}
-
-
-def log(*values: object):
-    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), *values)
 
 
 def aes_random_generate(length: int) -> str:
@@ -53,3 +45,27 @@ def password_encode(password: str, salt: str) -> str:
         mode=AES.MODE_CBC,
     )
     return base64.b64encode(cipher.encrypt(pkcs7padding(aes_random_generate(64)+password).encode())).decode()
+
+
+def prepare() -> tuple[str, int, str, bytes, bytes, str, str, str, str, int, str, str, str, bool]:
+    """一次性读取所有需要的环境变量"""
+    return (
+        os.getenv('SP_HOST'),
+        int(os.getenv('SP_SCHOOL_ID')),
+
+        os.getenv('SP_VPN_HOST'),
+        bytes.fromhex(os.getenv('SP_VPN_KEY')),
+        bytes.fromhex(os.getenv('SP_VPN_IV')),
+
+        os.getenv('SP_SSO_HOST'),
+        os.getenv('SP_SSO_USERNAME'),
+        os.getenv('SP_SSO_PASSWORD'),
+
+        os.getenv('SP_DB_HOST'),
+        int(os.getenv('SP_DB_PORT')),
+        os.getenv('SP_DB_USER'),
+        os.getenv('SP_DB_PASS'),
+        os.getenv('SP_DB_NAME'),
+
+        os.getenv('SP_DEBUG') == "1",
+    )
