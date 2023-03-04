@@ -64,7 +64,7 @@ services:
     build:
       context: ./crawler/
       dockerfile: Dockerfile
-    image: wankkoree/school_power_crawler:3.9.10-slim
+    image: wankkoree/school_power_crawler:3.10.10-slim-bullseye
     volumes:
       - "./crawler/:/home/school_power_crawler/"
     environment:
@@ -97,8 +97,8 @@ services:
       school_power_net:
         ipv4_address: 192.168.1.4
 
-  school_power_db_mongo:
-    container_name: school_power_db_mongo
+  school_power_mongo:
+    container_name: school_power_mongo
     image: "mongo:6.0.4-jammy"
     expose:
       - "27017"

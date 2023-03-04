@@ -1,4 +1,4 @@
-FROM python:3.9.10-slim
+FROM python:3.10.10-slim-bullseye
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN apt-get update && apt-get install -y wget
 ENV TDENGINE_VERSION=3.0.2.5
