@@ -90,7 +90,7 @@ class Power:
             for table_name, ts, power, spending in self.__tdengine.query(f"select tbname, last_row(ts, power, spending) from powers partition by tbname").fetch_all():
                 self.__cache_last_powers[table_name] = ts.timestamp(), power, spending
 
-        stmt = self.__tdengine.statement("insert into ? (ts, power, spending) using `powers` tags (?, ?, ?, ?, ?) values (?, ?, ?)")
+        stmt = self.__tdengine.statement("insert into ? (ts, power, spending) using `powers` tags (?, ?, ?, ?, ?, ?) values (?, ?, ?)")
 
         for area_name, building_name, room_name, room_power, room_ts in data:
             table_name = f"{area_name}{building_name}{room_name}"
@@ -109,12 +109,13 @@ class Power:
 
             room_spending = (self.__cache_last_powers[table_name][1] - room_power) if table_exist else None  # 反向减，算用电情况
 
-            tags = taos.new_bind_params(5)
+            tags = taos.new_bind_params(6)
             tags[0].nchar(area_name)
             tags[1].nchar(building_name)
             tags[2].nchar(room_name)
             tags[3].timestamp(room_ts)
             tags[4].bool(True)
+            tags[5].tinyint_unsigned(0)
             stmt.set_tbname_tags(f"`{table_name}`", tags)
 
             values = taos.new_bind_params(3)
