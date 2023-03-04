@@ -121,14 +121,20 @@ class Session(requests.Session):
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __get_sso_login_page_by_vpn(self) -> tuple[str, str]:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("通过 VPN 登录 SSO，解析登录页面")
+
         resp = self.get(
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/login",
             params={
                 "service": f"{self.__sp_vpn_host}/login?cas_login=true",
             },
         )
-        assert resp.status_code == 200, f"无法找到登录页，HTTP {resp.status_code}"
+        assert resp.status_code == 200, f"无法找到登录页，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.text
         salt = re.search(r'<div id="pwdLoginDiv" style="display: none">[\s\S]*?<input type="hidden" id="pwdEncryptSalt" value="([A-Za-z0-9]+)" />', ret).group(1)
         execution = re.search(r'<div id="pwdLoginDiv" style="display: none">[\s\S]*?<input type="hidden" id="execution" name="execution" value="([A-Za-z0-9-_/+=]+)" />', ret).group(1)
@@ -141,7 +147,10 @@ class Session(requests.Session):
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __get_sso_captcha_state_by_vpn(self) -> bool:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("通过 VPN 登录 SSO，判断是否需要验证码")
+
         resp = self.get(
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/checkNeedCaptcha.htl",
             params={
@@ -149,7 +158,10 @@ class Session(requests.Session):
                 "_": int(time.time()*1000),
             },
         )
-        assert resp.status_code == 200, f"无法得知是否需要验证码，HTTP {resp.status_code}"
+        assert resp.status_code == 200, f"无法得知是否需要验证码，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.json()
         return ret["isNeed"] == True
 
@@ -160,12 +172,18 @@ class Session(requests.Session):
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __get_sso_captcha_by_vpn(self) -> str:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("通过 VPN 登录 SSO，识别验证码")
+
         resp = self.get(
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/getCaptcha.htl",
             params=str(int(time.time() * 1000)),
         )
-        assert resp.status_code == 200, f"无法获取验证码，HTTP {resp.status_code}"
+        assert resp.status_code == 200, f"无法获取验证码，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ocr = ddddocr.DdddOcr(show_ad=False)
         ret = resp.content
         return ocr.classification(ret)
@@ -177,7 +195,10 @@ class Session(requests.Session):
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __login_sso_by_vpn(self, salt: str, execution: str, captcha: str):
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("通过 VPN 登录 SSO，发起登录")
+
         resp = self.post(
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/login",
             params={
@@ -194,7 +215,9 @@ class Session(requests.Session):
                 "execution": execution,
             },
         )
-        assert resp.status_code == 200, "无法登录 SSO，" + re.search(r'<span id="showErrorTip" class="form-error"><span>(.+)</span></span>', resp.text).group(1)
+        assert resp.status_code == 200, f"无法登录 SSO，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(5),
@@ -203,13 +226,19 @@ class Session(requests.Session):
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __check_sso_login_state_by_vpn(self) -> bool:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("检查 SSO/VPN 登录状态")
+
         resp = self.get(
             url=f"{self.__sp_vpn_host}/user/info",
         )
-        assert resp.status_code == 200, f"无法获取登录状态，HTTP {resp.status_code}"
+        assert resp.status_code == 200, f"无法获取登录状态，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.text
-        return ret.find(self.__sp_sso_username) != -1
+        return self.__sp_sso_username in ret
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(5),
@@ -218,21 +247,29 @@ class Session(requests.Session):
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __login_sp_by_sso_by_vpn(self) -> LoginType:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("通过 VPN-SSO 登录 SP")
+
         resp = self.get(
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/login",
             params={
                 "service": f"{self.__sp_host}/outIndex/power",
             },
         )
-        assert resp.status_code == 200, "无法通过 VPN-SSO 登录 SP"
+        assert resp.status_code == 200, f"无法通过 VPN-SSO 登录 SP，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.text
         if "电费充值" in ret:
             return LoginType.VPN
         elif "访问出错" in ret:
             return LoginType.SSO
         else:
-            assert False, f"未知情况\n{ret}"
+            assert False, f"未知情况\n\n" \
+                          f"args: \n{argv}\n\n" \
+                          f"resp: \n{ret}"
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(5),
@@ -242,11 +279,21 @@ class Session(requests.Session):
     )  # 每 5s 重试，最多 3 次
     def __login_sp_by_sso(self):
         """访问外网随行校园，将跳转 SSO 获取登录状态并跳转回随行校园，此时随行校园 Cookies 已自动应用"""
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("通过 SSO 登录 SP")
+
         resp = self.get(
             url=f"{self.__sp_host}/outIndex/power",
         )
-        assert resp.status_code == 200 and "电费充值" in resp.text, "无法通过 SSO 登录 SP"
+        assert resp.status_code == 200, f"无法通过 SSO 登录 SP，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
+        ret = resp.text
+        assert "电费充值" in ret, f"无法通过 SSO 登录 SP\n\n" \
+                              f"args: \n{argv}\n\n" \
+                              f"resp: \n{ret}"
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(5),
@@ -255,13 +302,19 @@ class Session(requests.Session):
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __check_sp_login_state(self) -> bool:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("检查 SP 登录状态")
+
         resp = self.get(
             url=f"{self.__sp_host}/member/power/selectArea",
         )
-        assert resp.status_code == 200, f"无法获取登录状态，HTTP {resp.status_code}"
+        assert resp.status_code == 200, f"无法获取登录状态，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.text
-        return ret.find("areaName") != -1
+        return "areaName" in ret
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(5),
@@ -270,7 +323,10 @@ class Session(requests.Session):
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __set_cookies_by_vpn(self, host: str, path: str):
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("获取 Cookies")
+
         resp = self.post(
             url=f"{self.__sp_vpn_host}/wengine-vpn/cookie",
             params={
@@ -281,8 +337,15 @@ class Session(requests.Session):
                 "vpn_timestamp": int(time.time() * 1000),
             },
         )
-        assert resp.status_code == 200 and len(resp.text) > 0, "获取 Cookies 失败"
+        assert resp.status_code == 200, f"获取 Cookies 失败，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.text
+        assert len(ret) > 0, f"获取 Cookies 失败\n\n" \
+                             f"args: \n{argv}\n\n" \
+                             f"resp: \n{ret}"
+
         self.__logger.debug("解析 Cookies 并应用")
         for cookie_str in ret.split('; '):
             cookie = re.search(r'(.+?)=(.*)', cookie_str).groups()

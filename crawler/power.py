@@ -143,13 +143,21 @@ class Power:
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __areas(self) -> Iterator[tuple[int, str]]:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug("尝试获取校区")
+
         resp = self.__session.post(
             url=f"{self.__sp_host}/member/power/selectArea",
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, f"无法获取校区，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.json()
-        assert ret['code'] == 1
+        assert ret['code'] == 1, f"无法获取校区\n\n" \
+                                 f"args: \n{argv}\n\n" \
+                                 f"resp: \n{ret}"
 
         for area in ret['data']:
             yield area['areaID'], area['areaName']
@@ -161,7 +169,10 @@ class Power:
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __buildings(self, area_id: int) -> Iterator[tuple[int, str, int]]:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug(f"尝试获取宿舍楼 {area_id}")
+
         resp = self.__session.post(
             url=f"{self.__sp_host}/member/power/buildings",
             data={
@@ -169,9 +180,14 @@ class Power:
                 "areaId": area_id,
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, f"无法获取宿舍楼，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.json()
-        assert ret['code'] == 1
+        assert ret['code'] == 1, f"无法获取宿舍楼\n\n" \
+                                 f"args: \n{argv}\n\n" \
+                                 f"resp: \n{ret}"
 
         for building in ret['data']:
             building_id, _, building_comp = building['value'].partition(",")
@@ -184,7 +200,10 @@ class Power:
         reraise=True,
     )  # 每 5s 重试，最多 3 次
     def __rooms(self, area_id: int, building_id: int, building_comp: int) -> Iterator[tuple[int, str, int, float]]:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug(f"尝试获取寝室 {area_id} {building_id},{building_comp}")
+
         resp = self.__session.post(
             url=f"{self.__sp_host}/member/power/rooms",
             data={
@@ -194,9 +213,14 @@ class Power:
                 "compCode": building_comp,
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, f"无法获取寝室，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.json()
-        assert ret['code'] == 1
+        assert ret['code'] == 1, f"无法获取寝室\n\n" \
+                                 f"args: \n{argv}\n\n" \
+                                 f"resp: \n{ret}"
 
         room_ts = time.time()
         for room in ret['data']:

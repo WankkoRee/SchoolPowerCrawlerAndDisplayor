@@ -245,16 +245,24 @@ class Student:
         reraise=True,
     )  # 每 10s 重试，最多 5 次
     def __get_dept_list(self, dept_id: str, dept_name: str) -> Iterator[tuple[str, str, int, int]]:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug(f"尝试获取部门 {dept_id} {dept_name}")
+
         resp = self.__session.get(
             url=f"{self.__sp_host}/member/dormitoryManage/getDeptList",
             params={
                 "deptCode": dept_id,
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, f"无法获取部门，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.text
-        assert ret.find("随行校园-部门") != -1
+        assert "随行校园-部门" in ret, f"无法获取部门\n\n" \
+                                 f"args: \n{argv}\n\n" \
+                                 f"resp: \n{ret}"
 
         for department_id, department_name, department_dept_number, department_stu_number in self.__regex_dept.findall(ret):
             yield department_id, department_name, int(department_dept_number), int(department_stu_number)
@@ -266,7 +274,10 @@ class Student:
         reraise=True,
     )  # 每 10s 重试，最多 5 次
     def __get_stu_list(self, class_id: str, class_name: str) -> Iterator[str]:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug(f"尝试获取班级 {class_id} {class_name}")
+
         resp = self.__session.get(
             url=f"{self.__sp_host}/member/dormitoryManage/getDeptList",
             params={
@@ -274,9 +285,14 @@ class Student:
                 "status": 1,
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, f"无法获取班级，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.text
-        assert ret.find("随行校园-班级") != -1
+        assert "随行校园-班级" in ret, f"无法获取班级\n\n" \
+                                 f"args: \n{argv}\n\n" \
+                                 f"resp: \n{ret}"
 
         for student_id, student_name in self.__regex_class.findall(ret):
             yield student_id
@@ -288,16 +304,24 @@ class Student:
         reraise=True,
     )  # 每 10s 重试，最多 5 次
     def __get_stu_info(self, student_id: str) -> tuple[str, str, str, str, str, str, str | None, str | None, str, str | None, str | None, int | None]:
+        argv = locals().copy()
+        argv.pop('self')
         self.__logger.debug(f"尝试获取学生 {student_id}")
+
         resp = self.__session.get(
             url=f"{self.__sp_host}/member/dormitoryManage/getStudentInfo",
             params={
                 "keyword": student_id,
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, f"无法获取学生，HTTP {resp.status_code}\n\n" \
+                                        f"args: \n{argv}\n\n" \
+                                        f"resp: \n{resp.content}"
+
         ret = resp.text
-        assert ret.find("随行校园-人员信息") != -1
+        assert "随行校园-人员信息" in ret, f"无法获取学生\n\n" \
+                                   f"args: \n{argv}\n\n" \
+                                   f"resp: \n{ret}"
 
         info = {info_name: info_value for info_name, info_value in self.__regex_info.findall(ret)}
         building, _, room = info['房间'].partition(' ') if info['房间'] != '' else (None, '', None)

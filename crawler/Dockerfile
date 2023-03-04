@@ -15,5 +15,6 @@ RUN wget -c https://www.tdengine.com/assets-download/3.0/TDengine-client-${TDENG
 COPY ./ /home/school_power_crawler/
 WORKDIR /home/school_power_crawler/
 
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && pip install --no-cache-dir -r requirements.txt
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip install --no-cache-dir -r requirements.txt
 CMD python -u main.py
