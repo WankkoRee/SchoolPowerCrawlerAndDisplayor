@@ -142,7 +142,7 @@ class Power:
         before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
         reraise=True,
     )  # 每 5s 重试，最多 3 次
-    def __areas(self) -> Iterator[tuple[int, str]]:
+    def __areas(self) -> list[tuple[int, str]]:
         argv = locals().copy()
         argv.pop('self')
         self.__logger.debug("尝试获取校区")
@@ -159,8 +159,10 @@ class Power:
                                  f"args: \n{argv}\n\n" \
                                  f"resp: \n{ret}"
 
+        areas = []
         for area in ret['data']:
-            yield area['areaID'], area['areaName']
+            areas.append((area['areaID'], area['areaName']))
+        return areas
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(5),
@@ -168,7 +170,7 @@ class Power:
         before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
         reraise=True,
     )  # 每 5s 重试，最多 3 次
-    def __buildings(self, area_id: int) -> Iterator[tuple[int, str, int]]:
+    def __buildings(self, area_id: int) -> list[tuple[int, str, int]]:
         argv = locals().copy()
         argv.pop('self')
         self.__logger.debug(f"尝试获取宿舍楼 {area_id}")
@@ -189,9 +191,11 @@ class Power:
                                  f"args: \n{argv}\n\n" \
                                  f"resp: \n{ret}"
 
+        buildings = []
         for building in ret['data']:
             building_id, _, building_comp = building['value'].partition(",")
-            yield int(building_id), building['title'], int(building_comp)
+            buildings.append((int(building_id), building['title'], int(building_comp)))
+        return buildings
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(5),
@@ -222,7 +226,9 @@ class Power:
                                  f"args: \n{argv}\n\n" \
                                  f"resp: \n{ret}"
 
+        rooms = []
         room_ts = time.time()
         for room in ret['data']:
             room_id, _, room_power = room['value'].partition(",")
-            yield int(room_id), room['title'], int(Decimal(room_power) * 100), room_ts
+            rooms.append((int(room_id), room['title'], int(Decimal(room_power) * 100), room_ts))
+        return rooms

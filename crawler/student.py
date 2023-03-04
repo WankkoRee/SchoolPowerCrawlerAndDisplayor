@@ -244,7 +244,7 @@ class Student:
         before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
         reraise=True,
     )  # 每 10s 重试，最多 5 次
-    def __get_dept_list(self, dept_id: str, dept_name: str) -> Iterator[tuple[str, str, int, int]]:
+    def __get_dept_list(self, dept_id: str, dept_name: str) -> list[tuple[str, str, int, int]]:
         argv = locals().copy()
         argv.pop('self')
         self.__logger.debug(f"尝试获取部门 {dept_id} {dept_name}")
@@ -264,8 +264,10 @@ class Student:
                                  f"args: \n{argv}\n\n" \
                                  f"resp: \n{ret}"
 
+        departments = []
         for department_id, department_name, department_dept_number, department_stu_number in self.__regex_dept.findall(ret):
-            yield department_id, department_name, int(department_dept_number), int(department_stu_number)
+            departments.append((department_id, department_name, int(department_dept_number), int(department_stu_number)))
+        return departments
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(10),
@@ -273,7 +275,7 @@ class Student:
         before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
         reraise=True,
     )  # 每 10s 重试，最多 5 次
-    def __get_stu_list(self, class_id: str, class_name: str) -> Iterator[str]:
+    def __get_stu_list(self, class_id: str, class_name: str) -> list[str]:
         argv = locals().copy()
         argv.pop('self')
         self.__logger.debug(f"尝试获取班级 {class_id} {class_name}")
@@ -294,8 +296,10 @@ class Student:
                                  f"args: \n{argv}\n\n" \
                                  f"resp: \n{ret}"
 
+        students = []
         for student_id, student_name in self.__regex_class.findall(ret):
-            yield student_id
+            students.append(student_id)
+        return students
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(10),
