@@ -3,7 +3,8 @@
 
 /crawler/cookies.mzl
 
-/db/data/
+/db/tdengine/
+/db/mongo/
 
 /mirai/
 !/mirai/config.json

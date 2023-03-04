@@ -15,5 +15,6 @@ CREATE STABLE `powers` (
     `building` NCHAR(16),
     `room` NCHAR(16),
     `create_time` TIMESTAMP,
-    `is_show` BOOL
+    `is_show` BOOL,
+    `nums` TINYINT UNSIGNED
 );

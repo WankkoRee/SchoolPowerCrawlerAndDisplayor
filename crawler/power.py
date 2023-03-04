@@ -4,7 +4,7 @@ from typing import Iterator
 from decimal import Decimal
 
 import taos
-from taos import ProgrammingError, TaosConnection
+import tenacity
 
 from session import Session
 from util import prepare
@@ -27,20 +27,29 @@ class Power:
             self.__sp_db_user,
             self.__sp_db_pass,
             self.__sp_db_name,
+            self.__sp_mongo_host,
+            self.__sp_mongo_port,
+            self.__sp_mongo_user,
+            self.__sp_mongo_pass,
+            self.__sp_mongo_name,
             self.__sp_debug
         ) = self.__sp_env = prepare()
         self.__logger = logging.getLogger("电量")
 
-        self.__logger.info("初始化")
+        self.__logger.debug("初始化")
 
-        self.__last_powers = {}
         self.__session = session
-        self.__tdengine: TaosConnection = None
+        self.__cache_last_powers = {}
+        self.__tdengine: taos.TaosConnection | None = None
 
     def __del__(self):
-        pass
+        if self.__tdengine is not None:
+            try:
+                self.__tdengine.close()
+            except:
+                pass
 
-        self.__logger.info("销毁")
+        self.__logger.debug("销毁")
 
     def run(self):
         self.__logger.info("任务开始")
@@ -50,7 +59,7 @@ class Power:
         self.__logger.info("登录成功")
         if self.__sp_debug:
             for area_name, building_name, room_name, room_power, room_ts in self.__crawler():
-                self.__logger.info(area_name, building_name, room_name, room_power, room_ts)
+                self.__logger.debug(msg=(area_name, building_name, room_name, room_power, room_ts))
         else:
             self.__tdengine = taos.connect(
                 host=self.__sp_db_host,
@@ -62,20 +71,24 @@ class Power:
             )
             self.__saver(self.__crawler())
             self.__tdengine.close()
+            self.__tdengine = None
         self.__logger.info("任务结束")
 
     def __crawler(self) -> Iterator[tuple[str, str, str, int, float]]:
         self.__logger.info("数据爬取")
+        sums = 0
         for area_id, area_name in self.__areas():
             for building_id, building_name, building_comp in self.__buildings(area_id):
                 for room_id, room_name, room_power, room_ts in self.__rooms(area_id, building_id, building_comp):
                     yield area_name, building_name, room_name, room_power, room_ts
+                    sums += 1
+        self.__logger.info(f"爬取了 {sums} 条数据")
 
     def __saver(self, data: Iterator[tuple[str, str, str, int, float]]):
         self.__logger.info("数据落地")
-        if len(self.__last_powers) == 0:
+        if len(self.__cache_last_powers) == 0:
             for table_name, ts, power, spending in self.__tdengine.query(f"select tbname, last_row(ts, power, spending) from powers partition by tbname").fetch_all():
-                self.__last_powers[table_name] = ts.timestamp(), power, spending
+                self.__cache_last_powers[table_name] = ts.timestamp(), power, spending
 
         stmt = self.__tdengine.statement("insert into ? (ts, power, spending) using `powers` tags (?, ?, ?, ?, ?) values (?, ?, ?)")
 
@@ -83,18 +96,18 @@ class Power:
             table_name = f"{area_name}{building_name}{room_name}"
 
             table_exist = True
-            if table_name not in self.__last_powers.keys():
+            if table_name not in self.__cache_last_powers.keys():
                 try:
                     ts, power, spending = self.__tdengine.query(f"select last_row(ts, power, spending) from `{table_name}`").fetch_all()[0]
-                    self.__last_powers[table_name] = ts.timestamp(), power, spending
-                except ProgrammingError as e:
+                    self.__cache_last_powers[table_name] = ts.timestamp(), power, spending
+                except taos.ProgrammingError as e:
                     if e.errno == 0x80002662 - 0x100000000 or e.msg == 'Fail to get table info, error: Table does not exist':
                         table_exist = False
-                        self.__logger.info(f"新寝室: {table_name}")
+                        self.__logger.warning(f"新寝室: {table_name}")
                     else:
                         raise e
 
-            room_spending = (self.__last_powers[table_name][1] - room_power) if table_exist else None  # 反向减，算用电情况
+            room_spending = (self.__cache_last_powers[table_name][1] - room_power) if table_exist else None  # 反向减，算用电情况
 
             tags = taos.new_bind_params(5)
             tags[0].nchar(area_name)
@@ -112,29 +125,42 @@ class Power:
 
             if table_exist:  # 更新上一次的 spending
                 values = taos.new_bind_params(3)
-                values[0].timestamp(self.__last_powers[table_name][0])
-                values[1].int(self.__last_powers[table_name][1])
+                values[0].timestamp(self.__cache_last_powers[table_name][0])
+                values[1].int(self.__cache_last_powers[table_name][1])
                 values[2].int(room_spending)
                 stmt.bind_param(values)
 
-            self.__last_powers[table_name] = (room_ts, room_power, None)  # 缓存这一次的 power
+            self.__cache_last_powers[table_name] = (room_ts, room_power, None)  # 缓存这一次的 power
 
         stmt.execute()
         stmt.close()
 
+    @tenacity.retry(
+        wait=tenacity.wait_fixed(5),
+        stop=tenacity.stop_after_attempt(3),
+        before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
+        reraise=True,
+    )  # 每 5s 重试，最多 3 次
     def __areas(self) -> Iterator[tuple[int, str]]:
-        self.__logger.info("尝试获取校区")
+        self.__logger.debug("尝试获取校区")
         resp = self.__session.post(
             url=f"{self.__sp_host}/member/power/selectArea",
         )
         assert resp.status_code == 200
         ret = resp.json()
         assert ret['code'] == 1
+
         for area in ret['data']:
             yield area['areaID'], area['areaName']
 
+    @tenacity.retry(
+        wait=tenacity.wait_fixed(5),
+        stop=tenacity.stop_after_attempt(3),
+        before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
+        reraise=True,
+    )  # 每 5s 重试，最多 3 次
     def __buildings(self, area_id: int) -> Iterator[tuple[int, str, int]]:
-        self.__logger.info("尝试获取宿舍楼")
+        self.__logger.debug(f"尝试获取宿舍楼 {area_id}")
         resp = self.__session.post(
             url=f"{self.__sp_host}/member/power/buildings",
             data={
@@ -145,12 +171,19 @@ class Power:
         assert resp.status_code == 200
         ret = resp.json()
         assert ret['code'] == 1
+
         for building in ret['data']:
             building_id, _, building_comp = building['value'].partition(",")
             yield int(building_id), building['title'], int(building_comp)
 
+    @tenacity.retry(
+        wait=tenacity.wait_fixed(5),
+        stop=tenacity.stop_after_attempt(3),
+        before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
+        reraise=True,
+    )  # 每 5s 重试，最多 3 次
     def __rooms(self, area_id: int, building_id: int, building_comp: int) -> Iterator[tuple[int, str, int, float]]:
-        self.__logger.info("尝试获取寝室")
+        self.__logger.debug(f"尝试获取寝室 {area_id} {building_id},{building_comp}")
         resp = self.__session.post(
             url=f"{self.__sp_host}/member/power/rooms",
             data={
@@ -163,6 +196,7 @@ class Power:
         assert resp.status_code == 200
         ret = resp.json()
         assert ret['code'] == 1
+
         room_ts = time.time()
         for room in ret['data']:
             room_id, _, room_power = room['value'].partition(",")

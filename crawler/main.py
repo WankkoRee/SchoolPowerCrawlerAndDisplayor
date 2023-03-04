@@ -7,8 +7,9 @@ from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-from power import Power
 from session import Session
+from power import Power
+from student import Student
 
 
 class Scheduler(BlockingScheduler):
@@ -62,7 +63,7 @@ def job_listener(event):
                     minute='0',
                 )
         else:
-            scheduler._logger.info(f"{job.name} 任务异常结束，执行周期设置为 每分钟一次")
+            scheduler._logger.warning(f"{job.name} 任务异常结束，执行周期设置为 每分钟一次")
             scheduler.retry_job[job.id] = True
             # 每分钟一次
             scheduler.reschedule_job(
@@ -81,7 +82,7 @@ def job_listener(event):
                     day_of_week='mon',
                 )
         else:
-            scheduler._logger.info(f"{job.name} 任务异常结束，执行周期恢复为 每小时一次")
+            scheduler._logger.warning(f"{job.name} 任务异常结束，执行周期恢复为 每小时一次")
             scheduler.retry_job[job.id] = False
             # 每小时一次
             scheduler.reschedule_job(
@@ -115,6 +116,18 @@ def main():
         func=power.run,
         trigger='cron',
         minute='0',
+        coalesce=True,
+        max_instances=1,
+        next_run_time=datetime.datetime.now(),
+        replace_existing=True,
+    )
+    student = Student(session)
+    scheduler.add_job(
+        id="student",
+        name="爬取学生信息",
+        func=student.run,
+        trigger='cron',
+        day_of_week='mon',
         coalesce=True,
         max_instances=1,
         next_run_time=datetime.datetime.now(),

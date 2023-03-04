@@ -12,12 +12,8 @@ services:
       - "6030"
       - "6041-6049"
       - "6041-6049/udp"
-    ports:
-      - "6030:6030"
-      - "6041-6049:6041-6049"
-      - "6041-6049:6041-6049/udp"
     volumes:
-      - "./db/data/:/var/lib/taos/"
+      - "./db/tdengine/:/var/lib/taos/"
 #      - ./db/initdb.d/:/docker-entrypoint-initdb.d/
     environment:
       TAOS_FQDN: "school_power_db"
@@ -41,8 +37,6 @@ services:
     image: wankkoree/school_power_api:12.22.12-bullseye-slim
     expose:
       - "3000"
-    ports:
-      - "3000:3000"
     volumes:
       - "./api/:/home/school_power_api/"
     environment:
@@ -87,6 +81,11 @@ services:
       SP_DB_USER: "root"
       SP_DB_PASS: "taosdata"
       SP_DB_NAME: "school_power"
+      SP_MONGO_HOST: "school_power_mongo"
+      SP_MONGO_PORT: 27017
+      SP_MONGO_USER: "root"
+      SP_MONGO_PASS: "123456"
+      SP_MONGO_NAME: "school_power"
       SP_DEBUG: 0
     restart: unless-stopped
     logging:
@@ -97,6 +96,26 @@ services:
     networks:
       school_power_net:
         ipv4_address: 192.168.1.4
+
+  school_power_db_mongo:
+    container_name: school_power_db_mongo
+    image: "mongo:6.0.4-jammy"
+    expose:
+      - "27017"
+    volumes:
+      - ./db/mongo/:/data/db/
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 1
+    networks:
+      school_power_net:
+        ipv4_address: 192.168.1.5
 
 #  school_power_mirai:
 #    container_name: school_power_mirai
