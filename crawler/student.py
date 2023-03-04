@@ -267,6 +267,9 @@ class Student:
         departments = []
         for department_id, department_name, department_dept_number, department_stu_number in self.__regex_dept.findall(ret):
             departments.append((department_id, department_name, int(department_dept_number), int(department_stu_number)))
+        assert len(departments) > 0, f"无法获取部门，内容为空\n\n" \
+                                     f"args: \n{argv}\n\n" \
+                                     f"resp: \n{ret}"
         return departments
 
     @tenacity.retry(
@@ -299,6 +302,9 @@ class Student:
         students = []
         for student_id, student_name in self.__regex_class.findall(ret):
             students.append(student_id)
+        assert len(students) > 0, f"无法获取班级，内容为空\n\n" \
+                                  f"args: \n{argv}\n\n" \
+                                  f"resp: \n{ret}"
         return students
 
     @tenacity.retry(
