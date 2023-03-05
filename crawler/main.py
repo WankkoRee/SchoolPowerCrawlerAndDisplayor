@@ -155,7 +155,7 @@ def main():
         day_of_week='mon',
         coalesce=True,
         max_instances=1,
-        next_run_time=datetime.datetime.now(),
+        # next_run_time=datetime.datetime.now(),
         replace_existing=True,
     )
 
