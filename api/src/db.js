@@ -28,8 +28,24 @@ function spDb (fastify, options, next) {
                         'app.password': password,
                     })
                     if (loginResult == null)
-                        throw new fastify.spError('登录失败', 103, `用户名或密码错误`)
+                        throw new fastify.spError('登录失败', 103, `用户名或密码错误，${username}, ${password}`)
                     return {code: 1, data: loginResult}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                }
+            },
+            setUserPassword: async function (id, password) {
+                try {
+                    const setUserPasswordResult = await mongo.updateOne({
+                        '_id': id,
+                    }, {
+                        '$set': {
+                            'app.password': password,
+                        }
+                    })
+                    if (setUserPasswordResult.modifiedCount !== 1)
+                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${password}`)
+                    return {code: 1, data: null}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
                 }

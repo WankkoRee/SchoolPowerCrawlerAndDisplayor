@@ -11,9 +11,15 @@ function spError (fastify, options, next) {
         api.js
             spError('未知方法', 102, )
         db.js
-            spError('登录失败', 103, )
+            spError('登录失败', 103, `用户名或密码错误，${username}, ${password}`)
         api.js
-            spError('未登录', 104, )
+            spError('未登录', 104, '就是未登录')
+        api.js
+            spError('修改失败', 105, `旧密码错误，${request.session.user.app.password}, ${password}`)
+        db.js
+            spError('修改失败', 106, `需要联系管理员，${id}, ${password}`)
+        api.js
+            spError('修改失败', 107, `旧密码与新密码相同，${password}, ${new_password}`)
          */
 
         fastify.spError = class extends Error {

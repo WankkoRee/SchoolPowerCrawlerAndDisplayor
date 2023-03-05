@@ -64,6 +64,38 @@ async function api (fastify, options) {
     /*
     获取用户信息
      */
+    fastify.post('/user/password/change', {
+        schema: {
+            body: {
+                type: 'object',
+                properties: {
+                    password: { type: 'string' },
+                    new_password: { type: 'string' },
+                }
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'null',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        if (!request.session.user)
+            return fastify.sp_error.ApiErrorReturn(new fastify.spError('未登录', 104, '就是未登录'))
+        const {
+            password: password,
+            new_password: new_password,
+        } = request.body
+        if (password !== request.session.user.app.password)
+            return fastify.sp_error.ApiErrorReturn(new fastify.spError('修改失败', 105, `旧密码错误，${request.session.user.app.password}, ${password}`))
+        if (password === new_password)
+            return fastify.sp_error.ApiErrorReturn(new fastify.spError('修改失败', 107, `旧密码与新密码相同，${password}, ${new_password}`))
+        return await fastify.sp_db.setUserPassword(request.session.user._id, new_password)
+    })
+
+    /*
+    获取用户信息
+     */
     fastify.get('/user/info', {
         schema: {
             response: {
