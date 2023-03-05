@@ -61,8 +61,8 @@ class Session(requests.Session):
 
         self.__logger.debug("初始化")
 
-        self.__lock = threading.Lock()
-        self.__lock_login = threading.Lock()
+        self.__lock = threading.RLock()
+        self.__lock_login = threading.RLock()
         self.cookies: CookieJar = CookieJar(filename="cookies.mzl", logger=self.__logger)
         try:
             self.cookies.load()
@@ -81,9 +81,14 @@ class Session(requests.Session):
         before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
         reraise=True,
     )  # 每 5s 重试，最多 3 次
-    def get(self, *args, **kwargs):
+    def get(self, check_login_state=True, *args, **kwargs):
         with self.__lock:
-            return super().get(*args, **kwargs)
+            ret = super().get(*args, **kwargs)
+            if check_login_state and ("请在微信客户端打开链接" in ret.text or "pwdEncryptSalt" in ret.text):
+                self.__logger.warning("登录状态失效，尝试重新登录并重试")
+                self.login()
+                raise Exception("重新登录后需要重试")
+            return ret
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(5),
@@ -91,9 +96,14 @@ class Session(requests.Session):
         before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
         reraise=True,
     )  # 每 5s 重试，最多 3 次
-    def post(self, *args, **kwargs):
+    def post(self, check_login_state=True, *args, **kwargs):
         with self.__lock:
-            return super().post(*args, **kwargs)
+            ret = super().post(*args, **kwargs)
+            if check_login_state and ("请在微信客户端打开链接" in ret.text or "pwdEncryptSalt" in ret.text):
+                self.__logger.warning("登录状态失效，尝试重新登录并重试")
+                self.login()
+                raise Exception("重新登录后需要重试")
+            return ret
 
     def login(self):
         """自适应登录"""
@@ -126,6 +136,7 @@ class Session(requests.Session):
         self.__logger.debug("通过 VPN 登录 SSO，解析登录页面")
 
         resp = self.get(
+            check_login_state=False,
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/login",
             params={
                 "service": f"{self.__sp_vpn_host}/login?cas_login=true",
@@ -152,6 +163,7 @@ class Session(requests.Session):
         self.__logger.debug("通过 VPN 登录 SSO，判断是否需要验证码")
 
         resp = self.get(
+            check_login_state=False,
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/checkNeedCaptcha.htl",
             params={
                 "username": self.__sp_sso_username,
@@ -177,6 +189,7 @@ class Session(requests.Session):
         self.__logger.debug("通过 VPN 登录 SSO，识别验证码")
 
         resp = self.get(
+            check_login_state=False,
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/getCaptcha.htl",
             params=str(int(time.time() * 1000)),
         )
@@ -200,6 +213,7 @@ class Session(requests.Session):
         self.__logger.debug("通过 VPN 登录 SSO，发起登录")
 
         resp = self.post(
+            check_login_state=False,
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/login",
             params={
                 "service": f"{self.__sp_vpn_host}/login?cas_login=true",
@@ -231,6 +245,7 @@ class Session(requests.Session):
         self.__logger.debug("检查 SSO/VPN 登录状态")
 
         resp = self.get(
+            check_login_state=False,
             url=f"{self.__sp_vpn_host}/user/info",
         )
         assert resp.status_code == 200, f"无法获取登录状态，HTTP {resp.status_code}\n\n" \
@@ -252,6 +267,7 @@ class Session(requests.Session):
         self.__logger.debug("通过 VPN-SSO 登录 SP")
 
         resp = self.get(
+            check_login_state=False,
             url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/authserver/login",
             params={
                 "service": f"{self.__sp_host}/outIndex/power",
@@ -284,6 +300,7 @@ class Session(requests.Session):
         self.__logger.debug("通过 SSO 登录 SP")
 
         resp = self.get(
+            check_login_state=False,
             url=f"{self.__sp_host}/outIndex/power",
         )
         assert resp.status_code == 200, f"无法通过 SSO 登录 SP，HTTP {resp.status_code}\n\n" \
@@ -307,6 +324,7 @@ class Session(requests.Session):
         self.__logger.debug("检查 SP 登录状态")
 
         resp = self.get(
+            check_login_state=False,
             url=f"{self.__sp_host}/member/power/selectArea",
         )
         assert resp.status_code == 200, f"无法获取登录状态，HTTP {resp.status_code}\n\n" \
@@ -328,6 +346,7 @@ class Session(requests.Session):
         self.__logger.debug("获取 Cookies")
 
         resp = self.post(
+            check_login_state=False,
             url=f"{self.__sp_vpn_host}/wengine-vpn/cookie",
             params={
                 "method": "get",
