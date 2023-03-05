@@ -1,5 +1,6 @@
 import logging
 import re
+import time
 from typing import Iterator
 from urllib.parse import quote_plus
 
@@ -67,7 +68,7 @@ class Student:
             r'\s*</h\d>'
         )
         self.__regex_img = re.compile(r'<img src="(.*?)">')
-        self.__cache_rooms: dict[str, dict[str, dict[str, int]]] = {}
+        self.__cache_rooms: dict[str, dict[str, dict[str, set[int]]]] = {}
         self.__tdengine: taos.TaosConnection | None = None
         self.__mongodb_: pymongo.MongoClient | None = None
         self.__mongodb: pymongo.database.Database | None = None
@@ -93,8 +94,8 @@ class Student:
         self.__session.login()
         self.__logger.info("登录成功")
         if self.__sp_debug:
-            for student_id, student_number, student_name, student_faculty, student_grade, student_class, student_major, student_qualification, student_phone, student_picture, student_building, student_room, student_bed in self.__crawler():
-                self.__logger.debug(msg=(student_id, student_number, student_name, student_faculty, student_grade, student_class, student_major, student_qualification, student_phone, student_picture, student_building, student_room, student_bed))
+            for student_id, student_number, student_name, student_faculty, student_grade, student_class, student_major, student_qualification, student_phone, student_picture, student_building, student_room, student_bed, student_ts in self.__crawler():
+                self.__logger.debug(msg=(student_id, student_number, student_name, student_faculty, student_grade, student_class, student_major, student_qualification, student_phone, student_picture, student_building, student_room, student_bed, student_ts))
         else:
             self.__tdengine = taos.connect(
                 host=self.__sp_db_host,
@@ -113,7 +114,7 @@ class Student:
             self.__mongodb = None
         self.__logger.info("任务结束")
 
-    def __crawler(self) -> Iterator[tuple[str, str, str, str, str, str, str, str | None, str | None, str, str | None, str | None, int | None]]:
+    def __crawler(self) -> Iterator[tuple[str, str, str, str, str, str, str, str | None, str | None, str, str | None, str | None, int | None, float]]:
         self.__logger.info("数据爬取")
         sums = 0
         for faculty_id, faculty_name, faculty_dept_number, faculty_stu_number in self.__get_dept_list("00", "学校"):
@@ -127,7 +128,7 @@ class Student:
                             sums += 1
         self.__logger.info(f"爬取了 {sums} 条数据")
 
-    def __saver(self, data: Iterator[tuple[str, str, str, str, str, str, str, str | None, str | None, str, str | None, str | None, int | None]]):
+    def __saver(self, data: Iterator[tuple[str, str, str, str, str, str, str, str | None, str | None, str, str | None, str | None, int | None, float]]):
         self.__logger.info("数据落地")
         if len(self.__cache_rooms) == 0:
             for table_name, area, building, room in self.__tdengine.query(f"select distinct tbname, area, building, room from powers").fetch_all():
@@ -136,15 +137,16 @@ class Student:
                 if room not in self.__cache_rooms[building].keys():
                     self.__cache_rooms[building][room] = {}
                 if area not in self.__cache_rooms[building][room].keys():
-                    self.__cache_rooms[building][room][area] = 0
+                    self.__cache_rooms[building][room][area] = set()
 
         for building in self.__cache_rooms.keys():
             for room in self.__cache_rooms[building].keys():
                 for area in self.__cache_rooms[building][room].keys():
-                    self.__cache_rooms[building][room][area] = 0
+                    self.__cache_rooms[building][room][area] = set()
 
-        for student_id, student_number, student_name, student_faculty, student_grade, student_class, student_major, student_qualification, student_phone, student_picture, student_building, student_room, student_bed in data:
+        for student_id, student_number, student_name, student_faculty, student_grade, student_class, student_major, student_qualification, student_phone, student_picture, student_building, student_room, student_bed, student_ts in data:
             no_room = student_building is None or student_room is None
+            custom_room = False  # 可自选
 
             if not no_room:
                 if student_building not in self.__cache_rooms.keys():
@@ -154,10 +156,11 @@ class Student:
                         if room not in self.__cache_rooms[building].keys():
                             self.__cache_rooms[building][room] = {}
                         if area not in self.__cache_rooms[building][room].keys():
-                            self.__cache_rooms[building][room][area] = 0
+                            self.__cache_rooms[building][room][area] = set()
                 if student_building not in self.__cache_rooms.keys():
                     self.__logger.warning(f"所需的 building {student_building} 无法在 TDengine 中找到")
                     no_room = True
+                    custom_room = True
 
                 if not no_room:
                     if student_room not in self.__cache_rooms[student_building].keys():
@@ -167,76 +170,78 @@ class Student:
                             if room not in self.__cache_rooms[building].keys():
                                 self.__cache_rooms[building][room] = {}
                             if area not in self.__cache_rooms[building][room].keys():
-                                self.__cache_rooms[building][room][area] = 0
+                                self.__cache_rooms[building][room][area] = set()
                     if student_room not in self.__cache_rooms[student_building].keys():
                         self.__logger.warning(f"所需的 room {student_room} 无法在 TDengine 中找到")
                         no_room = True
+                        custom_room = True
 
             if no_room:
-                self.__mongodb['student'].update_one(filter={'_id': student_id}, update={
-                    '$set': {
-                        'info': {
-                            'number': student_number,
-                            'name': student_name,
-                            'faculty': student_faculty,
-                            'grade': student_grade,
-                            'class': student_class,
-                            'major': student_major,
-                            'qualification': student_qualification,
-                            'phone': student_phone,
-                            'picture': student_picture,
-                        },
-                        'position': {
-                            'area': None,
-                            'building': None,
-                            'room': None,
-                            'bed': None,
-                        },
-                    },
-                    '$setOnInsert': {
-                        'app': {
-                            'password': student_phone[-6:] if student_phone is not None and len(student_phone) >= 6 else "".join(pypinyin.lazy_pinyin(student_name, pypinyin.Style.NORMAL)),
-                            'qq': None,
-                            'dingtalk': None,
-                        }
-                    },
-                }, upsert=True)
+                student_area = None
             else:
+                student_rooms = list(filter(lambda x: x == student_room or x.startswith(student_room+"-"), self.__cache_rooms[student_building].keys()))
+                assert len(student_rooms) > 0
+                if len(student_rooms) > 1:
+                    custom_room = True
                 student_area = list(self.__cache_rooms[student_building][student_room].keys())[0]
-                self.__cache_rooms[student_building][student_room][student_area] += 1
-                self.__mongodb['student'].update_one(filter={'_id': student_id}, update={
-                    '$set': {
-                        'info': {
-                            'number': student_number,
-                            'name': student_name,
-                            'faculty': student_faculty,
-                            'grade': student_grade,
-                            'class': student_class,
-                            'major': student_major,
-                            'qualification': student_qualification,
-                            'phone': student_phone,
-                            'picture': student_picture,
-                        },
-                        'position': {
-                            'area': student_area,
-                            'building': student_building,
-                            'room': student_room,
-                            'bed': student_bed,
-                        },
-                    },
-                    '$setOnInsert': {
-                        'app': {
-                            'password': student_phone[-6:] if student_phone is not None and len(student_phone) >= 6 else "".join(pypinyin.lazy_pinyin(student_name, pypinyin.Style.NORMAL)),
-                            'qq': None,
-                            'dingtalk': None,
-                        }
-                    },
-                }, upsert=True)
+
+            mongo_result = self.__mongodb['student'].find_one_and_update(filter={'_id': student_id}, update={
+                '$set': {
+                    'info.number': student_number,
+                    'info.name': student_name,
+                    'info.faculty': student_faculty,
+                    'info.grade': student_grade,
+                    'info.class': student_class,
+                    'info.major': student_major,
+                    'info.qualification': student_qualification,
+                    'info.phone': student_phone,
+                    'info.picture': student_picture,
+                    'position.area': student_area,
+                    'position.building': student_building,
+                    'position.room': student_room,
+                    'position.bed': student_bed,
+                    'position.custom.state': custom_room,
+                    'update_time': student_ts,
+                },
+                '$setOnInsert': {
+                    'position.custom.area': None,
+                    'position.custom.building': None,
+                    'position.custom.room': None,
+                    'app.password': student_phone[-6:] if student_phone is not None and len(student_phone) >= 6 else "".join(pypinyin.lazy_pinyin(student_name, pypinyin.Style.NORMAL)),
+                    'app.qq': None,
+                    'app.dingtalk': None,
+                },
+            }, projection={
+                'position.custom.state': 1,
+                'position.area': 1,
+                'position.building': 1,
+                'position.room': 1,
+                'position.bed': 1,
+                'position.custom.area': 1,
+                'position.custom.building': 1,
+                'position.custom.room': 1,
+            }, upsert=True, return_document=pymongo.ReturnDocument.AFTER)
+            if mongo_result['position']['custom']['state']:
+                mongo_result_area = mongo_result['position']['custom']['area']
+                mongo_result_building = mongo_result['position']['custom']['building']
+                mongo_result_room = mongo_result['position']['custom']['room']
+            else:
+                mongo_result_area = mongo_result['position']['area']
+                mongo_result_building = mongo_result['position']['building']
+                mongo_result_room = mongo_result['position']['room']
+            mongo_result_bed = mongo_result['position']['bed']
+            if mongo_result_building in self.__cache_rooms.keys():
+                if mongo_result_room in self.__cache_rooms[mongo_result_building].keys():
+                    if mongo_result_area in self.__cache_rooms[mongo_result_building][mongo_result_room].keys():
+                        if mongo_result_bed in self.__cache_rooms[student_building][student_room][student_area]:
+                            self.__logger.warning(f"寝室床位异常，{student_area} / {student_building} / {student_room} 中已存在 {mongo_result_bed}，{student_id} 或其他人可能不属于此寝室")
+                        else:
+                            self.__cache_rooms[student_building][student_room][student_area].add(mongo_result_bed)
 
         for building in self.__cache_rooms.keys():
             for room in self.__cache_rooms[building].keys():
                 for area in self.__cache_rooms[building][room].keys():
-                    self.__tdengine.execute(f"ALTER TABLE `{area}{building}{room}` SET TAG nums={self.__cache_rooms[building][room][area]}")
+                    self.__tdengine.execute(f"ALTER TABLE `{area}{building}{room}` SET TAG nums={len(self.__cache_rooms[building][room][area])}")
 
     @tenacity.retry(
         wait=tenacity.wait_fixed(10),
@@ -313,7 +318,7 @@ class Student:
         before_sleep=tenacity.before_sleep_log(logging.getLogger("重试"), logging.WARNING),
         reraise=True,
     )  # 每 10s 重试，最多 5 次
-    def __get_stu_info(self, student_id: str) -> tuple[str, str, str, str, str, str, str | None, str | None, str, str | None, str | None, int | None]:
+    def __get_stu_info(self, student_id: str) -> tuple[str, str, str, str, str, str, str | None, str | None, str, str | None, str | None, int | None, float]:
         argv = locals().copy()
         argv.pop('self')
         self.__logger.debug(f"尝试获取学生 {student_id}")
@@ -348,4 +353,5 @@ class Student:
             building,
             room,
             int(info['床位']) if info['床位'] != '' else None,
+            time.time()
         )
