@@ -63,7 +63,7 @@ class Session(requests.Session):
 
         self.__lock = threading.RLock()
         self.__lock_login = threading.RLock()
-        self.cookies: CookieJar = CookieJar(filename="cookies.mzl", logger=self.__logger)
+        self.cookies: CookieJar = CookieJar(filename="data/cookies.mzl", logger=self.__logger)
         try:
             self.cookies.load()
         except:

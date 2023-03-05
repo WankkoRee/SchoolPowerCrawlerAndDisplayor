@@ -1,5 +1,7 @@
 import datetime
 import logging
+import logging.handlers
+import re
 import signal
 import sys
 
@@ -35,16 +37,39 @@ class LoggingLevelFilter(logging.Filter):
 
 def logger_patch():
     h1 = logging.StreamHandler(sys.stdout)
-    h1.addFilter(LoggingLevelFilter({logging.INFO, logging.DEBUG}, True))
+    h1.addFilter(LoggingLevelFilter({logging.INFO}, True))
 
     h2 = logging.StreamHandler(sys.stderr)
-    h2.addFilter(LoggingLevelFilter({logging.INFO, logging.DEBUG}, False))
+    h2.addFilter(LoggingLevelFilter({logging.DEBUG, logging.INFO}, False))
+
+    h3 = logging.handlers.TimedRotatingFileHandler("./logs/all", when='H', encoding='utf-8', utc=False)
+    h3.suffix = "%Y-%m-%d %H.log"
+    h3.extMatch = r"^\d{4}-\d{2}-\d{2} \d{2}.log$"
+    h3.extMatch = re.compile(h3.extMatch)
+
+    h4 = logging.handlers.TimedRotatingFileHandler("./logs/info", when='H', encoding='utf-8', utc=False)
+    h4.suffix = "%Y-%m-%d %H.log"
+    h4.extMatch = r"^\d{4}-\d{2}-\d{2} \d{2}.log$"
+    h4.extMatch = re.compile(h4.extMatch)
+    h4.addFilter(LoggingLevelFilter({logging.DEBUG}, False))
+
+    h5 = logging.handlers.TimedRotatingFileHandler("./logs/warn", when='H', encoding='utf-8', utc=False)
+    h5.suffix = "%Y-%m-%d %H.log"
+    h5.extMatch = r"^\d{4}-\d{2}-\d{2} \d{2}.log$"
+    h5.extMatch = re.compile(h5.extMatch)
+    h5.addFilter(LoggingLevelFilter({logging.DEBUG, logging.INFO}, False))
+
+    h6 = logging.handlers.TimedRotatingFileHandler("./logs/err", when='H', encoding='utf-8', utc=False)
+    h6.suffix = "%Y-%m-%d %H.log"
+    h6.extMatch = r"^\d{4}-\d{2}-\d{2} \d{2}.log$"
+    h6.extMatch = re.compile(h6.extMatch)
+    h6.addFilter(LoggingLevelFilter({logging.DEBUG, logging.INFO, logging.WARNING}, False))
 
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s.%(msecs)06d<%(name)s>[%(levelname)s](%(thread)d): %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
-        handlers=[h1, h2],
+        handlers=[h1, h2, h3, h4, h5, h6],
     )
 
 

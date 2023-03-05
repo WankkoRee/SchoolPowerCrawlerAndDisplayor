@@ -1,7 +1,8 @@
 /.idea/
 **/node_modules/
 
-/crawler/cookies.mzl
+/crawler/logs/
+/crawler/data/
 
 /db/tdengine/
 /db/mongo/
