@@ -244,9 +244,9 @@ class Session(requests.Session):
         argv.pop('self')
         self.__logger.debug("检查 SSO/VPN 登录状态")
 
-        resp = self.get(
+        resp = self.post(
             check_login_state=False,
-            url=f"{self.__sp_vpn_host}/user/info",
+            url=f"{self.__sp_vpn_host}/{vpn_host_encode(self.__sp_sso_host, self.__sp_vpn_key, self.__sp_vpn_iv)}/personalInfo/common/getUserConf",
         )
         assert resp.status_code == 200, f"无法获取登录状态，HTTP {resp.status_code}\n\n" \
                                         f"args: \n{argv}\n\n" \
