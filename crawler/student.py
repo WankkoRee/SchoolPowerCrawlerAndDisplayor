@@ -120,9 +120,24 @@ class Student:
         for faculty_id, faculty_name, faculty_dept_number, faculty_stu_number in self.__get_dept_list("00", "学校"):
             if faculty_name == "教职工":
                 continue
+            if faculty_dept_number == 0 or faculty_stu_number == 0:
+                self.__logger.warning(f"数据可能为空，直接跳过，{faculty_id=}, {faculty_name=}, {faculty_dept_number=}, {faculty_stu_number=}")
+                continue
             for major_id, major_name, major_dept_number, major_stu_number in self.__get_dept_list(faculty_id, faculty_name):
+                if major_dept_number == 0 or major_stu_number == 0:
+                    self.__logger.warning(f"数据可能为空，直接跳过，{major_id=}, {major_name=}, {major_dept_number=}, {major_stu_number=}")
+                    continue
                 for grade_id, grade_name, grade_dept_number, grade_stu_number in self.__get_dept_list(major_id, major_name):
+                    if grade_dept_number == 0 or grade_stu_number == 0:
+                        self.__logger.warning(f"数据可能为空，直接跳过，{grade_id=}, {grade_name=}, {grade_dept_number=}, {grade_stu_number=}")
+                        continue
                     for class_id, class_name, class_dept_number, class_stu_number in self.__get_dept_list(grade_id, grade_name):
+                        if class_dept_number != 0:
+                            self.__logger.warning(f"数据不合预期，直接跳过，{class_id=}, {class_name=}, {class_dept_number=}")
+                            continue
+                        if class_stu_number == 0:
+                            self.__logger.warning(f"数据可能为空，直接跳过，{class_id=}, {class_name=}, {class_stu_number=}")
+                            continue
                         for student_id in self.__get_stu_list(class_id, class_name):
                             yield student_id, *self.__get_stu_info(student_id)
                             sums += 1
