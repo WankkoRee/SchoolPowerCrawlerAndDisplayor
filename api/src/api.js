@@ -3,6 +3,123 @@ async function api (fastify, options) {
     await fastify.register(require('./db'))
     await fastify.register(require('./util'))
 
+    fastify.addHook('preHandler', async (request, reply) => {
+      if (request.session.user) {
+          const loginResult = await fastify.sp_db.getLoginResult(request.session.user.info.number, request.session.user.app.password)
+          if (loginResult.code === 1) {
+              request.session.user = loginResult.data
+          } else {
+              request.session.user = undefined
+          }
+      }
+    })
+
+    /*
+    登录
+     */
+    fastify.post('/user/login', {
+        schema: {
+            body: {
+                type: 'object',
+                properties: {
+                    username: { type: 'string' },
+                    password: { type: 'string' },
+                }
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'null'
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            username: username,
+            password: password,
+        } = request.body
+        const loginResult = await fastify.sp_db.getLoginResult(username, password)
+        if (loginResult.code === 1) {
+            request.session.user = loginResult.data
+            return { code: 1, data: null }
+        } else {
+            return loginResult
+        }
+    })
+
+    /*
+    退出登录
+     */
+    fastify.post('/user/logout', {
+        schema: {
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'null'
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        request.session.user = undefined
+    })
+
+    /*
+    获取用户信息
+     */
+    fastify.get('/user/info', {
+        schema: {
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'object',
+                    properties: {
+                        'info': {
+                            type: 'object',
+                            properties: {
+                                'number': { type: 'string' },
+                                'name': { type: 'string' },
+                                'faculty': { type: 'string' },
+                                'grade': { type: 'string' },
+                                'class': { type: 'string' },
+                                'major': { type: 'string' },
+                                'qualification': { type: 'string' },
+                                'phone': { type: 'string' },
+                                'picture': { type: 'string' },
+                            },
+                        },
+                        'position': {
+                            type: 'object',
+                            properties: {
+                                'area': { type: 'string' },
+                                'building': { type: 'string' },
+                                'room': { type: 'string' },
+                                'bed': { type: 'string' },
+                                'custom': {
+                                    type: 'object',
+                                    properties: {
+                                        'state': { type: 'boolean' },
+                                        'area': { type: 'string' },
+                                        'building': { type: 'string' },
+                                        'room': { type: 'string' },
+                                    },
+                                },
+                            },
+                        },
+                        'app': {
+                            type: 'object',
+                            properties: {
+                                'qq': { type: 'string' },
+                                'dingtalk': { type: 'string' },
+                            },
+                        },
+                        'update_time': { type: 'number' },
+                    }
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        if (!request.session.user)
+            return fastify.sp_error.ApiErrorReturn(new fastify.spError('未登录', 104, '就是未登录'))
+        return { codr: 1, data: request.session.user }
+    })
+
     /*
     获取范围`range`的数量
      */

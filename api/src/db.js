@@ -1,5 +1,6 @@
 const fp = require('fastify-plugin')
 const SqlString = require("sqlstring")
+const { MongoClient } = require("mongodb")
 
 function spDb (fastify, options, next) {
     if (fastify.sp_db) {
@@ -12,11 +13,28 @@ function spDb (fastify, options, next) {
             password: process.env.SP_DB_PASS,
             database: process.env.SP_DB_NAME,
         })
+        const mongo_ = new MongoClient(`mongodb://${encodeURIComponent(process.env.SP_MONGO_USER)}:${encodeURIComponent(process.env.SP_MONGO_PASS)}@${process.env.SP_MONGO_HOST}:${process.env.SP_MONGO_PORT}`)
+        const mongo = mongo_.db(process.env.SP_MONGO_NAME).collection('student')
         fastify.addHook('onClose', async (instance, done) => {
             tde.close()
+            mongo_.close()
             done()
         })
         fastify.sp_db = {
+            getLoginResult: async function (username, password) {
+                try {
+                    const loginResult = await mongo.findOne({
+                        'info.number': username,
+                        'app.password': password,
+                    })
+                    if (loginResult == null)
+                        throw new fastify.spError('登录失败', 103, `用户名或密码错误`)
+                    return {code: 1, data: loginResult}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                }
+            },
+
             getLastTime: async function () {
                 const cur = tde.cursor()
                 try {

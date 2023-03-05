@@ -7,9 +7,13 @@ function spError (fastify, options, next) {
     } else {
         /*
         db.js
-            throw new fastify.spError('非法输入', 101, )
+            spError('非法输入', 101, )
         api.js
-            throw new fastify.spError('未知方法', 102, )
+            spError('未知方法', 102, )
+        db.js
+            spError('登录失败', 103, )
+        api.js
+            spError('未登录', 104, )
          */
 
         fastify.spError = class extends Error {

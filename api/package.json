@@ -11,10 +11,13 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "@tdengine/client": "^3.0.1",
-    "fastify": "^3.27.2",
+    "fastify": "^3.29.5",
     "fastify-plugin": "^3.0.1",
-    "fastify-routes": "^3.1.0",
-    "sqlstring": "^2.3.3"
+    "@fastify/routes": "^4.1.1",
+    "@fastify/cookie": "^6.0.0",
+    "@fastify/session": "^8.2.0",
+    "@tdengine/client": "^3.0.1",
+    "sqlstring": "^2.3.3",
+    "mongodb": "^4.14.0"
   }
 }

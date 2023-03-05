@@ -15,4 +15,7 @@ RUN wget -c https://www.tdengine.com/assets-download/3.0/TDengine-client-${TDENG
 #COPY ./ /home/school_power_api/
 WORKDIR /home/school_power_api/
 
-CMD npm config set registry https://registry.npmmirror.com && npm install && npm run start
+RUN npm config set registry https://registry.npmmirror.com && \
+    yarn config set registry https://registry.npmmirror.com && \
+    yarn
+CMD yarn && yarn run start

@@ -31,6 +31,7 @@ services:
     container_name: school_power_api
     depends_on:
       - school_power_db
+      - school_power_mongo
     build:
       context: ./api/
       dockerfile: Dockerfile
@@ -42,11 +43,17 @@ services:
     environment:
       SP_PORT: 3000
       SP_DEBUG: 0
+      SP_SECRET: "0123456789abcdefghijklmnopqrstuvwxyz"
       SP_DB_HOST: "school_power_db"
       SP_DB_PORT: 6030
       SP_DB_USER: "root"
       SP_DB_PASS: "taosdata"
       SP_DB_NAME: "school_power"
+      SP_MONGO_HOST: "school_power_mongo"
+      SP_MONGO_PORT: 27017
+      SP_MONGO_USER: "root"
+      SP_MONGO_PASS: "123456"
+      SP_MONGO_NAME: "school_power"
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -61,6 +68,7 @@ services:
     container_name: school_power_crawler
     depends_on:
       - school_power_db
+      - school_power_mongo
     build:
       context: ./crawler/
       dockerfile: Dockerfile
