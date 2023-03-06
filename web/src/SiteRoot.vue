@@ -36,7 +36,7 @@ import type { GlobalTheme } from "naive-ui";
 import { getUserInfo } from "@/api";
 import { userInfo } from "@/utils";
 
-function changeTheme(themeRef: Ref<GlobalTheme>, themeName: string) {
+function changeTheme(themeRef: Ref<GlobalTheme>, themeName: ThemeName) {
   if (themeName === "light") {
     themeRef.value = lightTheme;
   } else if (themeName === "dark") {
@@ -63,7 +63,7 @@ const locale = createLocale(
 );
 const osTheme = useOsTheme();
 const theme = ref(lightTheme);
-const themeName = useStorage<"light" | "dark">("SiteRoot_themeName", osTheme.value ?? "light");
+const themeName = useStorage<ThemeName>("SiteRoot_themeName", osTheme.value ?? "light");
 const themeOverrides = {};
 const reloadFlag = ref(true);
 
@@ -75,14 +75,13 @@ provide("v_themeName", themeName);
 watch(osTheme, (newOsName) => {
   if (newOsName) themeName.value = newOsName;
 });
-async function reload() {
+const reload: ReloadFunc = async () => {
   reloadFlag.value = false;
   userInfo.value = await getUserInfo();
   console.debug(userInfo.value);
-  nextTick(() => {
-    reloadFlag.value = true;
-  });
-}
+  await nextTick();
+  reloadFlag.value = true;
+};
 provide("f_reload", reload);
 </script>
 

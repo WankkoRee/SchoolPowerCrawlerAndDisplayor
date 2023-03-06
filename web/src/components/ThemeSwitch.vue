@@ -29,7 +29,7 @@ const props = defineProps<{
   style?: CSSProperties;
 }>();
 
-const themeName = inject<Ref<"light" | "dark">>("v_themeName")!;
+const themeName = inject<Ref<ThemeName>>("v_themeName")!;
 </script>
 
 <style scoped></style>

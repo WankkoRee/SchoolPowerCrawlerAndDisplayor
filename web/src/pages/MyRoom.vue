@@ -153,7 +153,7 @@ import { CloudDownloadOutline } from "@vicons/ionicons5";
 
 import { userInfo } from "@/utils";
 
-const reload = inject<() => Promise<void>>("f_reload")!;
+const reload = inject<ReloadFunc>("f_reload")!;
 
 const loginForm = ref<FormInst>();
 const loginFormHelpShow = ref(false);

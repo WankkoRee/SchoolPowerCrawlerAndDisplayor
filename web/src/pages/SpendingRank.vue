@@ -249,7 +249,6 @@ export default {
 };
 import { onMounted, ref } from "vue";
 import { useStorage } from "@vueuse/core";
-import type { TreeSelectOption } from "naive-ui";
 
 import {
   getAreas,
@@ -261,9 +260,6 @@ import {
   getRankDailyAvgRangeDuringInArea,
   getRankDailyAvgRangeDuringInBuilding,
 } from "@/api";
-
-type Range = "area" | "building" | "room";
-type RankData = { area: string; building?: string; room?: string; spending: number };
 </script>
 
 <script lang="ts" setup>
@@ -271,7 +267,7 @@ import { NGrid, NGridItem, NCard, NInputNumber, NRadioGroup, NRadioButton, NSpac
 
 import RoomsRank from "@/components/RoomsRank.vue";
 
-const rangeOption = ref<TreeSelectOption[]>([
+const rangeOption = ref<SelectorOption[]>([
   {
     label: "学校",
     value: "学校",
@@ -282,7 +278,7 @@ const rangeOption = ref<TreeSelectOption[]>([
 ]);
 
 const dayRankSum = ref<RankData[]>([]);
-const dayRankSumRange = useStorage<Range>("SpendingRank_dayRankSumRange", "room");
+const dayRankSumRange = useStorage<RoomRange>("SpendingRank_dayRankSumRange", "room");
 const dayRankSumLimit = useStorage("SpendingRank_dayRankSumLimit", 3);
 const dayRankSumRangeSelect = ref("学校");
 const dayRankSumRangeSelectDepth = ref(1);
@@ -290,7 +286,7 @@ const dayRankSumRangeAreaDisabled = ref(false);
 const dayRankSumRangeBuildingDisabled = ref(false);
 
 const weekRankSum = ref<RankData[]>([]);
-const weekRankSumRange = useStorage<Range>("SpendingRank_weekRankSumRange", "room");
+const weekRankSumRange = useStorage<RoomRange>("SpendingRank_weekRankSumRange", "room");
 const weekRankSumLimit = useStorage("SpendingRank_weekRankSumLimit", 3);
 const weekRankSumRangeSelect = ref("学校");
 const weekRankSumRangeSelectDepth = ref(1);
@@ -298,7 +294,7 @@ const weekRankSumRangeAreaDisabled = ref(false);
 const weekRankSumRangeBuildingDisabled = ref(false);
 
 const monthRankSum = ref<RankData[]>([]);
-const monthRankSumRange = useStorage<Range>("SpendingRank_monthRankSumRange", "room");
+const monthRankSumRange = useStorage<RoomRange>("SpendingRank_monthRankSumRange", "room");
 const monthRankSumLimit = useStorage("SpendingRank_monthRankSumLimit", 3);
 const monthRankSumRangeSelect = ref("学校");
 const monthRankSumRangeSelectDepth = ref(1);
@@ -306,7 +302,7 @@ const monthRankSumRangeAreaDisabled = ref(false);
 const monthRankSumRangeBuildingDisabled = ref(false);
 
 const weekRankDailyAvg = ref<RankData[]>([]);
-const weekRankDailyAvgRange = useStorage<Range>("SpendingRank_weekRankDailyAvgRange", "room");
+const weekRankDailyAvgRange = useStorage<RoomRange>("SpendingRank_weekRankDailyAvgRange", "room");
 const weekRankDailyAvgLimit = useStorage("SpendingRank_weekRankDailyAvgLimit", 3);
 const weekRankDailyAvgRangeSelect = ref("学校");
 const weekRankDailyAvgRangeSelectDepth = ref(1);
@@ -314,17 +310,17 @@ const weekRankDailyAvgRangeAreaDisabled = ref(false);
 const weekRankDailyAvgRangeBuildingDisabled = ref(false);
 
 const monthRankDailyAvg = ref<RankData[]>([]);
-const monthRankDailyAvgRange = useStorage<Range>("SpendingRank_monthRankDailyAvgRange", "room");
+const monthRankDailyAvgRange = useStorage<RoomRange>("SpendingRank_monthRankDailyAvgRange", "room");
 const monthRankDailyAvgLimit = useStorage("SpendingRank_monthRankDailyAvgLimit", 3);
 const monthRankDailyAvgRangeSelect = ref("学校");
 const monthRankDailyAvgRangeSelectDepth = ref(1);
 const monthRankDailyAvgRangeAreaDisabled = ref(false);
 const monthRankDailyAvgRangeBuildingDisabled = ref(false);
 
-async function rangeLoad(option: TreeSelectOption) {
+async function rangeLoad(option: SelectorOption) {
   if (option.depth === 1) {
     const areas = await getAreas();
-    option.children = areas.map<TreeSelectOption>((area) => ({
+    option.children = areas.map<SelectorOption>((area) => ({
       label: area,
       value: `${area}`,
       key: `${area}`,
@@ -334,7 +330,7 @@ async function rangeLoad(option: TreeSelectOption) {
   } else if (option.depth === 2) {
     const areaPath = (option.value || option.key)!.toString();
     const buildings = await getBuildings(areaPath);
-    option.children = buildings.map<TreeSelectOption>((building) => ({
+    option.children = buildings.map<SelectorOption>((building) => ({
       label: building,
       value: `${areaPath}/${building}`,
       key: `${areaPath}/${building}`,
@@ -344,7 +340,7 @@ async function rangeLoad(option: TreeSelectOption) {
   }
 }
 
-async function handleDayRankSumRangeSelect(value: string, option: TreeSelectOption) {
+async function handleDayRankSumRangeSelect(value: string, option: SelectorOption) {
   if (option.depth === 1) {
     dayRankSumRangeSelectDepth.value = 1;
     dayRankSumRangeAreaDisabled.value = false;
@@ -364,7 +360,7 @@ async function handleDayRankSumRangeSelect(value: string, option: TreeSelectOpti
     await dayRankSumRangeUpdate();
   }
 }
-async function handleWeekRankSumRangeSelect(value: string, option: TreeSelectOption) {
+async function handleWeekRankSumRangeSelect(value: string, option: SelectorOption) {
   if (option.depth === 1) {
     weekRankSumRangeSelectDepth.value = 1;
     weekRankSumRangeAreaDisabled.value = false;
@@ -384,7 +380,7 @@ async function handleWeekRankSumRangeSelect(value: string, option: TreeSelectOpt
     await weekRankSumRangeUpdate();
   }
 }
-async function handleMonthRankSumRangeSelect(value: string, option: TreeSelectOption) {
+async function handleMonthRankSumRangeSelect(value: string, option: SelectorOption) {
   if (option.depth === 1) {
     monthRankSumRangeSelectDepth.value = 1;
     monthRankSumRangeAreaDisabled.value = false;
@@ -404,7 +400,7 @@ async function handleMonthRankSumRangeSelect(value: string, option: TreeSelectOp
     await monthRankSumRangeUpdate();
   }
 }
-async function handleWeekRankDailyAvgRangeSelect(value: string, option: TreeSelectOption) {
+async function handleWeekRankDailyAvgRangeSelect(value: string, option: SelectorOption) {
   if (option.depth === 1) {
     weekRankDailyAvgRangeSelectDepth.value = 1;
     weekRankDailyAvgRangeAreaDisabled.value = false;
@@ -424,7 +420,7 @@ async function handleWeekRankDailyAvgRangeSelect(value: string, option: TreeSele
     await weekRankDailyAvgRangeUpdate();
   }
 }
-async function handleMonthRankDailyAvgRangeSelect(value: string, option: TreeSelectOption) {
+async function handleMonthRankDailyAvgRangeSelect(value: string, option: SelectorOption) {
   if (option.depth === 1) {
     monthRankDailyAvgRangeSelectDepth.value = 1;
     monthRankDailyAvgRangeAreaDisabled.value = false;

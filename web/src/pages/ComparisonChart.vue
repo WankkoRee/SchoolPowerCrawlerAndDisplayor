@@ -87,12 +87,9 @@ export default {
   name: "ComparisonChart",
 };
 import { ref, onMounted } from "vue";
-import type { CascaderOption, TreeSelectOption } from "naive-ui";
 
 import { getAreas, getBuildings, getRooms, getRoomInfo, getRoomSumDuring, getRoomAvgDuring, getRoomLogs, getRoomDailys } from "@/api";
 import { messageApi } from "@/utils";
-
-type Option = CascaderOption | TreeSelectOption;
 </script>
 
 <script setup lang="ts">
@@ -102,39 +99,34 @@ import RoomInfo from "@/components/RoomInfo.vue";
 import RoomsChart from "@/components/RoomsChart.vue";
 import { colors } from "@/utils";
 
-const roomsOption = ref<Option[]>([]);
+const roomsOption = ref<SelectorOption[]>([]);
 const roomsSelect = ref<string[]>([]);
 const roomsSelected = ref<string[]>([]);
 const roomsSelectLoading = ref(false);
 const roomsData: {
   [key: string]: {
-    roomInfo: {
-      area: string;
-      building: string;
-      room: string;
+    roomInfo: RoomInfo & {
       path: string;
       fullName: string;
     };
     roomData: {
-      ts: Date;
-      power: number;
-      spendingDay: { from: number; to: number; spending: number };
-      spendingWeek: { from: number; to: number; spending: number };
-      spendingMonth: { from: number; to: number; spending: number };
-      avgWeek: { from: number; to: number; spending: number };
-      avgMonth: { from: number; to: number; spending: number };
-      avgLast30d: { from: number; to: number; spending: number };
+      spendingDay: RoomStatisticalData;
+      spendingWeek: RoomStatisticalData;
+      spendingMonth: RoomStatisticalData;
+      avgWeek: RoomStatisticalData;
+      avgMonth: RoomStatisticalData;
+      avgLast30d: RoomStatisticalData;
     };
-    roomLogs: { ts: Date; power: number }[];
-    roomSpendings: { ts: Date; power: number }[];
-    roomDailys: { ts: Date; power: number }[];
+    roomLogs: RoomPowerData[];
+    roomSpendings: RoomPowerData[];
+    roomDailys: RoomPowerData[];
   };
 } = {};
 
 onMounted(async () => {
   const areas = await getAreas();
   roomsOption.value.splice(0, roomsOption.value.length); // roomsOption.value.clear()
-  roomsOption.value = areas.map<Option>((area) => ({
+  roomsOption.value = areas.map<SelectorOption>((area) => ({
     label: area,
     value: area,
     key: area,
@@ -143,11 +135,11 @@ onMounted(async () => {
   }));
 });
 
-async function handleRoomsLoad(option: Option) {
+async function handleRoomsLoad(option: SelectorOption) {
   if (option.depth === 1) {
     const areaPath = (option.value || option.key)!.toString();
     const buildings = await getBuildings(areaPath);
-    option.children = buildings.map<Option>((building) => ({
+    option.children = buildings.map<SelectorOption>((building) => ({
       label: building,
       value: `${areaPath}/${building}`,
       key: `${areaPath}/${building}`,
@@ -171,7 +163,7 @@ async function handleRoomsLoad(option: Option) {
         roomClassified.get(b)!.get(l)!.push(r);
       }
     });
-    option.children = <Option[]>[];
+    option.children = <SelectorOption[]>[];
     if (roomUnclassified.length > 0) {
       option.children.push({
         label: "未分类",
@@ -281,6 +273,8 @@ async function addRooms(addedRooms: string[]) {
 
         roomsData[roomPath] = {
           roomInfo: {
+            ts: roomInfo.ts,
+            power: roomInfo.power,
             area: roomInfo.area,
             building: roomInfo.building,
             room: roomInfo.room,
@@ -288,8 +282,6 @@ async function addRooms(addedRooms: string[]) {
             fullName: `${roomInfo.area} > ${roomInfo.building} > ${roomInfo.room}`,
           },
           roomData: {
-            ts: new Date(roomInfo.ts),
-            power: roomInfo.power,
             spendingDay: roomSumDay,
             spendingWeek: roomSumWeek,
             spendingMonth: roomSumMonth,
@@ -297,9 +289,9 @@ async function addRooms(addedRooms: string[]) {
             avgMonth: roomAvgMonth,
             avgLast30d: roomAvgLast30d,
           },
-          roomLogs: roomLogs.map(({ ts, power }) => ({ ts: new Date(ts), power })),
-          roomSpendings: roomLogs.filter(({ spending }) => spending >= 0).map(({ ts, spending }) => ({ ts: new Date(ts), power: spending })),
-          roomDailys: roomDailys.map(({ ts, spending }) => ({ ts: new Date(ts), power: spending })),
+          roomLogs: roomLogs.map(({ ts, power }) => ({ ts: ts, power })),
+          roomSpendings: roomLogs.filter(({ spending }) => spending >= 0).map(({ ts, spending }) => ({ ts: ts, power: spending })),
+          roomDailys: roomDailys.map(({ ts, spending }) => ({ ts: ts, power: spending })),
         };
       } catch {
         continue;

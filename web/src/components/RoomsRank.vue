@@ -30,7 +30,7 @@ export default {
 import { NGrid, NGridItem, NProgress } from "naive-ui";
 
 const props = defineProps<{
-  data: { area: string; building?: string; room?: string; spending: number }[];
+  data: RankData[];
   range: string;
   unit: string;
 }>();

@@ -22,14 +22,13 @@ import { UniversalTransition } from "echarts/features";
 
 import { colors } from "@/utils";
 
-type ECharts = ReturnType<typeof echarts.init>;
 type Option = echarts.ComposeOption<
   LineSeriesOption | TitleComponentOption | GridComponentOption | TooltipComponentOption | ToolboxComponentOption | LegendComponentOption
 >;
 
 echarts.use([CanvasRenderer, LineChart, TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent, UniversalTransition]);
 
-function generateSeries(roomsName: string[], roomsLogs: { ts: Date; power: number }[][]): LineSeriesOption[] {
+function generateSeries(roomsName: string[], roomsLogs: RoomPowerData[][]): LineSeriesOption[] {
   return roomsName
     .map((roomName, i) => ({ roomName, roomLogs: roomsLogs[i] }))
     .map((room) => ({
@@ -55,9 +54,9 @@ import { ResizeObserver } from "vue3-resize";
 const props = defineProps<{
   chartName: string;
   roomsName: string[];
-  roomsLogs: { ts: Date; power: number }[][];
+  roomsLogs: RoomPowerData[][];
 }>();
-const themeName = inject<Ref<"light" | "dark">>("v_themeName")!;
+const themeName = inject<Ref<ThemeName>>("v_themeName")!;
 
 const options: Option = {
   title: {

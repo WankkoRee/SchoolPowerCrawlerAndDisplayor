@@ -3,7 +3,6 @@ import type { AxiosResponse } from "axios";
 
 import { loadingBarApi, messageApi } from "@/utils";
 
-type AppResponse<T = any> = { code: number; data?: T; error?: string };
 async function checkRequest<T, B extends boolean>(request: Promise<AxiosResponse<AppResponse<T>>>, silent: B): Promise<B extends false ? T : AppResponse<T>> {
   let err = false;
   let msg = "";
@@ -43,80 +42,69 @@ async function checkRequest<T, B extends boolean>(request: Promise<AxiosResponse
   }
 }
 
-type GetLastTimeResult = number;
 export async function getLastTime(): Promise<GetLastTimeResult> {
   const lastTimeRequest = axios.get<AppResponse<GetLastTimeResult>>("./api/dash/time/last");
   const result = await checkRequest(lastTimeRequest, false);
   return result;
 }
 
-type GetRangeCountResult = number;
-export async function getRangeCount(range: "area" | "building" | "room"): Promise<GetRangeCountResult> {
+export async function getRangeCount(range: RoomRange): Promise<GetRangeCountResult> {
   const rangeCountRequest = axios.get<AppResponse<GetRangeCountResult>>(`./api/dash/count/${range}`);
   const result = await checkRequest(rangeCountRequest, false);
   return result;
 }
 
-type GetAreasResult = string[];
 export async function getAreas(): Promise<GetAreasResult> {
   const areasRequest = axios.get<AppResponse<GetAreasResult>>("./api/info");
   const result = await checkRequest(areasRequest, false);
   return result.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-type GetBuildingsResult = string[];
 export async function getBuildings(areaPath: string): Promise<GetBuildingsResult> {
   const buildingsRequest = axios.get<AppResponse<GetBuildingsResult>>(`./api/info/${areaPath}`);
   const result = await checkRequest(buildingsRequest, false);
   return result.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-type GetRoomsResult = string[];
 export async function getRooms(buildingPath: string): Promise<GetRoomsResult> {
   const roomsRequest = axios.get<AppResponse<GetRoomsResult>>(`./api/info/${buildingPath}`);
   const result = await checkRequest(roomsRequest, false);
   return result.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-type GetRoomInfoResult = { ts: number; power: number; area: string; building: string; room: string };
 export async function getRoomInfo(roomPath: string): Promise<GetRoomInfoResult> {
   const roomInfoRequest = axios.get<AppResponse<GetRoomInfoResult>>(`./api/info/${roomPath}`);
   const result = await checkRequest(roomInfoRequest, false);
   return result;
 }
 
-type GetRoomSumDuringResult = { from: number; to: number; spending: number };
 export async function getRoomSumDuring(roomPath: string, during: string = ""): Promise<GetRoomSumDuringResult> {
   const roomSumDuringRequest = axios.get<AppResponse<GetRoomSumDuringResult>>(`./api/data/${roomPath}/sum/${during}`);
   const result = await checkRequest(roomSumDuringRequest, false);
   return result;
 }
 
-type GetRoomAvgDuringResult = { from: number; to: number; spending: number };
 export async function getRoomAvgDuring(roomPath: string, during: string = ""): Promise<GetRoomAvgDuringResult> {
   const roomAvgDuringRequest = axios.get<AppResponse<GetRoomAvgDuringResult>>(`./api/data/${roomPath}/avg/${during}`);
   const result = await checkRequest(roomAvgDuringRequest, false);
   return result;
 }
 
-type GetRoomLogsResult = { ts: number; power: number; spending: number }[];
 export async function getRoomLogs(roomPath: string): Promise<GetRoomLogsResult> {
   const roomLogsRequest = axios.get<AppResponse<GetRoomLogsResult>>(`./api/data/${roomPath}/logs`);
   const result = await checkRequest(roomLogsRequest, false);
   return result;
 }
 
-type GetRoomDailysResult = { ts: number; spending: number }[];
 export async function getRoomDailys(roomPath: string): Promise<GetRoomDailysResult> {
   const roomDailysRequest = axios.get<AppResponse<GetRoomDailysResult>>(`./api/data/${roomPath}/daily`);
   const result = await checkRequest(roomDailysRequest, false);
   return result;
 }
 
-type GetRankSumDuringResult = { area: string; building?: string; room?: string; spending: number }[];
 export async function getRankSumRangeDuring(
-  range: "area" | "building" | "room",
-  during: "day" | "week" | "month" | "",
+  range: RoomRange,
+  during: TimeDuring,
   limit: number
 ): Promise<GetRankSumDuringResult> {
   const rankSumDuringRequest = axios.get<AppResponse<GetRankSumDuringResult>>(`./api/rank/sum/${range}/${during}`, { params: { limit } });
@@ -124,8 +112,8 @@ export async function getRankSumRangeDuring(
   return result;
 }
 export async function getRankSumRangeDuringInArea(
-  range: "area" | "building" | "room",
-  during: "day" | "week" | "month" | "",
+  range: RoomRange,
+  during: TimeDuring,
   limit: number,
   area: string
 ): Promise<GetRankSumDuringResult> {
@@ -134,8 +122,8 @@ export async function getRankSumRangeDuringInArea(
   return result;
 }
 export async function getRankSumRangeDuringInBuilding(
-  range: "area" | "building" | "room",
-  during: "day" | "week" | "month" | "",
+  range: RoomRange,
+  during: TimeDuring,
   limit: number,
   area: string,
   building: string
@@ -145,20 +133,18 @@ export async function getRankSumRangeDuringInBuilding(
   return result;
 }
 
-type GetRankDailyAvgDuringResult = { area: string; building?: string; room?: string; spending: number }[];
 export async function getRankDailyAvgRangeDuring(
-  range: "area" | "building" | "room",
-  during: "day" | "week" | "month" | "",
+  range: RoomRange,
+  during: TimeDuring,
   limit: number
 ): Promise<GetRankDailyAvgDuringResult> {
   const rankDailyAvgDuringRequest = axios.get<AppResponse<GetRankDailyAvgDuringResult>>(`./api/rank/dailyAvg/${range}/${during}`, { params: { limit } });
   const result = await checkRequest(rankDailyAvgDuringRequest, false);
   return result;
 }
-
 export async function getRankDailyAvgRangeDuringInArea(
-  range: "area" | "building" | "room",
-  during: "day" | "week" | "month" | "",
+  range: RoomRange,
+  during: TimeDuring,
   limit: number,
   area: string
 ): Promise<GetRankDailyAvgDuringResult> {
@@ -166,10 +152,9 @@ export async function getRankDailyAvgRangeDuringInArea(
   const result = await checkRequest(rankDailyAvgDuringRequest, false);
   return result;
 }
-
 export async function getRankDailyAvgRangeDuringInBuilding(
-  range: "area" | "building" | "room",
-  during: "day" | "week" | "month" | "",
+  range: RoomRange,
+  during: TimeDuring,
   limit: number,
   area: string,
   building: string
@@ -181,7 +166,6 @@ export async function getRankDailyAvgRangeDuringInBuilding(
   return result;
 }
 
-type GetUserInfoResult = {};
 export async function getUserInfo(): Promise<GetUserInfoResult | undefined> {
   const userInfoRequest = axios.get<AppResponse<GetUserInfoResult>>("./api/user/info");
   const result = await checkRequest(userInfoRequest, true);
@@ -196,7 +180,6 @@ export async function getUserInfo(): Promise<GetUserInfoResult | undefined> {
   }
 }
 
-type LoginResult = null;
 export async function login(username: string, password: string): Promise<LoginResult | string> {
   const loginRequest = axios.post<AppResponse<LoginResult>>("./api/user/login", {
     username,
@@ -212,7 +195,6 @@ export async function login(username: string, password: string): Promise<LoginRe
   }
 }
 
-type LogoutResult = null;
 export async function logout(): Promise<LogoutResult> {
   const logoutRequest = axios.post<AppResponse<LogoutResult>>("./api/user/logout");
   const result = await checkRequest(logoutRequest, false);

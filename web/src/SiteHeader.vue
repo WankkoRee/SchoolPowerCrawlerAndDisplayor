@@ -46,8 +46,6 @@ import { useLoadingBar, useMessage } from "naive-ui";
 import { NIcon } from "naive-ui";
 import { EaselOutline, LayersOutline, BarChartOutline, HomeOutline } from "@vicons/ionicons5";
 
-import { LoadingBarApi } from "@/utils";
-
 const renderIcon = (icon: Component) => {
   return () => h(NIcon, null, { default: () => h(icon) });
 };

@@ -17,7 +17,7 @@
         <n-popover placement="right" trigger="hover">
           <template #trigger>
             <n-tag round :bordered="false">
-              <n-time :time="roomData.ts" type="relative" />
+              <n-time :time="roomInfo.ts" type="relative" />
               <template #icon>
                 <n-icon>
                   <cloud-download-outline />
@@ -25,7 +25,7 @@
               </template>
             </n-tag>
           </template>
-          数据同步于：<n-time :time="roomData.ts" type="datetime" />
+          数据同步于：<n-time :time="roomInfo.ts" type="datetime" />
         </n-popover>
       </template>
       <n-grid :cols="3">
@@ -87,13 +87,13 @@
           <n-popover placement="top" :delay="500" trigger="hover">
             <template #trigger>
               <n-statistic label="剩余电量" tabular-nums>
-                <n-number-animation ref="remainingPower" :from="0" :to="roomData.power" :duration="500" :active="true" :precision="2" />
+                <n-number-animation ref="remainingPower" :from="0" :to="roomInfo.power" :duration="500" :active="true" :precision="2" />
                 <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
               </n-statistic>
             </template>
             过去30天日均用电量为 <b>{{ roomData.avgLast30d.spending.toFixed(2) }}</b> kWh/d
             <br />
-            预计可用 <b>{{ Math.floor(roomData.power / roomData.avgLast30d.spending) }}</b> 天
+            预计可用 <b>{{ Math.floor(roomInfo.power / roomData.avgLast30d.spending) }}</b> 天
           </n-popover>
         </n-grid-item>
         <n-grid-item>
@@ -149,29 +149,24 @@ import { EyeOffOutline, CloudDownloadOutline } from "@vicons/ionicons5";
 
 const props = defineProps<{
   cardStyle: string;
-  roomInfo: {
-    area: string;
-    building: string;
-    room: string;
+  roomInfo: RoomInfo & {
     path: string;
     fullName: string;
   };
   roomData: {
-    ts: Date;
-    power: number;
-    spendingDay: { from: number; to: number; spending: number };
-    spendingWeek: { from: number; to: number; spending: number };
-    spendingMonth: { from: number; to: number; spending: number };
-    avgWeek: { from: number; to: number; spending: number };
-    avgMonth: { from: number; to: number; spending: number };
-    avgLast30d: { from: number; to: number; spending: number };
+    spendingDay: RoomStatisticalData;
+    spendingWeek: RoomStatisticalData;
+    spendingMonth: RoomStatisticalData;
+    avgWeek: RoomStatisticalData;
+    avgMonth: RoomStatisticalData;
+    avgLast30d: RoomStatisticalData;
   };
 }>();
 const emit = defineEmits<{
   (e: "remove"): void;
 }>();
 
-function timeInterval(from: number, to: number): string {
+function timeInterval(from: Timestamp, to: Timestamp): string {
   let result = "";
   let interval = to - from;
   if (interval < 0) {
