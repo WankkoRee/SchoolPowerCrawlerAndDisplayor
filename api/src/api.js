@@ -59,6 +59,7 @@ async function api (fastify, options) {
         },
     }, async (request, reply) => {
         request.session.user = undefined
+        return { code: 1, data: null }
     })
 
     /*
@@ -149,7 +150,7 @@ async function api (fastify, options) {
     }, async (request, reply) => {
         if (!request.session.user)
             return fastify.sp_error.ApiErrorReturn(new fastify.spError('未登录', 104, '就是未登录'))
-        return { codr: 1, data: request.session.user }
+        return { code: 1, data: request.session.user }
     })
 
     /*

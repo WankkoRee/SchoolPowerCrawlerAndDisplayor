@@ -33,10 +33,10 @@ function spError (fastify, options, next) {
         fastify.sp_error = {
             ApiErrorReturn: (error) => {
                 console.log(error)
-                if (error instanceof fastify.spError) return {code: 1000+error.code, error: error.message}
-                else if (error instanceof TDError) return {code: 10000, error: error.message}
-                else if (error instanceof TypeError) return {code: 99998, error: error.message}
-                else return {code: 99999, error: error.message}
+                if (error instanceof fastify.spError) return {code: error.code, error: error.message}
+                else if (error instanceof TDError) return {code: 1000, error: error.message}
+                else if (error instanceof TypeError) return {code: 2000, error: error.message}
+                else return {code: 9999, error: error.message}
             }
         }
     }
