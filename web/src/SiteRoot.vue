@@ -33,6 +33,9 @@ import { createLocale, useOsTheme } from "naive-ui";
 import { zhCN, lightTheme, darkTheme } from "naive-ui";
 import type { GlobalTheme } from "naive-ui";
 
+import { getUserInfo } from "@/api";
+import { userInfo } from "@/utils";
+
 function changeTheme(themeRef: Ref<GlobalTheme>, themeName: string) {
   if (themeName === "light") {
     themeRef.value = lightTheme;
@@ -72,8 +75,10 @@ provide("v_themeName", themeName);
 watch(osTheme, (newOsName) => {
   if (newOsName) themeName.value = newOsName;
 });
-function reload() {
+async function reload() {
   reloadFlag.value = false;
+  userInfo.value = await getUserInfo();
+  console.debug(userInfo.value);
   nextTick(() => {
     reloadFlag.value = true;
   });

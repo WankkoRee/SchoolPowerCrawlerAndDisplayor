@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import { loadingBarApi } from "@/utils";
+import { loadingBarApi, userInfo } from "@/utils";
+import { getUserInfo } from "@/api";
 
 export default function createAppRouter(routes: { path: string; name: string; component: { name: string } }[]) {
   const router = createRouter({
@@ -8,16 +9,13 @@ export default function createAppRouter(routes: { path: string; name: string; co
     routes,
   });
 
-  router.beforeEach(function (to, from, next) {
-    if (!from || to.path !== from.path) {
-      loadingBarApi.value?.start();
-    }
-    next();
+  router.beforeEach(async function (to, from) {
+    loadingBarApi.value?.start();
+    userInfo.value = await getUserInfo();
+    console.debug(userInfo.value);
   });
   router.afterEach(function (to, from) {
-    if (!from || to.path !== from.path) {
-      loadingBarApi.value?.finish();
-    }
+    loadingBarApi.value?.finish();
   });
   return router;
 }

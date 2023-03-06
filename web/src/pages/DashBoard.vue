@@ -67,7 +67,7 @@
             />
             <n-tooltip v-if="showRefresh" :show-arrow="false" trigger="hover">
               <template #trigger>
-                <n-button text style="font-size: 24px" @click="reload()">
+                <n-button text style="font-size: 24px" @click="refresh">
                   <n-icon>
                     <ArrowClockwise24Regular />
                   </n-icon>
@@ -102,13 +102,17 @@ import {
   ArrowClockwise24Regular,
 } from "@vicons/fluent";
 
-const reload = inject<() => void>("f_reload")!;
+const reload = inject<() => Promise<void>>("f_reload")!;
 
 const areasCount = ref(0);
 const buildingsCount = ref(0);
 const roomsCount = ref(0);
 const lastTime = ref(new Date());
 const showRefresh = ref(false);
+
+async function refresh() {
+  await reload();
+}
 
 onMounted(async () => {
   const [lastTime_, areasCount_, buildingsCount_, roomsCount_] = await Promise.all([
