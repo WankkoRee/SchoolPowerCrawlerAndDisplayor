@@ -86,17 +86,3 @@ type ReloadFunc = () => Promise<void>;
 type ThemeName = "light" | "dark";
 type SelectorOption = import("naive-ui").CascaderOption | import("naive-ui").TreeSelectOption;
 type ECharts = ReturnType<typeof import("echarts/core").init>;
-class LoadingBarApi {
-  private readonly loadingBarApi;
-  private indicator = 0;
-
-  constructor(loadingBarApi: import("naive-ui").LoadingBarApi) {
-    this.loadingBarApi = loadingBarApi;
-  }
-  start() {
-    if (this.indicator++ === 0) this.loadingBarApi.start();
-  }
-  finish() {
-    if (--this.indicator === 0) this.loadingBarApi.finish();
-  }
-}
