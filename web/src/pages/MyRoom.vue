@@ -66,7 +66,7 @@
           <n-popover trigger="hover">
             <template #trigger>
               <n-tag round :bordered="false">
-                <n-time :time="Math.round(userInfo.update_time * 1000)" type="relative" />
+                <n-time :time="userInfo.update_time" type="relative" />
                 <template #icon>
                   <n-icon>
                     <cloud-download-outline />
@@ -74,7 +74,7 @@
                 </template>
               </n-tag>
             </template>
-            数据同步于：<n-time :time="Math.round(userInfo.update_time * 1000)" type="datetime" />
+            数据同步于：<n-time :time="userInfo.update_time" type="datetime" />
           </n-popover>
         </template>
         <template #footer>
