@@ -1,6 +1,6 @@
 <template>
   <n-grid item-responsive :cols="12" style="height: 100%">
-    <n-grid-item span="10 1080:4 1440:3">
+    <n-grid-item span="10 800:2">
       <n-space align="center" justify="start" style="width: 100%; height: 100%">
         <router-link :to="{ name: 'Index' }" #="{ navigate, href }" custom>
           <n-button style="display: flex; height: 100%" text tag="a" :href="href" @click="navigate">
@@ -10,17 +10,17 @@
         </router-link>
       </n-space>
     </n-grid-item>
-    <n-grid-item span="0 1080:7 1440:6">
+    <n-grid-item span="0 800:8">
       <n-space align="center" justify="center" style="width: 100%; height: 100%">
         <n-menu mode="horizontal" :options="menuOptions" v-model:value="menuKey" />
       </n-space>
     </n-grid-item>
-    <n-grid-item span="0 1080:1 1440:3">
+    <n-grid-item span="0 800:2">
       <n-space align="center" justify="end" style="width: 100%; height: 100%">
         <theme-switch />
       </n-space>
     </n-grid-item>
-    <n-grid-item span="2 1080:0 1440:0">
+    <n-grid-item span="2 800:0">
       <n-space align="center" justify="end" style="width: 100%; height: 100%">
         <n-button @click="showMobileMenu = !showMobileMenu">=</n-button>
       </n-space>
