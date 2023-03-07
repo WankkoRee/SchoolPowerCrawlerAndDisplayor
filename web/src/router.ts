@@ -29,7 +29,7 @@ export default function createAppRouter(routes: RouteRecordRaw[]) {
     if (to.meta.loginDemand === LoginDemand.LoggedIn && userInfo.value === undefined) {
       loadingBarApi.value?.finish();
       return {
-        path: "/Login",
+        name: "Login",
         query: { redirect: to.fullPath },
       };
     } else if (to.meta.loginDemand === LoginDemand.NotLoggedIn && userInfo.value !== undefined) {

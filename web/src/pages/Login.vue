@@ -76,7 +76,7 @@ function loginFormClick(e: MouseEvent) {
       if (typeof loginResult === "string") {
         messageApi.value?.error(loginResult);
       } else {
-        router.push(<string>route.query.redirect);
+        router.push(typeof route.query.redirect === "string" ? route.query.redirect : { name: "Index" });
       }
     }
   });

@@ -8,6 +8,7 @@ import ComparisonChart from "@/pages/ComparisonChart.vue";
 import SpendingRank from "@/pages/SpendingRank.vue";
 import MyRoom from "@/pages/MyRoom.vue";
 import Login from "@/pages/Login.vue";
+import PageNotFound from "@/pages/PageNotFound.vue";
 
 const app = createApp(SiteRoot);
 const router = createAppRouter([
@@ -17,6 +18,12 @@ const router = createAppRouter([
   { path: "/SpendingRank", name: "SpendingRank", component: SpendingRank, meta: { loginDemand: LoginDemand.NoMatter } },
   { path: "/MyRoom", name: "MyRoom", component: MyRoom, meta: { loginDemand: LoginDemand.LoggedIn } },
   { path: "/Login", name: "Login", component: Login, meta: { loginDemand: LoginDemand.NotLoggedIn } },
+
+  { path: "/404", name: "404", component: PageNotFound, meta: { loginDemand: LoginDemand.NoMatter } },
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: (to) => ({ name: "404" }),
+  },
 ]);
 app.use(router);
 router.isReady().then(() => {

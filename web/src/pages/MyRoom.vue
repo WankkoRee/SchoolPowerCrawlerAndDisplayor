@@ -90,7 +90,7 @@ export default {
   name: "MyRoom",
 };
 
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import { logout } from "@/api";
 </script>
@@ -101,12 +101,13 @@ import { CloudDownloadOutline } from "@vicons/ionicons5";
 
 import { userInfo } from "@/utils";
 
+const route = useRoute();
 const router = useRouter();
 
 async function logoutClick(e: MouseEvent) {
   e.preventDefault();
   await logout();
-  router.push({ name: "Login" });
+  router.push({ name: "Login", query: { redirect: route.fullPath } });
 }
 </script>
 
