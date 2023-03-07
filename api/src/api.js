@@ -112,25 +112,25 @@ async function api (fastify, options) {
                                 'grade': { type: 'string' },
                                 'class': { type: 'string' },
                                 'major': { type: 'string' },
-                                'qualification': { type: 'string' },
-                                'phone': { type: 'string' },
+                                'qualification': { type: 'string', nullable: true },
+                                'phone': { type: 'string', nullable: true },
                                 'picture': { type: 'string' },
                             },
                         },
                         'position': {
                             type: 'object',
                             properties: {
-                                'area': { type: 'string' },
-                                'building': { type: 'string' },
-                                'room': { type: 'string' },
-                                'bed': { type: 'string' },
+                                'area': { type: 'string', nullable: true },
+                                'building': { type: 'string', nullable: true },
+                                'room': { type: 'string', nullable: true },
+                                'bed': { type: 'integer', nullable: true },
                                 'custom': {
                                     type: 'object',
                                     properties: {
                                         'state': { type: 'boolean' },
-                                        'area': { type: 'string' },
-                                        'building': { type: 'string' },
-                                        'room': { type: 'string' },
+                                        'area': { type: 'string', nullable: true },
+                                        'building': { type: 'string', nullable: true },
+                                        'room': { type: 'string', nullable: true },
                                     },
                                 },
                             },
@@ -138,11 +138,11 @@ async function api (fastify, options) {
                         'app': {
                             type: 'object',
                             properties: {
-                                'qq': { type: 'string' },
-                                'dingtalk': { type: 'string' },
+                                'qq': { type: 'string', nullable: true },
+                                'dingtalk': { type: 'string', nullable: true },
                             },
                         },
-                        'update_time': { type: 'number' },
+                        'update_time': { type: 'integer' },
                     }
                 }),
             },
@@ -277,7 +277,6 @@ async function api (fastify, options) {
                         building: {type: 'string'},
                         room: {type: 'string'},
                     },
-                    default: null
                 }),
             },
         },
@@ -445,7 +444,7 @@ async function api (fastify, options) {
                             spending: {type: 'number'},
                         },
                     },
-                    default: null
+                    default: []
                 }),
             },
         },
@@ -493,7 +492,7 @@ async function api (fastify, options) {
                             spending: {type: 'number'},
                         },
                     },
-                    default: null
+                    default: []
                 }),
             },
         },
@@ -540,11 +539,11 @@ async function api (fastify, options) {
                         type: 'object',
                         properties: {
                             area: {type: 'string'},
-                            building: {type: 'string'},
-                            room: {type: 'string'},
+                            building: {type: 'string', nullable: true},
+                            room: {type: 'string', nullable: true},
                             spending: {type: 'number'},
                         },
-                        default: null
+                        default: []
                     },
                 }),
             },
@@ -630,11 +629,11 @@ async function api (fastify, options) {
                         type: 'object',
                         properties: {
                             area: {type: 'string'},
-                            building: {type: 'string'},
-                            room: {type: 'string'},
+                            building: {type: 'string', nullable: true},
+                            room: {type: 'string', nullable: true},
                             spending: {type: 'number'},
                         },
-                        default: null
+                        default: []
                     },
                 }),
             },

@@ -29,6 +29,7 @@ function spDb (fastify, options, next) {
                     })
                     if (loginResult == null)
                         throw new fastify.spError('登录失败', 103, `用户名或密码错误，${username}, ${password}`)
+                    loginResult.update_time = Math.floor(loginResult.update_time * 1000)
                     return {code: 1, data: loginResult}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
