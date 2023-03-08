@@ -2,7 +2,6 @@
   <n-grid :x-gap="8" :y-gap="8" cols="6" item-responsive>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
-        <rooms-rank :data="dayRankSum" :range="dayRankSumRange" unit="kWh" />
         <template #header>
           <n-space align="center" justify="space-between">
             <span>今日用电</span>
@@ -48,11 +47,12 @@
             </n-grid>
           </n-space>
         </template>
+        <n-skeleton v-if="loading" width="100%" :height="200" :sharp="false" />
+        <rooms-rank v-else :data="dayRankSum" unit="kWh" />
       </n-card>
     </n-grid-item>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
-        <rooms-rank :data="weekRankSum" :range="weekRankSumRange" unit="kWh" />
         <template #header>
           <n-space align="center" justify="space-between">
             <span>本周用电</span>
@@ -98,11 +98,12 @@
             </n-grid>
           </n-space>
         </template>
+        <n-skeleton v-if="loading" width="100%" :height="200" :sharp="false" />
+        <rooms-rank v-else :data="weekRankSum" unit="kWh" />
       </n-card>
     </n-grid-item>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
-        <rooms-rank :data="monthRankSum" :range="monthRankSumRange" unit="kWh" />
         <template #header>
           <n-space align="center" justify="space-between">
             <span>本月用电</span>
@@ -148,11 +149,12 @@
             </n-grid>
           </n-space>
         </template>
+        <n-skeleton v-if="loading" width="100%" :height="200" :sharp="false" />
+        <rooms-rank v-else :data="monthRankSum" unit="kWh" />
       </n-card>
     </n-grid-item>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
-        <rooms-rank :data="weekRankDailyAvg" :range="weekRankDailyAvgRange" unit="kWh/d" />
         <template #header>
           <n-space align="center" justify="space-between">
             <span>本周日均用电</span>
@@ -198,11 +200,12 @@
             </n-grid>
           </n-space>
         </template>
+        <n-skeleton v-if="loading" width="100%" :height="200" :sharp="false" />
+        <rooms-rank v-else :data="weekRankDailyAvg" unit="kWh/d" />
       </n-card>
     </n-grid-item>
     <n-grid-item span="6 600:3 900:2">
       <n-card hoverable>
-        <rooms-rank :data="monthRankDailyAvg" :range="monthRankDailyAvgRange" unit="kWh/d" />
         <template #header>
           <n-space align="center" justify="space-between">
             <span>本月日均用电</span>
@@ -248,6 +251,8 @@
             </n-grid>
           </n-space>
         </template>
+        <n-skeleton v-if="loading" width="100%" :height="200" :sharp="false" />
+        <rooms-rank v-else :data="monthRankDailyAvg" unit="kWh/d" />
       </n-card>
     </n-grid-item>
   </n-grid>
@@ -274,9 +279,11 @@ import {
 </script>
 
 <script lang="ts" setup>
-import { NGrid, NGridItem, NCard, NInputNumber, NRadioGroup, NRadioButton, NSpace, NTreeSelect } from "naive-ui";
+import { NGrid, NGridItem, NCard, NInputNumber, NRadioGroup, NRadioButton, NSpace, NTreeSelect, NSkeleton } from "naive-ui";
 
 import RoomsRank from "@/components/RoomsRank.vue";
+
+const loading = ref(true);
 
 const rangeOption = ref<SelectorOption[]>([
   {
@@ -523,6 +530,7 @@ onMounted(async () => {
     weekRankDailyAvgRangeUpdate(),
     monthRankDailyAvgRangeUpdate(),
   ]);
+  loading.value = false;
 });
 </script>
 

@@ -31,7 +31,6 @@ import { NGrid, NGridItem, NProgress } from "naive-ui";
 
 const props = defineProps<{
   data: RankData[];
-  range: string;
   unit: string;
 }>();
 </script>
