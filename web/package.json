@@ -23,7 +23,8 @@
     "echarts": "^5.4.1",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6",
-    "vue3-resize": "^0.2.0"
+    "vue3-resize": "^0.2.0",
+    "js-base64": "^3.7.5"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",

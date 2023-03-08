@@ -3,8 +3,11 @@
     <n-grid :cols="1" item-responsive style="width: var(--container-width)">
       <n-grid-item span="0 904:1">
         <n-cascader
+          ref="roomsSelector"
           placeholder="请选择要查询的寝室"
           :options="roomsOption"
+          label-field="value_show"
+          value-field="value_fact"
           :cascade="true"
           multiple
           check-strategy="child"
@@ -22,8 +25,11 @@
       </n-grid-item>
       <n-grid-item span="1 904:0">
         <n-tree-select
+          ref="roomsSelector"
           placeholder="请选择要查询的寝室"
           :options="roomsOption"
+          label-field="value_show"
+          key-field="value_fact"
           checkable
           :cascade="false"
           multiple
@@ -89,7 +95,10 @@
 export default {
   name: "ComparisonChart",
 };
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch, nextTick } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { Base64 } from "js-base64";
+import type { CascaderInst, TreeSelectInst } from "naive-ui";
 
 import { getAreas, getBuildings, getRooms, getRoomInfo, getRoomSumDuring, getRoomAvgDuring, getRoomLogs, getRoomDailys } from "@/api";
 import { messageApi } from "@/utils";
@@ -102,6 +111,10 @@ import RoomInfo from "@/components/RoomInfo.vue";
 import RoomsChart from "@/components/RoomsChart.vue";
 import { colors } from "@/utils";
 
+const route = useRoute();
+const router = useRouter();
+
+const roomsSelector = ref<CascaderInst | TreeSelectInst>();
 const roomsOption = ref<SelectorOption[]>([]);
 const roomsSelect = ref<string[]>([]);
 const roomsSelected = ref<string[]>([]);
@@ -127,85 +140,128 @@ const roomsData: {
 } = {};
 
 onMounted(async () => {
+  const areas = await loadAreas();
+  if (route.query.rooms)
+    for (const newRoomSelected of <string[][]>JSON.parse(Base64.decode(<string>route.query.rooms))) {
+      const area = areas.find((area) => area.value_show === newRoomSelected[0]);
+      if (!area) continue;
+      const buildings = await loadBuildings(area.value_fact, area);
+      const building = buildings.find((building) => building.value_show === newRoomSelected[1]);
+      if (!building) continue;
+      let rooms = await loadRooms(building.value_fact, building);
+      for (const range of newRoomSelected.slice(2)) {
+        const room = rooms.find((room) => room.value_show === range);
+        if (!room) break;
+        if (room.children) rooms = room.children;
+        else await addRooms([room.value_fact]);
+      }
+    }
+});
+
+async function loadAreas(force: boolean = false): Promise<SelectorOption[]> {
+  if (!force && roomsOption.value.length > 0) return roomsOption.value;
+
   const areas = await getAreas();
-  roomsOption.value.splice(0, roomsOption.value.length); // roomsOption.value.clear()
   roomsOption.value = areas.map<SelectorOption>((area) => ({
-    label: area,
-    value: area,
-    key: area,
+    value_show: area,
+    value_fact: area,
     depth: 1,
     isLeaf: false,
+    path: [area],
   }));
-});
+  return roomsOption.value;
+}
+
+async function loadBuildings(areaPath: string, parent: SelectorOption, force: boolean = false): Promise<SelectorOption[]> {
+  if (!force && parent.children && parent.children.length > 0) return parent.children;
+
+  const buildings = await getBuildings(areaPath);
+  parent.children = buildings.map<SelectorOption>((building) => ({
+    value_show: building,
+    value_fact: `${areaPath}/${building}`,
+    depth: 2,
+    isLeaf: false,
+    path: [...parent.path, building],
+  }));
+  return parent.children;
+}
+
+async function loadRooms(buildingPath: string, parent: SelectorOption, force: boolean = false): Promise<SelectorOption[]> {
+  if (!force && parent.children && parent.children.length > 0) return parent.children;
+
+  const rooms = await getRooms(buildingPath);
+  const roomClassified = new Map<string, Map<string, string[]>>();
+  const roomUnclassified: string[] = [];
+  rooms.forEach((room) => {
+    const roomRegexResult = room.match(/^([A-Z\d]+)-(\d+?)(\d{2}(?:-.+?)?)$/);
+    if (roomRegexResult === null) {
+      console.warn(`${room} 无法匹配正则表达式 /^([A-Z\\d]+)-(\\d+?)(\\d{2}(?:-.+?)?)$/`);
+      roomUnclassified.push(room);
+    } else {
+      const [b, l, r] = roomRegexResult.slice(1, 4);
+      if (!roomClassified.has(b)) roomClassified.set(b, new Map());
+      if (!roomClassified.get(b)!.has(l)) roomClassified.get(b)!.set(l, []);
+      roomClassified.get(b)!.get(l)!.push(r);
+    }
+  });
+  parent.children = <SelectorOption[]>[];
+  if (roomUnclassified.length > 0) {
+    parent.children.push({
+      value_show: "未分类",
+      value_fact: `${buildingPath}/未分类`,
+      depth: 3,
+      isLeaf: false,
+      path: [...parent.path, "未分类"],
+      children: roomUnclassified.map((room) => ({
+        value_show: room,
+        value_fact: `${buildingPath}/${room}`,
+        depth: 4,
+        isLeaf: true,
+        path: [...parent.path, "未分类", room],
+      })),
+    });
+  }
+  parent.children.push(
+    ...Array.from(roomClassified).map(([b, l_]) => ({
+      value_show: `${b}栋`,
+      value_fact: `${buildingPath}/${b}`,
+      depth: 3,
+      isLeaf: false,
+      path: [...parent.path, `${b}栋`],
+      children: Array.from(l_).map(([l, r_]) => ({
+        value_show: `${b}-${l}层`,
+        value_fact: `${buildingPath}/${b}-${l}`,
+        depth: 4,
+        isLeaf: false,
+        path: [...parent.path, `${b}栋`, `${b}-${l}层`],
+        children: Array.from(r_).map((r) => ({
+          value_show: `${b}-${l}${r}`,
+          value_fact: `${buildingPath}/${b}-${l}${r}`,
+          depth: 5,
+          isLeaf: true,
+          path: [...parent.path, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`],
+        })),
+      })),
+    }))
+  );
+  return parent.children;
+}
+
+watch(
+  () => [...roomsSelected.value],
+  () => {
+    router.replace({
+      name: "ComparisonChart",
+      query: { rooms: Base64.encodeURI(JSON.stringify(roomsSelector.value!.getCheckedData().options.map((option) => option!.path))) },
+    });
+  }
+);
 
 async function handleRoomsLoad(option: SelectorOption) {
   if (option.depth === 1) {
-    const areaPath = (option.value || option.key)!.toString();
-    const buildings = await getBuildings(areaPath);
-    option.children = buildings.map<SelectorOption>((building) => ({
-      label: building,
-      value: `${areaPath}/${building}`,
-      key: `${areaPath}/${building}`,
-      depth: 2,
-      isLeaf: false,
-    }));
+    await loadBuildings(option.value_fact, option);
   } else if (option.depth === 2) {
-    const buildingPath = (option.value || option.key)!.toString();
-    const rooms = await getRooms(buildingPath);
-    const roomClassified = new Map<string, Map<string, string[]>>();
-    const roomUnclassified: string[] = [];
-    rooms.forEach((room) => {
-      const roomRegexResult = room.match(/^([A-Z\d]+)-(\d+?)(\d{2}(?:-.+?)?)$/);
-      if (roomRegexResult === null) {
-        console.warn(`${room} 无法匹配正则表达式 /^([A-Z\\d]+)-(\\d+?)(\\d{2}(?:-.+?)?)$/`);
-        roomUnclassified.push(room);
-      } else {
-        const [b, l, r] = roomRegexResult.slice(1, 4);
-        if (!roomClassified.has(b)) roomClassified.set(b, new Map());
-        if (!roomClassified.get(b)!.has(l)) roomClassified.get(b)!.set(l, []);
-        roomClassified.get(b)!.get(l)!.push(r);
-      }
-    });
-    option.children = <SelectorOption[]>[];
-    if (roomUnclassified.length > 0) {
-      option.children.push({
-        label: "未分类",
-        value: `${buildingPath}/未分类`,
-        key: `${buildingPath}/未分类`,
-        depth: 3,
-        isLeaf: false,
-        children: roomUnclassified.map((room) => ({
-          label: room,
-          value: `${buildingPath}/${room}`,
-          key: `${buildingPath}/${room}`,
-          depth: 4,
-          isLeaf: true,
-        })),
-      });
-    }
-    option.children.push(
-      ...Array.from(roomClassified).map(([b, l_]) => ({
-        label: `${b}栋`,
-        value: `${buildingPath}/${b}`,
-        key: `${buildingPath}/${b}`,
-        depth: 3,
-        isLeaf: false,
-        children: Array.from(l_).map(([l, r_]) => ({
-          label: `${b}-${l}层`,
-          value: `${buildingPath}/${b}-${l}`,
-          key: `${buildingPath}/${b}-${l}`,
-          depth: 4,
-          isLeaf: false,
-          children: Array.from(r_).map((r) => ({
-            label: `${b}-${l}${r}`,
-            value: `${buildingPath}/${b}-${l}${r}`,
-            key: `${buildingPath}/${b}-${l}${r}`,
-            depth: 5,
-            isLeaf: true,
-          })),
-        })),
-      }))
-    );
+    await loadRooms(option.value_fact, option);
   }
 }
 
@@ -238,7 +294,7 @@ async function handleRoomsSelect() {
     const removedRooms = roomsSelected.value.filter((roomPath) => !tmpSelected.includes(roomPath));
     const addedRooms = tmpSelected.filter((roomPath) => !roomsSelected.value.includes(roomPath));
     // 处理 removed
-    removeRooms(removedRooms);
+    await removeRooms(removedRooms);
     // 处理 added
     await addRooms(addedRooms);
   }
@@ -300,14 +356,16 @@ async function addRooms(addedRooms: string[]) {
         continue;
       }
     }
-    roomsSelected.value.push(roomPath); // add新选中的寝室
     roomsSelect.value.push(roomPath);
+    await nextTick();
+    roomsSelected.value.push(roomPath); // add新选中的寝室
   }
 }
 
-function removeRooms(removedRooms: string[]) {
-  roomsSelected.value = roomsSelected.value.filter((roomPath) => !removedRooms.includes(roomPath));
+async function removeRooms(removedRooms: string[]) {
   roomsSelect.value = roomsSelect.value.filter((roomPath) => !removedRooms.includes(roomPath));
+  await nextTick();
+  roomsSelected.value = roomsSelected.value.filter((roomPath) => !removedRooms.includes(roomPath));
 }
 </script>
 
