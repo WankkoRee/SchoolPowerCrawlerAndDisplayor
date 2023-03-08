@@ -36,25 +36,25 @@ type UserInfo = {
     grade: string;
     major: string;
     class: string;
-    qualification: string;
-    phone: string;
+    qualification?: string;
+    phone?: string;
     picture: string;
   };
   position: {
-    area: string;
-    building: string;
-    room: string;
-    bed: number;
+    area?: string;
+    building?: string;
+    room?: string;
+    bed?: number;
     custom: {
       state: boolean;
-      area: string;
-      building: string;
-      room: string;
+      area?: string;
+      building?: string;
+      room?: string;
     };
   };
   app: {
-    qq: string;
-    dingtalk: string;
+    qq?: string;
+    dingtalk?: string;
   };
   update_time: Timestamp;
 };
