@@ -11,6 +11,8 @@
                 <n-tree-select
                   placeholder="在 ... 中"
                   :options="rangeOption"
+                  label-field="value_show"
+                  key-field="value_fact"
                   :cascade="false"
                   check-strategy="all"
                   remote
@@ -59,6 +61,8 @@
                 <n-tree-select
                   placeholder="在 ... 中"
                   :options="rangeOption"
+                  label-field="value_show"
+                  key-field="value_fact"
                   :cascade="false"
                   check-strategy="all"
                   remote
@@ -107,6 +111,8 @@
                 <n-tree-select
                   placeholder="在 ... 中"
                   :options="rangeOption"
+                  label-field="value_show"
+                  key-field="value_fact"
                   :cascade="false"
                   check-strategy="all"
                   remote
@@ -155,6 +161,8 @@
                 <n-tree-select
                   placeholder="在 ... 中"
                   :options="rangeOption"
+                  label-field="value_show"
+                  key-field="value_fact"
                   :cascade="false"
                   check-strategy="all"
                   remote
@@ -203,6 +211,8 @@
                 <n-tree-select
                   placeholder="在 ... 中"
                   :options="rangeOption"
+                  label-field="value_show"
+                  key-field="value_fact"
                   :cascade="false"
                   check-strategy="all"
                   remote
@@ -249,6 +259,7 @@ export default {
 };
 import { onMounted, ref } from "vue";
 import { useStorage } from "@vueuse/core";
+import type { TreeSelectOption } from "naive-ui";
 
 import {
   getAreas,
@@ -269,9 +280,8 @@ import RoomsRank from "@/components/RoomsRank.vue";
 
 const rangeOption = ref<SelectorOption[]>([
   {
-    label: "学校",
-    value: "学校",
-    key: "学校",
+    value_show: "学校",
+    value_fact: "学校",
     depth: 1,
     isLeaf: false,
   },
@@ -317,23 +327,23 @@ const monthRankDailyAvgRangeSelectDepth = ref(1);
 const monthRankDailyAvgRangeAreaDisabled = ref(false);
 const monthRankDailyAvgRangeBuildingDisabled = ref(false);
 
-async function rangeLoad(option: SelectorOption) {
+async function rangeLoad(option_: SelectorOption | TreeSelectOption) {
+  // todo: 删除 TreeSelectOption
+  const option = <SelectorOption>option_;
   if (option.depth === 1) {
     const areas = await getAreas();
     option.children = areas.map<SelectorOption>((area) => ({
-      label: area,
-      value: `${area}`,
-      key: `${area}`,
+      value_show: area,
+      value_fact: `${area}`,
       depth: 2,
       isLeaf: false,
     }));
   } else if (option.depth === 2) {
-    const areaPath = (option.value || option.key)!.toString();
+    const areaPath = option.value_fact.toString();
     const buildings = await getBuildings(areaPath);
     option.children = buildings.map<SelectorOption>((building) => ({
-      label: building,
-      value: `${areaPath}/${building}`,
-      key: `${areaPath}/${building}`,
+      value_show: building,
+      value_fact: `${areaPath}/${building}`,
       depth: 3,
       isLeaf: true,
     }));

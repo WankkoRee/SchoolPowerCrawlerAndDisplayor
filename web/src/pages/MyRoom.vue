@@ -1,31 +1,31 @@
 <template>
   <n-space vertical align="center" justify="center" style="min-height: var(--container-height)" item-style="width: var(--container-width)">
-    <n-card :title="userInfo.info.name" hoverable>
+    <n-card :title="userInfo?.info.name" hoverable>
       <n-space align="center" justify="space-between">
         <n-p>
           <n-text>学号</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo.info.number }}</n-text>
+          <n-text>{{ userInfo?.info.number }}</n-text>
           <br />
           <n-text>学院</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo.info.faculty }} </n-text>
+          <n-text>{{ userInfo?.info.faculty }} </n-text>
           <br />
           <n-text>年级</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo.info.grade }} </n-text>
+          <n-text>{{ userInfo?.info.grade }} </n-text>
           <br />
           <n-text>专业</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo.info.major }} </n-text>
+          <n-text>{{ userInfo?.info.major }} </n-text>
           <br />
           <n-text>班级</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo.info.class }} </n-text>
+          <n-text>{{ userInfo?.info.class }} </n-text>
         </n-p>
         <n-popover trigger="hover">
           <template #trigger>
-            <n-avatar :size="64" :src="'https://dk.nynu.edu.cn/' + userInfo.info.picture" style="height: unset" />
+            <n-avatar :size="64" :src="'https://dk.nynu.edu.cn/' + userInfo?.info.picture" style="height: unset" />
           </template>
           照片来自<n-tag :bordered="false">随行校园</n-tag>，本应用不保存任何隐私信息。
         </n-popover>
@@ -34,7 +34,7 @@
         <n-popover trigger="hover">
           <template #trigger>
             <n-tag round :bordered="false">
-              <n-time :time="userInfo.update_time" type="relative" />
+              <n-time :time="userInfo?.update_time" type="relative" />
               <template #icon>
                 <n-icon>
                   <cloud-download-outline />
@@ -42,32 +42,32 @@
               </template>
             </n-tag>
           </template>
-          数据同步于：<n-time :time="userInfo.update_time" type="datetime" />
+          数据同步于：<n-time :time="userInfo?.update_time" type="datetime" />
         </n-popover>
       </template>
       <template #footer>
         <n-space align="center">
           <n-popover trigger="hover">
             <template #trigger>
-              <n-tag type="success"> {{ userInfo.position.area }} </n-tag>
+              <n-tag type="success"> {{ userInfo?.position.area }} </n-tag>
             </template>
             <n-text>校区</n-text>
           </n-popover>
           <n-popover trigger="hover">
             <template #trigger>
-              <n-tag type="success"> {{ userInfo.position.building }} </n-tag>
+              <n-tag type="success"> {{ userInfo?.position.building }} </n-tag>
             </template>
             <n-text>宿舍楼</n-text>
           </n-popover>
           <n-popover trigger="hover">
             <template #trigger>
-              <n-tag type="success"> {{ userInfo.position.room }} </n-tag>
+              <n-tag type="success"> {{ userInfo?.position.room }} </n-tag>
             </template>
             <n-text>寝室</n-text>
           </n-popover>
           <n-popover trigger="hover">
             <template #trigger>
-              <n-tag round type="success"> {{ userInfo.position.bed }} </n-tag>
+              <n-tag round type="success"> {{ userInfo?.position.bed }} </n-tag>
             </template>
             <n-text>床位</n-text>
           </n-popover>

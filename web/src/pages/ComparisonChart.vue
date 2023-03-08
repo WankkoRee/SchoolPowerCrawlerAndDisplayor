@@ -98,7 +98,7 @@ export default {
 import { ref, onMounted, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Base64 } from "js-base64";
-import type { CascaderInst, TreeSelectInst } from "naive-ui";
+import type { CascaderInst, TreeSelectInst, TreeSelectOption } from "naive-ui";
 
 import { getAreas, getBuildings, getRooms, getRoomInfo, getRoomSumDuring, getRoomAvgDuring, getRoomLogs, getRoomDailys } from "@/api";
 import { messageApi } from "@/utils";
@@ -181,7 +181,7 @@ async function loadBuildings(areaPath: string, parent: SelectorOption, force: bo
     value_fact: `${areaPath}/${building}`,
     depth: 2,
     isLeaf: false,
-    path: [...parent.path, building],
+    path: [...parent.path!, building],
   }));
   return parent.children;
 }
@@ -211,13 +211,13 @@ async function loadRooms(buildingPath: string, parent: SelectorOption, force: bo
       value_fact: `${buildingPath}/未分类`,
       depth: 3,
       isLeaf: false,
-      path: [...parent.path, "未分类"],
+      path: [...parent.path!, "未分类"],
       children: roomUnclassified.map((room) => ({
         value_show: room,
         value_fact: `${buildingPath}/${room}`,
         depth: 4,
         isLeaf: true,
-        path: [...parent.path, "未分类", room],
+        path: [...parent.path!, "未分类", room],
       })),
     });
   }
@@ -227,19 +227,19 @@ async function loadRooms(buildingPath: string, parent: SelectorOption, force: bo
       value_fact: `${buildingPath}/${b}`,
       depth: 3,
       isLeaf: false,
-      path: [...parent.path, `${b}栋`],
+      path: [...parent.path!, `${b}栋`],
       children: Array.from(l_).map(([l, r_]) => ({
         value_show: `${b}-${l}层`,
         value_fact: `${buildingPath}/${b}-${l}`,
         depth: 4,
         isLeaf: false,
-        path: [...parent.path, `${b}栋`, `${b}-${l}层`],
+        path: [...parent.path!, `${b}栋`, `${b}-${l}层`],
         children: Array.from(r_).map((r) => ({
           value_show: `${b}-${l}${r}`,
           value_fact: `${buildingPath}/${b}-${l}${r}`,
           depth: 5,
           isLeaf: true,
-          path: [...parent.path, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`],
+          path: [...parent.path!, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`],
         })),
       })),
     }))
@@ -257,7 +257,9 @@ watch(
   }
 );
 
-async function handleRoomsLoad(option: SelectorOption) {
+async function handleRoomsLoad(option_: SelectorOption | TreeSelectOption) {
+  // todo: 删除 TreeSelectOption
+  const option = <SelectorOption>option_;
   if (option.depth === 1) {
     await loadBuildings(option.value_fact, option);
   } else if (option.depth === 2) {

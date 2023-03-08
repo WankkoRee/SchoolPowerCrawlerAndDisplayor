@@ -84,13 +84,5 @@ type LogoutResult = null;
 // ui
 type ReloadFunc = () => Promise<void>;
 type ThemeName = "light" | "dark";
-type SelectorOption = {
-  value_show: string;
-  value_fact: string;
-  disabled?: boolean;
-  isLeaf: boolean; // TreeSelectOption
-  depth: number; // 自定义
-  path: string[]; // 自定义
-  children?: SelectorOption[];
-};
+type SelectorOption = import("naive-ui").CascaderOption & import("naive-ui").TreeSelectOption;
 type ECharts = ReturnType<typeof import("echarts/core").init>;
