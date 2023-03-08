@@ -6,6 +6,6 @@ declare module "naive-ui" {
     value_fact: string;
     isLeaf: boolean;
     depth: number;
-    path?: string[];
+    path: string[];
   }
 }

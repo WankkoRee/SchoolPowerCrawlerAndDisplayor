@@ -92,6 +92,7 @@ import { onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { logout } from "@/api";
+import { refreshUserInfo } from "@/utils";
 </script>
 
 <script lang="ts" setup>
@@ -109,7 +110,8 @@ async function logoutClick(e: MouseEvent) {
   router.push({ name: "Login", query: { redirect: route.fullPath } });
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await refreshUserInfo();
   //todo
 });
 </script>

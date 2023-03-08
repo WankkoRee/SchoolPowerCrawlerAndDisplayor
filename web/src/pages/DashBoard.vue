@@ -9,7 +9,8 @@
                 <Board24Regular />
               </n-icon>
             </template>
-            <n-number-animation :from="0" :to="areasCount" show-separator />
+            <n-skeleton v-if="loading" text :width="20" :sharp="false" />
+            <n-number-animation v-else :from="0" :to="areasCount" show-separator />
             <template #suffix>个</template>
           </n-statistic>
         </n-card>
@@ -22,7 +23,8 @@
                 <Building24Regular />
               </n-icon>
             </template>
-            <n-number-animation :from="0" :to="buildingsCount" show-separator />
+            <n-skeleton v-if="loading" text :width="40" :sharp="false" />
+            <n-number-animation v-else :from="0" :to="buildingsCount" show-separator />
             <template #suffix>个</template>
           </n-statistic>
         </n-card>
@@ -35,7 +37,8 @@
                 <ConferenceRoom24Regular />
               </n-icon>
             </template>
-            <n-number-animation :from="0" :to="roomsCount" show-separator />
+            <n-skeleton v-if="loading" text :width="60" :sharp="false" />
+            <n-number-animation v-else :from="0" :to="roomsCount" show-separator />
             <template #suffix>个</template>
           </n-statistic>
         </n-card>
@@ -48,7 +51,8 @@
                 <ClockArrowDownload24Regular />
               </n-icon>
             </template>
-            <n-time :time="lastTime" type="relative" />，<n-time :time="lastTime" type="datetime" />
+            <n-skeleton v-if="loading" text :width="366" :sharp="false" />
+            <span v-else><n-time :time="lastTime" type="relative" />，<n-time :time="lastTime" type="datetime" /></span>
           </n-statistic>
         </n-card>
       </n-grid-item>
@@ -60,7 +64,9 @@
                 <Timer24Regular />
               </n-icon>
             </template>
+            <n-skeleton v-if="loading" text :width="116" :sharp="false" />
             <n-countdown
+              v-else
               :precision="1"
               :duration="new Date(lastTime).setMinutes(lastTime.getMinutes() + 60) - new Date().getTime()"
               @finish="showRefresh = true"
@@ -92,7 +98,7 @@ import { getLastTime, getRangeCount } from "@/api";
 </script>
 
 <script lang="ts" setup>
-import { NSpace, NGrid, NGridItem, NCard, NStatistic, NNumberAnimation, NIcon, NCountdown, NTime, NButton, NTooltip } from "naive-ui";
+import { NSpace, NGrid, NGridItem, NCard, NStatistic, NNumberAnimation, NIcon, NCountdown, NTime, NButton, NTooltip, NSkeleton } from "naive-ui";
 import {
   Board24Regular,
   Building24Regular,
@@ -104,6 +110,7 @@ import {
 
 const reload = inject<ReloadFunc>("f_reload")!;
 
+const loading = ref(true);
 const areasCount = ref(0);
 const buildingsCount = ref(0);
 const roomsCount = ref(0);
@@ -125,6 +132,7 @@ onMounted(async () => {
   areasCount.value = areasCount_;
   buildingsCount.value = buildingsCount_;
   roomsCount.value = roomsCount_;
+  loading.value = false;
 });
 </script>
 

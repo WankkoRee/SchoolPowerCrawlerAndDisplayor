@@ -284,6 +284,7 @@ const rangeOption = ref<SelectorOption[]>([
     value_fact: "学校",
     depth: 1,
     isLeaf: false,
+    path: ["学校"],
   },
 ]);
 
@@ -337,6 +338,7 @@ async function rangeLoad(option_: SelectorOption | TreeSelectOption) {
       value_fact: `${area}`,
       depth: 2,
       isLeaf: false,
+      path: [...option.path, area],
     }));
   } else if (option.depth === 2) {
     const areaPath = option.value_fact.toString();
@@ -346,6 +348,7 @@ async function rangeLoad(option_: SelectorOption | TreeSelectOption) {
       value_fact: `${areaPath}/${building}`,
       depth: 3,
       isLeaf: true,
+      path: [...option.path, building],
     }));
   }
 }

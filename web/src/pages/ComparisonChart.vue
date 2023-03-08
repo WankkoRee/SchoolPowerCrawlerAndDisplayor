@@ -58,8 +58,10 @@
             ${colors[index % colors.length]}77,
             ${colors[index % colors.length]}44,
             #ffffff00)`"
-            :roomInfo="roomsData[roomPath].roomInfo"
-            :roomData="roomsData[roomPath].roomData"
+            :area="roomsData[roomPath].area"
+            :building="roomsData[roomPath].building"
+            :room="roomsData[roomPath].room"
+            :full-name="roomsData[roomPath].fullName"
             @remove="removeRooms([roomPath])"
           />
         </n-grid-item>
@@ -68,21 +70,21 @@
         <n-grid-item>
           <RoomsChart
             chartName="电量"
-            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].roomInfo.fullName)"
+            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].fullName)"
             :roomsLogs="roomsSelected.map((roomPath) => roomsData[roomPath].roomLogs)"
           />
         </n-grid-item>
         <n-grid-item>
           <RoomsChart
             chartName="用电量"
-            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].roomInfo.fullName)"
+            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].fullName)"
             :roomsLogs="roomsSelected.map((roomPath) => roomsData[roomPath].roomSpendings)"
           />
         </n-grid-item>
         <n-grid-item>
           <RoomsChart
             chartName="日用电量"
-            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].roomInfo.fullName)"
+            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].fullName)"
             :roomsLogs="roomsSelected.map((roomPath) => roomsData[roomPath].roomDailys)"
           />
         </n-grid-item>
@@ -100,7 +102,7 @@ import { useRoute, useRouter } from "vue-router";
 import { Base64 } from "js-base64";
 import type { CascaderInst, TreeSelectInst, TreeSelectOption } from "naive-ui";
 
-import { getAreas, getBuildings, getRooms, getRoomInfo, getRoomSumDuring, getRoomAvgDuring, getRoomLogs, getRoomDailys } from "@/api";
+import { getAreas, getBuildings, getRooms, getRoomLogs, getRoomDailys } from "@/api";
 import { messageApi } from "@/utils";
 </script>
 
@@ -121,18 +123,10 @@ const roomsSelected = ref<string[]>([]);
 const roomsSelectLoading = ref(false);
 const roomsData: {
   [key: string]: {
-    roomInfo: RoomInfo & {
-      path: string;
-      fullName: string;
-    };
-    roomData: {
-      spendingDay: RoomStatisticalData;
-      spendingWeek: RoomStatisticalData;
-      spendingMonth: RoomStatisticalData;
-      avgWeek: RoomStatisticalData;
-      avgMonth: RoomStatisticalData;
-      avgLast30d: RoomStatisticalData;
-    };
+    area: string;
+    building: string;
+    room: string;
+    fullName: string;
     roomLogs: RoomPowerData[];
     roomSpendings: RoomPowerData[];
     roomDailys: RoomPowerData[];
@@ -145,10 +139,10 @@ onMounted(async () => {
     for (const newRoomSelected of <string[][]>JSON.parse(Base64.decode(<string>route.query.rooms))) {
       const area = areas.find((area) => area.value_show === newRoomSelected[0]);
       if (!area) continue;
-      const buildings = await loadBuildings(area.value_fact, area);
+      const buildings = await loadBuildings(area.path[0], area);
       const building = buildings.find((building) => building.value_show === newRoomSelected[1]);
       if (!building) continue;
-      let rooms = await loadRooms(building.value_fact, building);
+      let rooms = await loadRooms(building.path[0], building.path[1], building);
       for (const range of newRoomSelected.slice(2)) {
         const room = rooms.find((room) => room.value_show === range);
         if (!room) break;
@@ -164,7 +158,7 @@ async function loadAreas(force: boolean = false): Promise<SelectorOption[]> {
   const areas = await getAreas();
   roomsOption.value = areas.map<SelectorOption>((area) => ({
     value_show: area,
-    value_fact: area,
+    value_fact: JSON.stringify([area]),
     depth: 1,
     isLeaf: false,
     path: [area],
@@ -172,24 +166,24 @@ async function loadAreas(force: boolean = false): Promise<SelectorOption[]> {
   return roomsOption.value;
 }
 
-async function loadBuildings(areaPath: string, parent: SelectorOption, force: boolean = false): Promise<SelectorOption[]> {
+async function loadBuildings(area: string, parent: SelectorOption, force: boolean = false): Promise<SelectorOption[]> {
   if (!force && parent.children && parent.children.length > 0) return parent.children;
 
-  const buildings = await getBuildings(areaPath);
+  const buildings = await getBuildings(area);
   parent.children = buildings.map<SelectorOption>((building) => ({
     value_show: building,
-    value_fact: `${areaPath}/${building}`,
+    value_fact: JSON.stringify([...parent.path, building]),
     depth: 2,
     isLeaf: false,
-    path: [...parent.path!, building],
+    path: [...parent.path, building],
   }));
   return parent.children;
 }
 
-async function loadRooms(buildingPath: string, parent: SelectorOption, force: boolean = false): Promise<SelectorOption[]> {
+async function loadRooms(area: string, building: string, parent: SelectorOption, force: boolean = false): Promise<SelectorOption[]> {
   if (!force && parent.children && parent.children.length > 0) return parent.children;
 
-  const rooms = await getRooms(buildingPath);
+  const rooms = await getRooms(area, building);
   const roomClassified = new Map<string, Map<string, string[]>>();
   const roomUnclassified: string[] = [];
   rooms.forEach((room) => {
@@ -208,38 +202,38 @@ async function loadRooms(buildingPath: string, parent: SelectorOption, force: bo
   if (roomUnclassified.length > 0) {
     parent.children.push({
       value_show: "未分类",
-      value_fact: `${buildingPath}/未分类`,
+      value_fact: JSON.stringify([...parent.path, "未分类"]),
       depth: 3,
       isLeaf: false,
-      path: [...parent.path!, "未分类"],
+      path: [...parent.path, "未分类"],
       children: roomUnclassified.map((room) => ({
         value_show: room,
-        value_fact: `${buildingPath}/${room}`,
+        value_fact: JSON.stringify([...parent.path, "未分类", room]),
         depth: 4,
         isLeaf: true,
-        path: [...parent.path!, "未分类", room],
+        path: [...parent.path, "未分类", room],
       })),
     });
   }
   parent.children.push(
     ...Array.from(roomClassified).map(([b, l_]) => ({
       value_show: `${b}栋`,
-      value_fact: `${buildingPath}/${b}`,
+      value_fact: JSON.stringify([...parent.path, `${b}栋`]),
       depth: 3,
       isLeaf: false,
-      path: [...parent.path!, `${b}栋`],
+      path: [...parent.path, `${b}栋`],
       children: Array.from(l_).map(([l, r_]) => ({
         value_show: `${b}-${l}层`,
-        value_fact: `${buildingPath}/${b}-${l}`,
+        value_fact: JSON.stringify([...parent.path, `${b}栋`, `${b}-${l}层`]),
         depth: 4,
         isLeaf: false,
-        path: [...parent.path!, `${b}栋`, `${b}-${l}层`],
+        path: [...parent.path, `${b}栋`, `${b}-${l}层`],
         children: Array.from(r_).map((r) => ({
           value_show: `${b}-${l}${r}`,
-          value_fact: `${buildingPath}/${b}-${l}${r}`,
+          value_fact: JSON.stringify([...parent.path, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`]),
           depth: 5,
           isLeaf: true,
-          path: [...parent.path!, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`],
+          path: [...parent.path, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`],
         })),
       })),
     }))
@@ -261,9 +255,9 @@ async function handleRoomsLoad(option_: SelectorOption | TreeSelectOption) {
   // todo: 删除 TreeSelectOption
   const option = <SelectorOption>option_;
   if (option.depth === 1) {
-    await loadBuildings(option.value_fact, option);
+    await loadBuildings(option.path[0], option);
   } else if (option.depth === 2) {
-    await loadRooms(option.value_fact, option);
+    await loadRooms(option.path[0], option.path[1], option);
   }
 }
 
@@ -320,36 +314,15 @@ async function addRooms(addedRooms: string[]) {
   for (const roomPath of addedRooms) {
     if (Object.keys(roomsData).indexOf(roomPath) === -1) {
       try {
-        const [roomInfo, roomSumDay, roomSumWeek, roomSumMonth, roomAvgWeek, roomAvgMonth, roomAvgLast30d, roomLogs, roomDailys] = await Promise.all([
-          getRoomInfo(roomPath),
-          getRoomSumDuring(roomPath, "day"),
-          getRoomSumDuring(roomPath, "week"),
-          getRoomSumDuring(roomPath, "month"),
-          getRoomAvgDuring(roomPath, "week"),
-          getRoomAvgDuring(roomPath, "month"),
-          getRoomAvgDuring(roomPath, "last30d"),
-          getRoomLogs(roomPath),
-          getRoomDailys(roomPath),
-        ]);
+        const roomPA: string[] = JSON.parse(roomPath);
+        const [area, building, room] = [roomPA[0], roomPA[1], roomPA[roomPA.length - 1]];
+        const [roomLogs, roomDailys] = await Promise.all([getRoomLogs(area, building, room), getRoomDailys(area, building, room)]);
 
         roomsData[roomPath] = {
-          roomInfo: {
-            ts: roomInfo.ts,
-            power: roomInfo.power,
-            area: roomInfo.area,
-            building: roomInfo.building,
-            room: roomInfo.room,
-            path: roomPath,
-            fullName: `${roomInfo.area} > ${roomInfo.building} > ${roomInfo.room}`,
-          },
-          roomData: {
-            spendingDay: roomSumDay,
-            spendingWeek: roomSumWeek,
-            spendingMonth: roomSumMonth,
-            avgWeek: roomAvgWeek,
-            avgMonth: roomAvgMonth,
-            avgLast30d: roomAvgLast30d,
-          },
+          area,
+          building,
+          room,
+          fullName: `${area} > ${building} > ${room}`,
           roomLogs: roomLogs.map(({ ts, power }) => ({ ts: ts, power })),
           roomSpendings: roomLogs.filter(({ spending }) => spending >= 0).map(({ ts, spending }) => ({ ts: ts, power: spending })),
           roomDailys: roomDailys.map(({ ts, spending }) => ({ ts: ts, power: spending })),

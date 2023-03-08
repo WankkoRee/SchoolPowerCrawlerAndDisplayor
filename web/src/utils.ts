@@ -1,5 +1,8 @@
 import { ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import type { MessageApi } from "naive-ui";
+import { getUserInfo } from "@/api";
+import { LoginDemand } from "@/router";
 
 export const loadingBarApi = ref<LoadingBarApi>();
 export const messageApi = ref<MessageApi>();
@@ -21,5 +24,21 @@ export class LoadingBarApi {
 
   finish() {
     if (--this.indicator === 0) this.loadingBarApi.finish();
+  }
+}
+
+export async function refreshUserInfo() {
+  userInfo.value = await getUserInfo();
+  const route = useRoute();
+  const router = useRouter();
+  console.debug(userInfo.value);
+  if (route.meta.loginDemand === LoginDemand.LoggedIn && userInfo.value === undefined) {
+    router.push({
+      name: "Login",
+      query: { redirect: route.fullPath },
+    });
+  } else if (route.meta.loginDemand === LoginDemand.NotLoggedIn && userInfo.value !== undefined) {
+    await router.back();
+    router.push({ name: "Index" }); // 如果没有上一页则会执行这条
   }
 }

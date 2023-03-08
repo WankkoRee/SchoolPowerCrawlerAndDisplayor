@@ -1,5 +1,5 @@
 <template>
-  <n-card :title="roomInfo.fullName" :header-style="cardStyle" hoverable>
+  <n-card :title="fullName" :header-style="cardStyle ?? ''" hoverable>
     <template #header-extra>
       <n-tooltip :show-arrow="false" trigger="hover">
         <template #trigger>
@@ -12,126 +12,190 @@
         取消对 {{ roomInfo.room }} 的对比
       </n-tooltip>
     </template>
-    <template #footer>
-      <n-popover placement="right" trigger="hover">
-        <template #trigger>
-          <n-tag round :bordered="false">
-            <n-time :time="roomInfo.ts" type="relative" />
-            <template #icon>
-              <n-icon>
-                <cloud-download-outline />
-              </n-icon>
-            </template>
-          </n-tag>
-        </template>
-        数据同步于：<n-time :time="roomInfo.ts" type="datetime" />
-      </n-popover>
-    </template>
     <n-grid :cols="3">
       <n-grid-item>
         <n-popover placement="top" :delay="500" trigger="hover">
           <template #trigger>
             <n-statistic label="今日用电" tabular-nums>
-              <n-number-animation ref="spendingDay" :from="0" :to="roomData.spendingDay.spending" :duration="500" :active="true" :precision="2" />
+              <n-skeleton v-if="loading" text :width="60" :sharp="false" />
+              <n-number-animation v-else ref="spendingDay" :from="0" :to="roomSumDay.spending" :duration="500" :active="true" :precision="2" />
               <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
             </n-statistic>
           </template>
-          从
-          <b><n-time :time="roomData.spendingDay.from" type="datetime" /></b>
+          <span>从 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomSumDay.from" type="datetime" />
+          </b>
           <br />
-          到
-          <b><n-time :time="roomData.spendingDay.to" type="datetime" /></b>
+          <span>到 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomSumDay.to" type="datetime" />
+          </b>
           <br />
-          共
-          <b>{{ timeInterval(roomData.spendingDay.from, roomData.spendingDay.to) }}</b>
+          <span>共 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="30" round />
+            <span v-else>{{ timeInterval(roomSumDay.from, roomSumDay.to) }}</span>
+          </b>
         </n-popover>
       </n-grid-item>
       <n-grid-item>
         <n-popover placement="top" :delay="500" trigger="hover">
           <template #trigger>
             <n-statistic label="本周用电" tabular-nums>
-              <n-number-animation ref="remainingPower" :from="0" :to="roomData.spendingWeek.spending" :duration="500" :active="true" :precision="2" />
+              <n-skeleton v-if="loading" text :width="60" :sharp="false" />
+              <n-number-animation v-else ref="remainingPower" :from="0" :to="roomSumWeek.spending" :duration="500" :active="true" :precision="2" />
               <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
             </n-statistic>
           </template>
-          从
-          <b><n-time :time="roomData.spendingWeek.from" type="datetime" /></b>
+          <span>从 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomSumWeek.from" type="datetime" />
+          </b>
           <br />
-          到
-          <b><n-time :time="roomData.spendingWeek.to" type="datetime" /></b>
+          <span>到 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomSumWeek.to" type="datetime" />
+          </b>
           <br />
-          共
-          <b>{{ timeInterval(roomData.spendingWeek.from, roomData.spendingWeek.to) }}</b>
+          <span>共 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="30" round />
+            <span v-else>{{ timeInterval(roomSumWeek.from, roomSumWeek.to) }}</span>
+          </b>
         </n-popover>
       </n-grid-item>
       <n-grid-item>
         <n-popover placement="top" :delay="500" trigger="hover">
           <template #trigger>
             <n-statistic label="本月用电" tabular-nums>
-              <n-number-animation ref="spendingDay" :from="0" :to="roomData.spendingMonth.spending" :duration="500" :active="true" :precision="2" />
+              <n-skeleton v-if="loading" text :width="60" :sharp="false" />
+              <n-number-animation v-else ref="spendingDay" :from="0" :to="roomSumMonth.spending" :duration="500" :active="true" :precision="2" />
               <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
             </n-statistic>
           </template>
-          从
-          <b><n-time :time="roomData.spendingMonth.from" type="datetime" /></b>
+          <span>从 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomSumMonth.from" type="datetime" />
+          </b>
           <br />
-          到
-          <b><n-time :time="roomData.spendingMonth.to" type="datetime" /></b>
+          <span>到 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomSumMonth.to" type="datetime" />
+          </b>
           <br />
-          共
-          <b>{{ timeInterval(roomData.spendingMonth.from, roomData.spendingMonth.to) }}</b>
+          <span>共 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="30" round />
+            <span v-else>{{ timeInterval(roomSumMonth.from, roomSumMonth.to) }}</span>
+          </b>
         </n-popover>
       </n-grid-item>
       <n-grid-item>
         <n-popover placement="top" :delay="500" trigger="hover">
           <template #trigger>
             <n-statistic label="剩余电量" tabular-nums>
-              <n-number-animation ref="remainingPower" :from="0" :to="roomInfo.power" :duration="500" :active="true" :precision="2" />
+              <n-skeleton v-if="loading" text :width="60" :sharp="false" />
+              <n-number-animation v-else ref="remainingPower" :from="0" :to="roomInfo.power" :duration="500" :active="true" :precision="2" />
               <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
             </n-statistic>
           </template>
-          过去30天日均用电量为 <b>{{ roomData.avgLast30d.spending.toFixed(2) }}</b> kWh/d
+          <span>过去30天日均用电量为 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="40" round />
+            <span v-else>{{ roomAvgLast30d.spending.toFixed(2) }}</span>
+          </b>
+          <span> kWh/d</span>
           <br />
-          预计可用 <b>{{ Math.floor(roomInfo.power / roomData.avgLast30d.spending) }}</b> 天
+          <span>预计可用 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="30" round />
+            <span v-else>{{ Math.floor(roomInfo.power / roomAvgLast30d.spending) }}</span>
+          </b>
+          <span> 天</span>
         </n-popover>
       </n-grid-item>
       <n-grid-item>
         <n-popover placement="top" :delay="500" trigger="hover">
           <template #trigger>
             <n-statistic label="本周日均用电" tabular-nums>
-              <n-number-animation ref="avgWeek" :from="0" :to="roomData.avgWeek.spending" :duration="500" :active="true" :precision="2" />
+              <n-skeleton v-if="loading" text :width="60" :sharp="false" />
+              <n-number-animation v-else ref="avgWeek" :from="0" :to="roomAvgWeek.spending" :duration="500" :active="true" :precision="2" />
               <template #suffix><span style="font-size: var(--n-label-font-size)">kWh/d</span></template>
             </n-statistic>
           </template>
-          从
-          <b><n-time :time="roomData.avgWeek.from" type="datetime" /></b>
+          <span>从 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomAvgWeek.from" type="datetime" />
+          </b>
           <br />
-          到
-          <b><n-time :time="roomData.avgWeek.to" type="datetime" /></b>
+          <span>到 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomAvgWeek.to" type="datetime" />
+          </b>
           <br />
-          共
-          <b>{{ timeInterval(roomData.avgWeek.from, roomData.avgWeek.to) }}</b>
+          <span>共 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="30" round />
+            <span v-else>{{ timeInterval(roomAvgWeek.from, roomAvgWeek.to) }}</span>
+          </b>
         </n-popover>
       </n-grid-item>
       <n-grid-item>
         <n-popover placement="top" :delay="500" trigger="hover">
           <template #trigger>
             <n-statistic label="本月日均用电" tabular-nums>
-              <n-number-animation ref="avgMonth" :from="0" :to="roomData.avgMonth.spending" :duration="500" :active="true" :precision="2" />
+              <n-skeleton v-if="loading" text :width="60" :sharp="false" />
+              <n-number-animation v-else ref="avgMonth" :from="0" :to="roomAvgMonth.spending" :duration="500" :active="true" :precision="2" />
               <template #suffix><span style="font-size: var(--n-label-font-size)">kWh/d</span></template>
             </n-statistic>
           </template>
-          从
-          <b><n-time :time="roomData.avgMonth.from" type="datetime" /></b>
+          <span>从 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomAvgMonth.from" type="datetime" />
+          </b>
           <br />
-          到
-          <b><n-time :time="roomData.avgMonth.to" type="datetime" /></b>
+          <span>到 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="145" round />
+            <n-time v-else :time="roomAvgMonth.to" type="datetime" />
+          </b>
           <br />
-          共
-          <b>{{ timeInterval(roomData.avgMonth.from, roomData.avgMonth.to) }}</b>
+          <span>共 </span>
+          <b>
+            <n-skeleton v-if="loading" text :width="30" round />
+            <span v-else>{{ timeInterval(roomAvgMonth.from, roomAvgMonth.to) }}</span>
+          </b>
         </n-popover>
       </n-grid-item>
     </n-grid>
+    <template #footer>
+      <n-popover placement="right" trigger="hover">
+        <template #trigger>
+          <n-tag round :bordered="false">
+            <template #icon>
+              <n-icon>
+                <cloud-download-outline />
+              </n-icon>
+            </template>
+            <n-skeleton v-if="loading" text :width="62" round />
+            <n-time v-else :time="roomInfo.ts" type="relative" />
+          </n-tag>
+        </template>
+        <span>数据同步于：</span>
+        <n-skeleton v-if="loading" text :width="138" round />
+        <n-time v-else :time="roomInfo.ts" type="datetime" />
+      </n-popover>
+    </template>
   </n-card>
 </template>
 
@@ -139,30 +203,35 @@
 export default {
   name: "RoomInfoCard",
 };
+
+import { ref, onMounted } from "vue";
+
+import { getRoomInfo, getRoomSumDuring, getRoomAvgDuring } from "@/api";
 </script>
 
 <script lang="ts" setup>
-import { NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem, NButton, NIcon, NTag, NTooltip } from "naive-ui";
+import { NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem, NButton, NIcon, NTag, NTooltip, NSkeleton } from "naive-ui";
 import { EyeOffOutline, CloudDownloadOutline } from "@vicons/ionicons5";
 
 const props = defineProps<{
-  cardStyle: string;
-  roomInfo: RoomInfo & {
-    path: string;
-    fullName: string;
-  };
-  roomData: {
-    spendingDay: RoomStatisticalData;
-    spendingWeek: RoomStatisticalData;
-    spendingMonth: RoomStatisticalData;
-    avgWeek: RoomStatisticalData;
-    avgMonth: RoomStatisticalData;
-    avgLast30d: RoomStatisticalData;
-  };
+  area: string;
+  building: string;
+  room: string;
+  fullName: string;
+  cardStyle?: string;
 }>();
 const emit = defineEmits<{
   (e: "remove"): void;
 }>();
+
+const loading = ref(true);
+const roomInfo = ref(<RoomInfo>{});
+const roomSumDay = ref(<RoomStatisticalData>{});
+const roomSumWeek = ref(<RoomStatisticalData>{});
+const roomSumMonth = ref(<RoomStatisticalData>{});
+const roomAvgWeek = ref(<RoomStatisticalData>{});
+const roomAvgMonth = ref(<RoomStatisticalData>{});
+const roomAvgLast30d = ref(<RoomStatisticalData>{});
 
 function timeInterval(from: Timestamp, to: Timestamp): string {
   let result = "";
@@ -188,6 +257,19 @@ function timeInterval(from: Timestamp, to: Timestamp): string {
     .join("");
   return result;
 }
+
+onMounted(async () => {
+  [roomInfo.value, roomSumDay.value, roomSumWeek.value, roomSumMonth.value, roomAvgWeek.value, roomAvgMonth.value, roomAvgLast30d.value] = await Promise.all([
+    getRoomInfo(props.area, props.building, props.room),
+    getRoomSumDuring(props.area, props.building, props.room, "day"),
+    getRoomSumDuring(props.area, props.building, props.room, "week"),
+    getRoomSumDuring(props.area, props.building, props.room, "month"),
+    getRoomAvgDuring(props.area, props.building, props.room, "week"),
+    getRoomAvgDuring(props.area, props.building, props.room, "month"),
+    getRoomAvgDuring(props.area, props.building, props.room, "last30d"),
+  ]);
+  loading.value = false;
+});
 </script>
 
 <style scoped></style>

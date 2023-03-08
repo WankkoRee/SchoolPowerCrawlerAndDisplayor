@@ -1,7 +1,30 @@
+import { ref } from "vue";
 import axios from "axios";
-import type { AxiosResponse } from "axios";
+import type { Canceler, AxiosResponse } from "axios";
 
 import { loadingBarApi, messageApi } from "@/utils";
+
+export const requestsCanceler = ref<Canceler[]>([]);
+
+axios.interceptors.request.use((config) => {
+  config.cancelToken = new axios.CancelToken((c) => {
+    requestsCanceler.value.push(c);
+  });
+  return config;
+});
+axios.interceptors.response.use(
+  (resp) => {
+    return resp;
+  },
+  (error) => {
+    if (axios.isCancel(error)) {
+      loadingBarApi.value?.finish();
+      return new Promise(() => {});
+    } else {
+      return Promise.reject(error);
+    }
+  }
+);
 
 async function checkRequest<T, B extends boolean>(request: Promise<AxiosResponse<AppResponse<T>>>, silent: B): Promise<B extends false ? T : AppResponse<T>> {
   let err = false;
@@ -60,63 +83,54 @@ export async function getAreas(): Promise<GetAreasResult> {
   return result.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-export async function getBuildings(areaPath: string): Promise<GetBuildingsResult> {
-  const buildingsRequest = axios.get<AppResponse<GetBuildingsResult>>(`./api/info/${areaPath}`);
+export async function getBuildings(area: string): Promise<GetBuildingsResult> {
+  const buildingsRequest = axios.get<AppResponse<GetBuildingsResult>>(`./api/info/${area}`);
   const result = await checkRequest(buildingsRequest, false);
   return result.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-export async function getRooms(buildingPath: string): Promise<GetRoomsResult> {
-  const roomsRequest = axios.get<AppResponse<GetRoomsResult>>(`./api/info/${buildingPath}`);
+export async function getRooms(area: string, building: string): Promise<GetRoomsResult> {
+  const roomsRequest = axios.get<AppResponse<GetRoomsResult>>(`./api/info/${area}/${building}`);
   const result = await checkRequest(roomsRequest, false);
   return result.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-export async function getRoomInfo(roomPath: string): Promise<GetRoomInfoResult> {
-  const roomInfoRequest = axios.get<AppResponse<GetRoomInfoResult>>(`./api/info/${roomPath}`);
+export async function getRoomInfo(area: string, building: string, room: string): Promise<GetRoomInfoResult> {
+  const roomInfoRequest = axios.get<AppResponse<GetRoomInfoResult>>(`./api/info/${area}/${building}/${room}`);
   const result = await checkRequest(roomInfoRequest, false);
   return result;
 }
 
-export async function getRoomSumDuring(roomPath: string, during: string = ""): Promise<GetRoomSumDuringResult> {
-  const roomSumDuringRequest = axios.get<AppResponse<GetRoomSumDuringResult>>(`./api/data/${roomPath}/sum/${during}`);
+export async function getRoomSumDuring(area: string, building: string, room: string, during: string = ""): Promise<GetRoomSumDuringResult> {
+  const roomSumDuringRequest = axios.get<AppResponse<GetRoomSumDuringResult>>(`./api/data/${area}/${building}/${room}/sum/${during}`);
   const result = await checkRequest(roomSumDuringRequest, false);
   return result;
 }
 
-export async function getRoomAvgDuring(roomPath: string, during: string = ""): Promise<GetRoomAvgDuringResult> {
-  const roomAvgDuringRequest = axios.get<AppResponse<GetRoomAvgDuringResult>>(`./api/data/${roomPath}/avg/${during}`);
+export async function getRoomAvgDuring(area: string, building: string, room: string, during: string = ""): Promise<GetRoomAvgDuringResult> {
+  const roomAvgDuringRequest = axios.get<AppResponse<GetRoomAvgDuringResult>>(`./api/data/${area}/${building}/${room}/avg/${during}`);
   const result = await checkRequest(roomAvgDuringRequest, false);
   return result;
 }
 
-export async function getRoomLogs(roomPath: string): Promise<GetRoomLogsResult> {
-  const roomLogsRequest = axios.get<AppResponse<GetRoomLogsResult>>(`./api/data/${roomPath}/logs`);
+export async function getRoomLogs(area: string, building: string, room: string): Promise<GetRoomLogsResult> {
+  const roomLogsRequest = axios.get<AppResponse<GetRoomLogsResult>>(`./api/data/${area}/${building}/${room}/logs`);
   const result = await checkRequest(roomLogsRequest, false);
   return result;
 }
 
-export async function getRoomDailys(roomPath: string): Promise<GetRoomDailysResult> {
-  const roomDailysRequest = axios.get<AppResponse<GetRoomDailysResult>>(`./api/data/${roomPath}/daily`);
+export async function getRoomDailys(area: string, building: string, room: string): Promise<GetRoomDailysResult> {
+  const roomDailysRequest = axios.get<AppResponse<GetRoomDailysResult>>(`./api/data/${area}/${building}/${room}/daily`);
   const result = await checkRequest(roomDailysRequest, false);
   return result;
 }
 
-export async function getRankSumRangeDuring(
-  range: RoomRange,
-  during: TimeDuring,
-  limit: number
-): Promise<GetRankSumDuringResult> {
+export async function getRankSumRangeDuring(range: RoomRange, during: TimeDuring, limit: number): Promise<GetRankSumDuringResult> {
   const rankSumDuringRequest = axios.get<AppResponse<GetRankSumDuringResult>>(`./api/rank/sum/${range}/${during}`, { params: { limit } });
   const result = await checkRequest(rankSumDuringRequest, false);
   return result;
 }
-export async function getRankSumRangeDuringInArea(
-  range: RoomRange,
-  during: TimeDuring,
-  limit: number,
-  area: string
-): Promise<GetRankSumDuringResult> {
+export async function getRankSumRangeDuringInArea(range: RoomRange, during: TimeDuring, limit: number, area: string): Promise<GetRankSumDuringResult> {
   const rankSumDuringRequest = axios.get<AppResponse<GetRankSumDuringResult>>(`./api/rank/sum/${range}/${during}`, { params: { limit, area } });
   const result = await checkRequest(rankSumDuringRequest, false);
   return result;
@@ -133,11 +147,7 @@ export async function getRankSumRangeDuringInBuilding(
   return result;
 }
 
-export async function getRankDailyAvgRangeDuring(
-  range: RoomRange,
-  during: TimeDuring,
-  limit: number
-): Promise<GetRankDailyAvgDuringResult> {
+export async function getRankDailyAvgRangeDuring(range: RoomRange, during: TimeDuring, limit: number): Promise<GetRankDailyAvgDuringResult> {
   const rankDailyAvgDuringRequest = axios.get<AppResponse<GetRankDailyAvgDuringResult>>(`./api/rank/dailyAvg/${range}/${during}`, { params: { limit } });
   const result = await checkRequest(rankDailyAvgDuringRequest, false);
   return result;
