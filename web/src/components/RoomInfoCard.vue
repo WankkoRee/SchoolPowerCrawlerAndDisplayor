@@ -1,5 +1,5 @@
 <template>
-  <n-card :title="fullName" :header-style="cardStyle ?? ''" hoverable>
+  <n-card :title="fullName" hoverable>
     <template #header-extra>
       <n-tooltip :show-arrow="false" trigger="hover">
         <template #trigger>
@@ -218,7 +218,6 @@ const props = defineProps<{
   building: string;
   room: string;
   fullName: string;
-  cardStyle?: string;
 }>();
 const emit = defineEmits<{
   (e: "remove"): void;

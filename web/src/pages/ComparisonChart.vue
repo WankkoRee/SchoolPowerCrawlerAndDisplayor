@@ -57,7 +57,7 @@
       <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
         <n-grid-item v-for="(roomPath, index) in roomsSelected" :key="roomPath">
           <RoomInfoCard
-            :cardStyle="`background: linear-gradient(
+            :style="`background: linear-gradient(
             ${colors[index % colors.length]}aa,
             ${colors[index % colors.length]}77,
             ${colors[index % colors.length]}44,

@@ -65,7 +65,7 @@
             <template #trigger>
               <n-tag type="success">
                 <n-skeleton v-if="loading" text :width="50" :sharp="false" />
-                <span v-else>{{ userInfo?.position.area }}</span>
+                <span v-else>{{ area }}</span>
               </n-tag>
             </template>
             <n-text>校区</n-text>
@@ -74,7 +74,7 @@
             <template #trigger>
               <n-tag type="success">
                 <n-skeleton v-if="loading" text :width="50" :sharp="false" />
-                <span v-else>{{ userInfo?.position.building }}</span>
+                <span v-else>{{ building }}</span>
               </n-tag>
             </template>
             <n-text>宿舍楼</n-text>
@@ -83,7 +83,7 @@
             <template #trigger>
               <n-tag type="success">
                 <n-skeleton v-if="loading" text :width="50" :sharp="false" />
-                <span v-else>{{ userInfo?.position.room }}</span>
+                <span v-else>{{ room }}</span>
               </n-tag>
             </template>
             <n-text>寝室</n-text>
@@ -92,7 +92,7 @@
             <template #trigger>
               <n-tag round type="success">
                 <n-skeleton v-if="loading" text :width="16" round />
-                <span v-else>{{ userInfo?.position.bed }}</span>
+                <span v-else>{{ bed }}</span>
               </n-tag>
             </template>
             <n-text>床位</n-text>
@@ -106,7 +106,14 @@
         </n-space>
       </template>
     </n-card>
-    <!--    <room-info room-data="" card-style="" room-info="" />-->
+    <RoomInfoCard
+      style="width: min(var(--container-width), 600px)"
+      v-if="fullName !== ''"
+      :area="area"
+      :building="building"
+      :room="room"
+      :full-name="fullName"
+    />
   </n-space>
 </template>
 
@@ -134,6 +141,12 @@ const router = useRouter();
 
 const loading = ref(true);
 
+const area = ref("");
+const building = ref("");
+const room = ref("");
+const bed = ref("");
+const fullName = ref("");
+
 async function logoutClick(e: MouseEvent) {
   e.preventDefault();
   await logout();
@@ -142,6 +155,22 @@ async function logoutClick(e: MouseEvent) {
 
 onMounted(async () => {
   await refreshUserInfo();
+  if (userInfo.value) {
+    let canBeShow = true;
+    if (userInfo.value.position.custom.state) {
+      area.value = userInfo.value.position.custom.area ?? userInfo.value.position.area ?? "存在问题";
+      building.value = userInfo.value.position.custom.building ?? userInfo.value.position.building ?? "存在问题";
+      room.value = userInfo.value.position.custom.room ?? userInfo.value.position.room ?? "存在问题";
+      canBeShow &&= area.value !== "存在问题" && building.value !== "存在问题" && room.value !== "存在问题";
+    } else {
+      area.value = userInfo.value.position.area ?? "无";
+      building.value = userInfo.value.position.building ?? "无";
+      room.value = userInfo.value.position.room ?? "无";
+      canBeShow &&= area.value !== "无" && building.value !== "无" && room.value !== "无";
+    }
+    bed.value = userInfo.value.position.bed ? userInfo.value.position.bed.toString() : "0";
+    if (canBeShow) fullName.value = `${area.value} > ${building.value} > ${room.value}`;
+  }
   loading.value = true;
 });
 </script>
