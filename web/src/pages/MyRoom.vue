@@ -1,6 +1,6 @@
 <template>
-  <n-space vertical align="center" justify="center" style="min-height: var(--container-height)" item-style="width: var(--container-width)">
-    <n-card :title="userInfo?.info.name" hoverable>
+  <n-space vertical align="center" justify="center" style="min-height: var(--container-height)">
+    <n-card :title="userInfo?.info.name" hoverable style="width: min(var(--container-width), 600px)">
       <n-space align="center" justify="space-between">
         <n-p>
           <n-text>学号</n-text>
@@ -88,6 +88,7 @@ export default {
   name: "MyRoom",
 };
 
+import { onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { logout } from "@/api";
@@ -107,6 +108,10 @@ async function logoutClick(e: MouseEvent) {
   await logout();
   router.push({ name: "Login", query: { redirect: route.fullPath } });
 }
+
+onMounted(() => {
+  //todo
+});
 </script>
 
 <style scoped></style>

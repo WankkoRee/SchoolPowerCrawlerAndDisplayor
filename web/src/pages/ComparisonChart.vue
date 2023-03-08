@@ -52,7 +52,7 @@
     <n-space v-if="roomsSelected.length" vertical align="center" justify="center" item-style="width: var(--container-width)">
       <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
         <n-grid-item v-for="(roomPath, index) in roomsSelected" :key="roomPath">
-          <RoomInfo
+          <RoomInfoCard
             :cardStyle="`background: linear-gradient(
             ${colors[index % colors.length]}aa,
             ${colors[index % colors.length]}77,
@@ -107,7 +107,7 @@ import { messageApi } from "@/utils";
 <script setup lang="ts">
 import { NSpace, NCascader, NTreeSelect, NEmpty, NGrid, NGridItem } from "naive-ui";
 
-import RoomInfo from "@/components/RoomInfo.vue";
+import RoomInfoCard from "@/components/RoomInfoCard.vue";
 import RoomsChart from "@/components/RoomsChart.vue";
 import { colors } from "@/utils";
 
