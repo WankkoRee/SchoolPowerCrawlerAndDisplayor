@@ -1,12 +1,10 @@
 <template>
-  <n-layout position="absolute" style="top: 0; bottom: 0">
-    <n-space vertical align="center" justify="center" style="height: 100%" item-style="width: min(80vw, 600px)">
-      <img src="@/assets/images/404.svg" alt="404" />
-      <n-space align="center" justify="space-around">
-        <n-button size="large" type="primary" @click="goBackClick" style="width: 120px"> 点我回到过去 </n-button>
-      </n-space>
+  <n-space vertical align="center" justify="center" style="min-height: var(--container-height)" item-style="width: min(var(--container-width), 600px)">
+    <img src="@/assets/images/404.svg" alt="404" />
+    <n-space align="center" justify="space-around">
+      <n-button size="large" type="primary" @click="goBackClick" style="width: 120px"> 点我回到过去 </n-button>
     </n-space>
-  </n-layout>
+  </n-space>
 </template>
 
 <script lang="ts">
@@ -18,7 +16,7 @@ import { useRouter } from "vue-router";
 </script>
 
 <script lang="ts" setup>
-import { NLayout, NSpace, NButton } from "naive-ui";
+import { NSpace, NButton } from "naive-ui";
 
 const router = useRouter();
 

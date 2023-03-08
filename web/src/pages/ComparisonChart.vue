@@ -1,6 +1,6 @@
 <template>
-  <n-space vertical>
-    <n-grid :cols="1" item-responsive>
+  <n-space vertical align="center" justify="center" :size="8">
+    <n-grid :cols="1" item-responsive style="width: var(--container-width)">
       <n-grid-item span="0 904:1">
         <n-cascader
           placeholder="请选择要查询的寝室"
@@ -31,6 +31,7 @@
           clearable
           :show-path="false"
           separator=" > "
+          size="large"
           max-tag-count="responsive"
           v-model:value="roomsSelect"
           @load="handleRoomsLoad"
@@ -39,8 +40,10 @@
         />
       </n-grid-item>
     </n-grid>
-    <n-empty v-if="!roomsSelected.length" description="要不咱先选几个寝室看看数据？" />
-    <n-space v-if="roomsSelected.length" vertical>
+    <n-space vertical align="center" justify="center" style="min-height: calc(var(--container-height) - 40px - 8px)">
+      <n-empty v-if="!roomsSelected.length" description="要不咱先选几个寝室看看数据？" />
+    </n-space>
+    <n-space v-if="roomsSelected.length" vertical align="center" justify="center" item-style="width: var(--container-width)">
       <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
         <n-grid-item v-for="(roomPath, index) in roomsSelected" :key="roomPath">
           <RoomInfo

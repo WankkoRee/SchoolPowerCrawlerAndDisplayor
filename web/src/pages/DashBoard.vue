@@ -1,5 +1,5 @@
 <template>
-  <n-space style="width: 100%" item-style="width: 80%" align="center" justify="center">
+  <n-space align="center" justify="center" style="min-height: var(--container-height)" item-style="width: var(--container-width)">
     <n-grid style="width: 100%" item-responsive cols="6" :x-gap="8" :y-gap="8">
       <n-grid-item span="6 600:2">
         <n-card hoverable>

@@ -1,28 +1,24 @@
 <template>
   <n-grid item-responsive :cols="1">
     <n-grid-item span="0 700:1">
-      <n-layout position="absolute" style="top: 0; bottom: 0">
-        <n-space align="center" justify="center" :size="0" style="height: 100%" item-style="overflow: hidden">
-          <n-space align="center" justify="center" :size="0" class="title pc">
-            <img src="@/assets/images/logo.png" style="width: 100px; display: inline" alt="logo" />
-            <n-gradient-text size="80" type="success"> {{ title }} </n-gradient-text>
-          </n-space>
-          <n-divider vertical style="height: 100px" />
-          <n-gradient-text size="32" type="success" class="slogan pc"> ——更懂电费，更懂你 </n-gradient-text>
+      <n-space align="center" justify="center" :size="0" style="min-height: var(--container-height)" item-style="overflow: hidden">
+        <n-space align="center" justify="center" :size="0" class="title pc">
+          <img src="@/assets/images/logo.png" style="width: 100px; display: inline" alt="logo" />
+          <n-gradient-text size="80" type="success"> {{ title }} </n-gradient-text>
         </n-space>
-      </n-layout>
+        <n-divider vertical style="height: 100px" />
+        <n-gradient-text size="32" type="success" class="slogan pc"> ——更懂电费，更懂你 </n-gradient-text>
+      </n-space>
     </n-grid-item>
     <n-grid-item span="1 700:0">
-      <n-layout position="absolute" style="top: 0; bottom: 0">
-        <n-space vertical align="center" justify="center" :size="0" style="height: 100%" item-style="overflow: hidden">
-          <n-space align="center" justify="center" :size="0" class="title mobile">
-            <img src="@/assets/images/logo.png" style="width: 100px; display: inline" alt="logo" />
-            <n-gradient-text size="80" type="success"> {{ title }} </n-gradient-text>
-          </n-space>
-          <n-divider style="width: 300px" />
-          <n-gradient-text size="32" type="success" class="slogan mobile"> ——更懂电费，更懂你 </n-gradient-text>
+      <n-space vertical align="center" justify="center" :size="0" style="min-height: var(--container-height)" item-style="overflow: hidden">
+        <n-space align="center" justify="center" :size="0" class="title mobile">
+          <img src="@/assets/images/logo.png" style="width: 100px; display: inline" alt="logo" />
+          <n-gradient-text size="80" type="success"> {{ title }} </n-gradient-text>
         </n-space>
-      </n-layout>
+        <n-divider style="width: 300px" />
+        <n-gradient-text size="32" type="success" class="slogan mobile"> ——更懂电费，更懂你 </n-gradient-text>
+      </n-space>
     </n-grid-item>
   </n-grid>
 </template>
@@ -34,7 +30,7 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { NGrid, NGridItem, NLayout, NSpace, NDivider, NGradientText } from "naive-ui";
+import { NGrid, NGridItem, NSpace, NDivider, NGradientText } from "naive-ui";
 
 const title = import.meta.env.VITE_APP_TITLE;
 </script>

@@ -1,34 +1,32 @@
 <template>
-  <n-layout position="absolute" style="top: 0; bottom: 0">
-    <n-space vertical align="center" justify="center" style="height: 100%" item-style="width: min(80vw, 600px)">
-      <n-form ref="loginForm" :model="loginFormValue" :rules="loginFormRule">
-        <n-form-item label="账号" path="username">
-          <n-input v-model:value="loginFormValue.username" placeholder="就是你的学号" />
-        </n-form-item>
-        <n-form-item label="密码" path="password">
-          <n-input v-model:value="loginFormValue.password" placeholder="默认为手机号后六位，或姓名小写全拼，取决于随行校园是否绑定已手机号" type="password" />
-        </n-form-item>
-      </n-form>
-      <n-space align="center" justify="space-between">
-        <n-button size="small" quaternary @click="loginFormHelpShow = true"> 忘记密码 </n-button>
-        <n-button size="large" type="primary" @click="loginFormClick" style="width: 120px"> 登录 </n-button>
-        <n-button size="small" quaternary @click="loginFormHelpShow = true"> 无法登录 </n-button>
-      </n-space>
+  <n-space vertical align="center" justify="center" style="min-height: var(--container-height)" item-style="width: min(var(--container-width), 600px)">
+    <n-form ref="loginForm" :model="loginFormValue" :rules="loginFormRule">
+      <n-form-item label="账号" path="username">
+        <n-input v-model:value="loginFormValue.username" placeholder="就是你的学号" />
+      </n-form-item>
+      <n-form-item label="密码" path="password">
+        <n-input v-model:value="loginFormValue.password" placeholder="默认为手机号后六位，或姓名小写全拼，取决于随行校园是否绑定已手机号" type="password" />
+      </n-form-item>
+    </n-form>
+    <n-space align="center" justify="space-between">
+      <n-button size="small" quaternary @click="loginFormHelpShow = true"> 忘记密码 </n-button>
+      <n-button size="large" type="primary" @click="loginFormClick" style="width: 120px"> 登录 </n-button>
+      <n-button size="small" quaternary @click="loginFormHelpShow = true"> 无法登录 </n-button>
     </n-space>
-    <n-modal v-model:show="loginFormHelpShow">
-      <n-card style="width: min(80vw, 600px)" title="登录帮助" role="dialog">
-        <n-p>
-          <n-text>如果你：</n-text>
-          <n-ol>
-            <n-li>忘记了密码</n-li>
-            <n-li>被别人修改了密码</n-li>
-            <n-li>碰到了其他无法登录的情况</n-li>
-          </n-ol>
-          <n-text>请联系开发者</n-text>
-        </n-p>
-      </n-card>
-    </n-modal>
-  </n-layout>
+  </n-space>
+  <n-modal v-model:show="loginFormHelpShow">
+    <n-card style="width: min(80vw, 600px)" title="登录帮助" role="dialog">
+      <n-p>
+        <n-text>如果你：</n-text>
+        <n-ol>
+          <n-li>忘记了密码</n-li>
+          <n-li>被别人修改了密码</n-li>
+          <n-li>碰到了其他无法登录的情况</n-li>
+        </n-ol>
+        <n-text>请联系开发者</n-text>
+      </n-p>
+    </n-card>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -45,7 +43,7 @@ import { login } from "@/api";
 </script>
 
 <script lang="ts" setup>
-import { NLayout, NSpace, NForm, NFormItem, NInput, NButton, NModal, NCard, NP, NText, NOl, NLi } from "naive-ui";
+import { NSpace, NForm, NFormItem, NInput, NButton, NModal, NCard, NP, NText, NOl, NLi } from "naive-ui";
 
 const route = useRoute();
 const router = useRouter();

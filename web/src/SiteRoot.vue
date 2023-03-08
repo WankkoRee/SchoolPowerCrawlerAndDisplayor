@@ -89,4 +89,9 @@ provide("f_reload", reload);
 
 <style>
 @import "vue3-resize/dist/vue3-resize.css";
+
+:root {
+  --container-width: calc(80vw - 16px * 2);
+  --container-height: calc(100vh - 64px * 2 - 16px * 2);
+}
 </style>
