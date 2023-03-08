@@ -2,7 +2,9 @@
   <n-space vertical align="center" justify="center" :size="8">
     <n-grid :cols="1" item-responsive style="width: var(--container-width)">
       <n-grid-item span="0 904:1">
+        <n-skeleton v-if="loading" width="100%" :height="40" :sharp="false" />
         <n-cascader
+          v-else
           ref="roomsSelector"
           placeholder="请选择要查询的寝室"
           :options="roomsOption"
@@ -24,7 +26,9 @@
         />
       </n-grid-item>
       <n-grid-item span="1 904:0">
+        <n-skeleton v-if="loading" width="100%" :height="40" :sharp="false" />
         <n-tree-select
+          v-else
           ref="roomsSelector"
           placeholder="请选择要查询的寝室"
           :options="roomsOption"
@@ -107,7 +111,7 @@ import { messageApi } from "@/utils";
 </script>
 
 <script setup lang="ts">
-import { NSpace, NCascader, NTreeSelect, NEmpty, NGrid, NGridItem } from "naive-ui";
+import { NSpace, NCascader, NTreeSelect, NEmpty, NGrid, NGridItem, NSkeleton } from "naive-ui";
 
 import RoomInfoCard from "@/components/RoomInfoCard.vue";
 import RoomsChart from "@/components/RoomsChart.vue";
@@ -115,6 +119,8 @@ import { colors } from "@/utils";
 
 const route = useRoute();
 const router = useRouter();
+
+const loading = ref(true);
 
 const roomsSelector = ref<CascaderInst | TreeSelectInst>();
 const roomsOption = ref<SelectorOption[]>([]);
@@ -150,6 +156,7 @@ onMounted(async () => {
         else await addRooms([room.value_fact]);
       }
     }
+  loading.value = false;
 });
 
 async function loadAreas(force: boolean = false): Promise<SelectorOption[]> {
