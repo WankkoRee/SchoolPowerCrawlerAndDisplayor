@@ -1,31 +1,42 @@
 <template>
   <n-space vertical align="center" justify="center" style="min-height: var(--container-height)">
-    <n-card :title="userInfo?.info.name" hoverable style="width: min(var(--container-width), 600px)">
+    <n-card hoverable style="width: min(var(--container-width), 600px)">
+      <template #header>
+        <n-skeleton v-if="loading" text :width="80" :sharp="false" />
+        <span v-else>{{ userInfo?.info.name }}</span>
+      </template>
       <n-space align="center" justify="space-between">
         <n-p>
           <n-text>学号</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo?.info.number }}</n-text>
+          <n-skeleton v-if="loading" text :width="100" round />
+          <n-text v-else>{{ userInfo?.info.number }}</n-text>
           <br />
           <n-text>学院</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo?.info.faculty }} </n-text>
+          <n-skeleton v-if="loading" text :width="120" round />
+          <n-text v-else>{{ userInfo?.info.faculty }} </n-text>
           <br />
           <n-text>年级</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo?.info.grade }} </n-text>
+          <n-skeleton v-if="loading" text :width="60" round />
+          <n-text v-else>{{ userInfo?.info.grade }} </n-text>
           <br />
           <n-text>专业</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo?.info.major }} </n-text>
+
+          <n-skeleton v-if="loading" text :width="80" round />
+          <n-text v-else>{{ userInfo?.info.major }} </n-text>
           <br />
           <n-text>班级</n-text>
           <n-divider vertical />
-          <n-text>{{ userInfo?.info.class }} </n-text>
+          <n-skeleton v-if="loading" text :width="60" round />
+          <n-text v-else>{{ userInfo?.info.class }} </n-text>
         </n-p>
         <n-popover trigger="hover">
           <template #trigger>
-            <n-avatar :size="64" :src="'https://dk.nynu.edu.cn/' + userInfo?.info.picture" style="height: unset" />
+            <n-skeleton v-if="loading" :width="64" :height="90" :sharp="false" />
+            <n-avatar v-else :size="64" :src="'https://dk.nynu.edu.cn/' + userInfo?.info.picture" style="height: unset" />
           </template>
           照片来自<n-tag :bordered="false">随行校园</n-tag>，本应用不保存任何隐私信息。
         </n-popover>
@@ -34,40 +45,55 @@
         <n-popover trigger="hover">
           <template #trigger>
             <n-tag round :bordered="false">
-              <n-time :time="userInfo?.update_time" type="relative" />
               <template #icon>
                 <n-icon>
                   <cloud-download-outline />
                 </n-icon>
               </template>
+              <n-skeleton v-if="loading" text :width="50" round />
+              <n-time v-else :time="userInfo?.update_time" type="relative" />
             </n-tag>
           </template>
-          数据同步于：<n-time :time="userInfo?.update_time" type="datetime" />
+          <span>数据同步于：</span>
+          <n-skeleton v-if="loading" text :width="138" round />
+          <n-time v-else :time="userInfo?.update_time" type="datetime" />
         </n-popover>
       </template>
       <template #footer>
         <n-space align="center">
           <n-popover trigger="hover">
             <template #trigger>
-              <n-tag type="success"> {{ userInfo?.position.area }} </n-tag>
+              <n-tag type="success">
+                <n-skeleton v-if="loading" text :width="50" :sharp="false" />
+                <span v-else>{{ userInfo?.position.area }}</span>
+              </n-tag>
             </template>
             <n-text>校区</n-text>
           </n-popover>
           <n-popover trigger="hover">
             <template #trigger>
-              <n-tag type="success"> {{ userInfo?.position.building }} </n-tag>
+              <n-tag type="success">
+                <n-skeleton v-if="loading" text :width="50" :sharp="false" />
+                <span v-else>{{ userInfo?.position.building }}</span>
+              </n-tag>
             </template>
             <n-text>宿舍楼</n-text>
           </n-popover>
           <n-popover trigger="hover">
             <template #trigger>
-              <n-tag type="success"> {{ userInfo?.position.room }} </n-tag>
+              <n-tag type="success">
+                <n-skeleton v-if="loading" text :width="50" :sharp="false" />
+                <span v-else>{{ userInfo?.position.room }}</span>
+              </n-tag>
             </template>
             <n-text>寝室</n-text>
           </n-popover>
           <n-popover trigger="hover">
             <template #trigger>
-              <n-tag round type="success"> {{ userInfo?.position.bed }} </n-tag>
+              <n-tag round type="success">
+                <n-skeleton v-if="loading" text :width="16" round />
+                <span v-else>{{ userInfo?.position.bed }}</span>
+              </n-tag>
             </template>
             <n-text>床位</n-text>
           </n-popover>
@@ -80,6 +106,7 @@
         </n-space>
       </template>
     </n-card>
+    <!--    <room-info room-data="" card-style="" room-info="" />-->
   </n-space>
 </template>
 
@@ -88,7 +115,7 @@ export default {
   name: "MyRoom",
 };
 
-import { onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { logout } from "@/api";
@@ -96,13 +123,16 @@ import { refreshUserInfo } from "@/utils";
 </script>
 
 <script lang="ts" setup>
-import { NSpace, NButton, NCard, NP, NText, NAvatar, NDivider, NTag, NPopover, NTime, NIcon } from "naive-ui";
+import { NSpace, NButton, NCard, NP, NText, NAvatar, NDivider, NTag, NPopover, NTime, NIcon, NSkeleton } from "naive-ui";
 import { CloudDownloadOutline } from "@vicons/ionicons5";
 
 import { userInfo } from "@/utils";
+import RoomInfoCard from "@/components/RoomInfoCard.vue";
 
 const route = useRoute();
 const router = useRouter();
+
+const loading = ref(true);
 
 async function logoutClick(e: MouseEvent) {
   e.preventDefault();
@@ -112,7 +142,7 @@ async function logoutClick(e: MouseEvent) {
 
 onMounted(async () => {
   await refreshUserInfo();
-  //todo
+  loading.value = true;
 });
 </script>
 
