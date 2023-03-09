@@ -1,9 +1,19 @@
 <template>
-  <n-card :title="fullName" hoverable>
+  <n-card :title="fullName" :header-style="cardHeaderStyle" hoverable>
     <template #header-extra>
-      <n-tooltip :show-arrow="false" trigger="hover">
+      <n-tooltip v-if="refresh" :show-arrow="false" trigger="hover">
         <template #trigger>
-          <n-button text style="font-size: 24px" @click="emit('remove')">
+          <n-button text style="font-size: 24px" @click="refreshData">
+            <n-icon>
+              <arrow-clockwise-24-regular />
+            </n-icon>
+          </n-button>
+        </template>
+        刷新 {{ roomInfo.room }} 的数据
+      </n-tooltip>
+      <n-tooltip v-if="onRemove" :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <n-button text style="font-size: 24px" @click="onRemove()">
             <n-icon>
               <eye-off-outline />
             </n-icon>
@@ -205,6 +215,7 @@ export default {
 };
 
 import { ref, onMounted } from "vue";
+import type { CSSProperties } from "vue";
 
 import { getRoomInfo, getRoomSumDuring, getRoomAvgDuring } from "@/api";
 </script>
@@ -212,15 +223,16 @@ import { getRoomInfo, getRoomSumDuring, getRoomAvgDuring } from "@/api";
 <script lang="ts" setup>
 import { NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem, NButton, NIcon, NTag, NTooltip, NSkeleton } from "naive-ui";
 import { EyeOffOutline, CloudDownloadOutline } from "@vicons/ionicons5";
+import { ArrowClockwise24Regular } from "@vicons/fluent";
 
 const props = defineProps<{
   area: string;
   building: string;
   room: string;
   fullName: string;
-}>();
-const emit = defineEmits<{
-  (e: "remove"): void;
+  cardHeaderStyle?: CSSProperties;
+  onRemove?: () => Promise<void>;
+  refresh?: boolean;
 }>();
 
 const loading = ref(true);
@@ -257,7 +269,8 @@ function timeInterval(from: Timestamp, to: Timestamp): string {
   return result;
 }
 
-onMounted(async () => {
+async function refreshData() {
+  loading.value = true;
   [roomInfo.value, roomSumDay.value, roomSumWeek.value, roomSumMonth.value, roomAvgWeek.value, roomAvgMonth.value, roomAvgLast30d.value] = await Promise.all([
     getRoomInfo(props.area, props.building, props.room),
     getRoomSumDuring(props.area, props.building, props.room, "day"),
@@ -268,6 +281,10 @@ onMounted(async () => {
     getRoomAvgDuring(props.area, props.building, props.room, "last30d"),
   ]);
   loading.value = false;
+}
+
+onMounted(async () => {
+  await refreshData();
 });
 </script>
 

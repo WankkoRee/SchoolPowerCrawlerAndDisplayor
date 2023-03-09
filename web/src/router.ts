@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
 
-import { loadingBarApi, userInfo } from "@/utils";
-import { getUserInfo, requestsCanceler } from "@/api";
+import { loadingBarApi } from "@/utils";
+import { requestsCanceler } from "@/api";
 
 export enum LoginDemand {
   LoggedIn,
@@ -23,7 +23,7 @@ export default function createAppRouter(routes: RouteRecordRaw[]) {
   });
 
   router.beforeEach(async function (to, from) {
-    requestsCanceler.value.forEach((canceler) => canceler());
+    if (!(from.name === to.name && to.name === "ComparisonChart")) requestsCanceler.value.forEach((canceler) => canceler());
     loadingBarApi.value?.start();
   });
   router.afterEach(function (to, from) {

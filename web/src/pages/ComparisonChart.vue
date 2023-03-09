@@ -57,7 +57,7 @@
       <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
         <n-grid-item v-for="(roomPath, index) in roomsSelected" :key="roomPath">
           <RoomInfoCard
-            :style="`background: linear-gradient(
+            :card-header-style="`background: linear-gradient(
             ${colors[index % colors.length]}aa,
             ${colors[index % colors.length]}77,
             ${colors[index % colors.length]}44,
@@ -66,7 +66,7 @@
             :building="roomsData[roomPath].building"
             :room="roomsData[roomPath].room"
             :full-name="roomsData[roomPath].fullName"
-            @remove="removeRooms([roomPath])"
+            :on-remove="async () => await removeRooms([roomPath])"
           />
         </n-grid-item>
       </n-grid>
@@ -157,6 +157,17 @@ onMounted(async () => {
       }
     }
   loading.value = false;
+
+  // 加载好了再挂事件
+  watch(
+    () => [...roomsSelected.value],
+    () => {
+      router.replace({
+        name: "ComparisonChart",
+        query: { rooms: Base64.encodeURI(JSON.stringify(roomsSelector.value!.getCheckedData().options.map((option) => option!.path))) },
+      });
+    }
+  );
 });
 
 async function loadAreas(force: boolean = false): Promise<SelectorOption[]> {
@@ -247,16 +258,6 @@ async function loadRooms(area: string, building: string, parent: SelectorOption,
   );
   return parent.children;
 }
-
-watch(
-  () => [...roomsSelected.value],
-  () => {
-    router.replace({
-      name: "ComparisonChart",
-      query: { rooms: Base64.encodeURI(JSON.stringify(roomsSelector.value!.getCheckedData().options.map((option) => option!.path))) },
-    });
-  }
-);
 
 async function handleRoomsLoad(option_: SelectorOption | TreeSelectOption) {
   // todo: 删除 TreeSelectOption

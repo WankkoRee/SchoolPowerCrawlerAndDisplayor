@@ -1,6 +1,7 @@
 import { ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import type { RouteLocationNormalizedLoaded, Router } from "vue-router";
 import type { MessageApi } from "naive-ui";
+
 import { getUserInfo } from "@/api";
 import { LoginDemand } from "@/router";
 
@@ -27,10 +28,8 @@ export class LoadingBarApi {
   }
 }
 
-export async function refreshUserInfo() {
+export async function refreshUserInfo(route: RouteLocationNormalizedLoaded, router: Router) {
   userInfo.value = await getUserInfo();
-  const route = useRoute();
-  const router = useRouter();
   console.debug(userInfo.value);
   if (route.meta.loginDemand === LoginDemand.LoggedIn && userInfo.value === undefined) {
     router.push({
