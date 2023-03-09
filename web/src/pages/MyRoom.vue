@@ -107,15 +107,8 @@
           </n-space>
         </template>
       </n-card>
-      <RoomInfoCard
-        style="width: min(var(--container-width), 600px)"
-        v-if="fullName !== ''"
-        :area="area"
-        :building="building"
-        :room="room"
-        :full-name="fullName"
-        refresh
-      />
+      <RoomInfoCard style="width: min(var(--container-width), 600px)" v-if="canBeShow" :room="{ area, building, room }" refresh />
+      <!--      <RoomsChart chart-name="电量" rooms-name="" rooms-logs="" />-->
     </n-space>
   </n-space>
 </template>
@@ -138,6 +131,7 @@ import { CloudDownloadOutline } from "@vicons/ionicons5";
 
 import { userInfo } from "@/utils";
 import RoomInfoCard from "@/components/RoomInfoCard.vue";
+import RoomsChart from "@/components/RoomsChart.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -148,7 +142,7 @@ const area = ref("");
 const building = ref("");
 const room = ref("");
 const bed = ref("");
-const fullName = ref("");
+const canBeShow = ref(false);
 
 async function logoutClick(e: MouseEvent) {
   e.preventDefault();
@@ -159,20 +153,18 @@ async function logoutClick(e: MouseEvent) {
 onMounted(async () => {
   await refreshUserInfo(route, router);
   if (userInfo.value) {
-    let canBeShow = true;
     if (userInfo.value.position.custom.state) {
       area.value = userInfo.value.position.custom.area ?? userInfo.value.position.area ?? "存在问题";
       building.value = userInfo.value.position.custom.building ?? userInfo.value.position.building ?? "存在问题";
       room.value = userInfo.value.position.custom.room ?? userInfo.value.position.room ?? "存在问题";
-      canBeShow &&= area.value !== "存在问题" && building.value !== "存在问题" && room.value !== "存在问题";
+      canBeShow.value = area.value !== "存在问题" && building.value !== "存在问题" && room.value !== "存在问题";
     } else {
       area.value = userInfo.value.position.area ?? "无";
       building.value = userInfo.value.position.building ?? "无";
       room.value = userInfo.value.position.room ?? "无";
-      canBeShow &&= area.value !== "无" && building.value !== "无" && room.value !== "无";
+      canBeShow.value = area.value !== "无" && building.value !== "无" && room.value !== "无";
     }
     bed.value = userInfo.value.position.bed ? userInfo.value.position.bed.toString() : "0";
-    if (canBeShow) fullName.value = `${area.value} > ${building.value} > ${room.value}`;
   }
   loading.value = false;
 });

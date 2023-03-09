@@ -22,7 +22,6 @@
           v-model:value="roomsSelect"
           @load="handleRoomsLoad"
           @update:value="handleRoomsSelect"
-          :disabled="roomsSelectLoading"
         />
       </n-grid-item>
       <n-grid-item span="1 904:0">
@@ -46,51 +45,35 @@
           v-model:value="roomsSelect"
           @load="handleRoomsLoad"
           @update:value="handleRoomsSelect"
-          :disabled="roomsSelectLoading"
         />
       </n-grid-item>
     </n-grid>
-    <n-space vertical align="center" justify="center" style="min-height: calc(var(--container-height) - 40px - 8px)">
-      <n-empty v-if="!roomsSelected.length" description="要不咱先选几个寝室看看数据？" />
+    <n-space v-if="!roomsSelect.length" vertical align="center" justify="center" style="min-height: calc(var(--container-height) - 40px - 8px)">
+      <n-empty description="要不咱先选几个寝室看看数据？" />
     </n-space>
-    <n-space v-if="roomsSelected.length" vertical align="center" justify="center" item-style="width: var(--container-width)">
+    <n-space v-show="roomsSelect.length" vertical align="center" justify="center" item-style="width: var(--container-width)">
       <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
-        <n-grid-item v-for="(roomPath, index) in roomsSelected" :key="roomPath">
+        <n-grid-item v-for="(roomPath, index) in roomsSelect" :key="roomPath">
           <RoomInfoCard
             :card-header-style="`background: linear-gradient(
             ${colors[index % colors.length]}aa,
             ${colors[index % colors.length]}77,
             ${colors[index % colors.length]}44,
             #ffffff00)`"
-            :area="roomsData[roomPath].area"
-            :building="roomsData[roomPath].building"
-            :room="roomsData[roomPath].room"
-            :full-name="roomsData[roomPath].fullName"
-            :on-remove="async () => await removeRooms([roomPath])"
+            :room="JSON.parse(roomPath)"
+            :on-remove="() => roomsSelect.splice(index, 1)"
           />
         </n-grid-item>
       </n-grid>
       <n-grid :x-gap="8" :y-gap="8" cols="1">
         <n-grid-item>
-          <RoomsChart
-            chartName="电量"
-            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].fullName)"
-            :roomsLogs="roomsSelected.map((roomPath) => roomsData[roomPath].roomLogs)"
-          />
+          <RoomsChart type="电量" :rooms="roomsSelect.map((roomPath) => JSON.parse(roomPath))" />
         </n-grid-item>
         <n-grid-item>
-          <RoomsChart
-            chartName="用电量"
-            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].fullName)"
-            :roomsLogs="roomsSelected.map((roomPath) => roomsData[roomPath].roomSpendings)"
-          />
+          <RoomsChart type="用电量" :rooms="roomsSelect.map((roomPath) => JSON.parse(roomPath))" />
         </n-grid-item>
         <n-grid-item>
-          <RoomsChart
-            chartName="日用电量"
-            :roomsName="roomsSelected.map((roomPath) => roomsData[roomPath].fullName)"
-            :roomsLogs="roomsSelected.map((roomPath) => roomsData[roomPath].roomDailys)"
-          />
+          <RoomsChart type="日用电量" :rooms="roomsSelect.map((roomPath) => JSON.parse(roomPath))" />
         </n-grid-item>
       </n-grid>
     </n-space>
@@ -125,19 +108,6 @@ const loading = ref(true);
 const roomsSelector = ref<CascaderInst | TreeSelectInst>();
 const roomsOption = ref<SelectorOption[]>([]);
 const roomsSelect = ref<string[]>([]);
-const roomsSelected = ref<string[]>([]);
-const roomsSelectLoading = ref(false);
-const roomsData: {
-  [key: string]: {
-    area: string;
-    building: string;
-    room: string;
-    fullName: string;
-    roomLogs: RoomPowerData[];
-    roomSpendings: RoomPowerData[];
-    roomDailys: RoomPowerData[];
-  };
-} = {};
 
 onMounted(async () => {
   const areas = await loadAreas();
@@ -153,21 +123,10 @@ onMounted(async () => {
         const room = rooms.find((room) => room.value_show === range);
         if (!room) break;
         if (room.children) rooms = room.children;
-        else await addRooms([room.value_fact]);
+        else roomsSelect.value.push(room.value_fact);
       }
     }
   loading.value = false;
-
-  // 加载好了再挂事件
-  watch(
-    () => [...roomsSelected.value],
-    () => {
-      router.replace({
-        name: "ComparisonChart",
-        query: { rooms: Base64.encodeURI(JSON.stringify(roomsSelector.value!.getCheckedData().options.map((option) => option!.path))) },
-      });
-    }
-  );
 });
 
 async function loadAreas(force: boolean = false): Promise<SelectorOption[]> {
@@ -176,7 +135,7 @@ async function loadAreas(force: boolean = false): Promise<SelectorOption[]> {
   const areas = await getAreas();
   roomsOption.value = areas.map<SelectorOption>((area) => ({
     value_show: area,
-    value_fact: JSON.stringify([area]),
+    value_fact: JSON.stringify({ area }),
     depth: 1,
     isLeaf: false,
     path: [area],
@@ -190,7 +149,7 @@ async function loadBuildings(area: string, parent: SelectorOption, force: boolea
   const buildings = await getBuildings(area);
   parent.children = buildings.map<SelectorOption>((building) => ({
     value_show: building,
-    value_fact: JSON.stringify([...parent.path, building]),
+    value_fact: JSON.stringify({ area, building }),
     depth: 2,
     isLeaf: false,
     path: [...parent.path, building],
@@ -220,13 +179,13 @@ async function loadRooms(area: string, building: string, parent: SelectorOption,
   if (roomUnclassified.length > 0) {
     parent.children.push({
       value_show: "未分类",
-      value_fact: JSON.stringify([...parent.path, "未分类"]),
+      value_fact: JSON.stringify({ area, building, path: "未分类" }),
       depth: 3,
       isLeaf: false,
       path: [...parent.path, "未分类"],
       children: roomUnclassified.map((room) => ({
         value_show: room,
-        value_fact: JSON.stringify([...parent.path, "未分类", room]),
+        value_fact: JSON.stringify({ area, building, room }),
         depth: 4,
         isLeaf: true,
         path: [...parent.path, "未分类", room],
@@ -236,19 +195,19 @@ async function loadRooms(area: string, building: string, parent: SelectorOption,
   parent.children.push(
     ...Array.from(roomClassified).map(([b, l_]) => ({
       value_show: `${b}栋`,
-      value_fact: JSON.stringify([...parent.path, `${b}栋`]),
+      value_fact: JSON.stringify({ area, building, path: `${b}栋` }),
       depth: 3,
       isLeaf: false,
       path: [...parent.path, `${b}栋`],
       children: Array.from(l_).map(([l, r_]) => ({
         value_show: `${b}-${l}层`,
-        value_fact: JSON.stringify([...parent.path, `${b}栋`, `${b}-${l}层`]),
+        value_fact: JSON.stringify({ area, building, path: `${b}-${l}` }),
         depth: 4,
         isLeaf: false,
         path: [...parent.path, `${b}栋`, `${b}-${l}层`],
         children: Array.from(r_).map((r) => ({
           value_show: `${b}-${l}${r}`,
-          value_fact: JSON.stringify([...parent.path, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`]),
+          value_fact: JSON.stringify({ area, building, room: `${b}-${l}${r}` }),
           depth: 5,
           isLeaf: true,
           path: [...parent.path, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`],
@@ -269,86 +228,11 @@ async function handleRoomsLoad(option_: SelectorOption | TreeSelectOption) {
   }
 }
 
-async function handleRoomsSelect() {
-  // 预处理
-  roomsSelectLoading.value = true;
-  roomsOption.value.forEach((buildings) => {
-    buildings.disabled = true;
-    if (buildings.children)
-      buildings.children.forEach((rooms) => {
-        rooms.disabled = true;
-        if (rooms.children)
-          rooms.children.forEach((room) => {
-            room.disabled = true;
-          });
-      });
+function handleRoomsSelect(values: string[], options: SelectorOption[]) {
+  router.replace({
+    name: "ComparisonChart",
+    query: { rooms: Base64.encodeURI(JSON.stringify(options.map((option) => option.path))) },
   });
-  // 处理
-  const tmpSelected = [...roomsSelect.value];
-
-  // 先取消选中，直接改动 roomsSelect 不会触发本事件
-  roomsSelect.value.splice(0, roomsSelect.value.length); // == roomsSelect.value.clear()
-  roomsSelect.value.push(...roomsSelected.value);
-
-  const maxLimit = 8;
-  if (tmpSelected.length > maxLimit) {
-    messageApi.value!.warning(`最多选择${maxLimit}个，你尝试选择的寝室有${tmpSelected.length}个，已超出范围`, { keepAliveOnHover: true });
-  } else {
-    // 对比选中情况
-    const removedRooms = roomsSelected.value.filter((roomPath) => !tmpSelected.includes(roomPath));
-    const addedRooms = tmpSelected.filter((roomPath) => !roomsSelected.value.includes(roomPath));
-    // 处理 removed
-    await removeRooms(removedRooms);
-    // 处理 added
-    await addRooms(addedRooms);
-  }
-
-  // 后处理
-  roomsOption.value.forEach((buildings) => {
-    buildings.disabled = false;
-    if (buildings.children)
-      buildings.children.forEach((rooms) => {
-        rooms.disabled = false;
-        if (rooms.children)
-          rooms.children.forEach((room) => {
-            room.disabled = false;
-          });
-      });
-  });
-  roomsSelectLoading.value = false;
-}
-
-async function addRooms(addedRooms: string[]) {
-  for (const roomPath of addedRooms) {
-    if (Object.keys(roomsData).indexOf(roomPath) === -1) {
-      try {
-        const roomPA: string[] = JSON.parse(roomPath);
-        const [area, building, room] = [roomPA[0], roomPA[1], roomPA[roomPA.length - 1]];
-        const [roomLogs, roomDailys] = await Promise.all([getRoomLogs(area, building, room), getRoomDailys(area, building, room)]);
-
-        roomsData[roomPath] = {
-          area,
-          building,
-          room,
-          fullName: `${area} > ${building} > ${room}`,
-          roomLogs: roomLogs.map(({ ts, power }) => ({ ts: ts, power })),
-          roomSpendings: roomLogs.filter(({ spending }) => spending >= 0).map(({ ts, spending }) => ({ ts: ts, power: spending })),
-          roomDailys: roomDailys.map(({ ts, spending }) => ({ ts: ts, power: spending })),
-        };
-      } catch {
-        continue;
-      }
-    }
-    roomsSelect.value.push(roomPath);
-    await nextTick();
-    roomsSelected.value.push(roomPath); // add新选中的寝室
-  }
-}
-
-async function removeRooms(removedRooms: string[]) {
-  roomsSelect.value = roomsSelect.value.filter((roomPath) => !removedRooms.includes(roomPath));
-  await nextTick();
-  roomsSelected.value = roomsSelected.value.filter((roomPath) => !removedRooms.includes(roomPath));
 }
 </script>
 

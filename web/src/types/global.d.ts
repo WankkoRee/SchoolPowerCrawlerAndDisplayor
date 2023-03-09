@@ -2,12 +2,14 @@
 type Timestamp = number;
 type RoomRange = "area" | "building" | "room";
 type TimeDuring = "day" | "week" | "month" | "";
-type RoomInfo = {
-  ts: Timestamp;
-  power: number;
+type RoomPosition = {
   area: string;
   building: string;
   room: string;
+};
+type RoomInfo = RoomPosition & {
+  ts: Timestamp;
+  power: number;
 };
 type RoomStatisticalData = {
   from: Timestamp;

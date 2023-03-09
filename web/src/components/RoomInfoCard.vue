@@ -1,5 +1,5 @@
 <template>
-  <n-card :title="fullName" :header-style="cardHeaderStyle" hoverable>
+  <n-card :title="`${room.area} > ${room.building} > ${room.room}`" :header-style="cardHeaderStyle" hoverable>
     <template #header-extra>
       <n-tooltip v-if="refresh" :show-arrow="false" trigger="hover">
         <template #trigger>
@@ -226,10 +226,7 @@ import { EyeOffOutline, CloudDownloadOutline } from "@vicons/ionicons5";
 import { ArrowClockwise24Regular } from "@vicons/fluent";
 
 const props = defineProps<{
-  area: string;
-  building: string;
-  room: string;
-  fullName: string;
+  room: RoomPosition;
   cardHeaderStyle?: CSSProperties;
   onRemove?: () => Promise<void>;
   refresh?: boolean;
@@ -272,13 +269,13 @@ function timeInterval(from: Timestamp, to: Timestamp): string {
 async function refreshData() {
   loading.value = true;
   [roomInfo.value, roomSumDay.value, roomSumWeek.value, roomSumMonth.value, roomAvgWeek.value, roomAvgMonth.value, roomAvgLast30d.value] = await Promise.all([
-    getRoomInfo(props.area, props.building, props.room),
-    getRoomSumDuring(props.area, props.building, props.room, "day"),
-    getRoomSumDuring(props.area, props.building, props.room, "week"),
-    getRoomSumDuring(props.area, props.building, props.room, "month"),
-    getRoomAvgDuring(props.area, props.building, props.room, "week"),
-    getRoomAvgDuring(props.area, props.building, props.room, "month"),
-    getRoomAvgDuring(props.area, props.building, props.room, "last30d"),
+    getRoomInfo(props.room.area, props.room.building, props.room.room),
+    getRoomSumDuring(props.room.area, props.room.building, props.room.room, "day"),
+    getRoomSumDuring(props.room.area, props.room.building, props.room.room, "week"),
+    getRoomSumDuring(props.room.area, props.room.building, props.room.room, "month"),
+    getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "week"),
+    getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "month"),
+    getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "last30d"),
   ]);
   loading.value = false;
 }

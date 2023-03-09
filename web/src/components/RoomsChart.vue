@@ -21,6 +21,7 @@ import { CanvasRenderer } from "echarts/renderers";
 import { UniversalTransition } from "echarts/features";
 
 import { colors } from "@/utils";
+import { getRoomLogs, getRoomDailys } from "@/api";
 
 type Option = echarts.ComposeOption<
   LineSeriesOption | TitleComponentOption | GridComponentOption | TooltipComponentOption | ToolboxComponentOption | LegendComponentOption
@@ -52,16 +53,13 @@ import { NCard } from "naive-ui";
 import { ResizeObserver } from "vue3-resize";
 
 const props = defineProps<{
-  chartName: string;
-  roomsName: string[];
-  roomsLogs: RoomPowerData[][];
+  type: string;
+  rooms: RoomPosition[];
 }>();
+
 const themeName = inject<Ref<ThemeName>>("v_themeName")!;
 
 const options: Option = {
-  title: {
-    text: props.chartName,
-  },
   tooltip: {
     trigger: "axis",
     axisPointer: {
@@ -71,8 +69,8 @@ const options: Option = {
       },
     },
   },
-  legend: <LegendComponentOption>{
-    data: props.roomsName,
+  legend: {
+    data: [],
     type: "scroll",
     left: "center",
     top: "bottom",
@@ -89,7 +87,7 @@ const options: Option = {
   yAxis: {
     type: "value",
   },
-  series: generateSeries(props.roomsName, props.roomsLogs),
+  series: [],
   grid: {
     left: "3%",
     right: "4%",
@@ -103,25 +101,78 @@ const options: Option = {
 const chartDiv = ref<HTMLInputElement>();
 const chartInstance = shallowRef<ECharts>();
 
-onMounted(() => {
-  initChart(chartInstance, chartDiv.value!, { light: "vintage", dark: "dark" }[themeName.value], options);
-});
 watch(themeName, (newThemeName) => {
   initChart(chartInstance, chartDiv.value!, { light: "vintage", dark: "dark" }[newThemeName], options);
 });
-watch(
-  () => JSON.stringify({ roomsName: props.roomsName, roomsLogs: props.roomsLogs }),
-  () => {
-    // chartInstance.value.clear()
-    (options.legend! as LegendComponentOption).data = props.roomsName;
-    options.series = generateSeries(props.roomsName, props.roomsLogs);
-    chartInstance.value!.setOption(options, true, false);
-  }
-);
 
 function handleResize() {
   chartInstance.value?.resize();
 }
+
+const lastRooms: RoomPosition[] = [];
+async function refresh(clear: boolean = false) {
+  if (clear) {
+    ((options.legend as LegendComponentOption).data as string[]).splice(0);
+    (options.series as LineSeriesOption[]).splice(0);
+    lastRooms.splice(0);
+  }
+
+  const removedRooms = lastRooms.filter(
+    (room) => !props.rooms.map((r) => `${r.area}/${r.building}/${r.room}`).includes(`${room.area}/${room.building}/${room.room}`)
+  );
+  const addedRooms = props.rooms.filter(
+    (room) => !lastRooms.map((r) => `${r.area}/${r.building}/${r.room}`).includes(`${room.area}/${room.building}/${room.room}`)
+  );
+
+  // 处理 removedRooms
+  removedRooms.forEach((room) => {
+    const index = ((options.legend as LegendComponentOption).data as string[]).indexOf(room.room);
+    ((options.legend as LegendComponentOption).data as string[]).splice(index, 1);
+    (options.series as LineSeriesOption[]).splice(index, 1);
+  });
+
+  // 处理 addedRooms
+  const roomsName = addedRooms.map((room) => room.room);
+  ((options.legend as LegendComponentOption).data as string[]).push(...roomsName);
+  if (props.type === "电量") {
+    const roomsLogs = await Promise.all(addedRooms.map((room) => getRoomLogs(room.area, room.building, room.room)));
+    (options.series as LineSeriesOption[]).push(...generateSeries(roomsName, roomsLogs));
+  } else if (props.type === "用电量") {
+    const roomsLogs = await Promise.all(addedRooms.map((room) => getRoomLogs(room.area, room.building, room.room)));
+    (options.series as LineSeriesOption[]).push(
+      ...generateSeries(
+        roomsName,
+        roomsLogs.map((roomLogs) => roomLogs.map(({ ts, spending }) => ({ ts: ts, power: spending })))
+      )
+    );
+  } else if (props.type === "日用电量") {
+    const roomsLogs = await Promise.all(addedRooms.map((room) => getRoomDailys(room.area, room.building, room.room)));
+    (options.series as LineSeriesOption[]).push(
+      ...generateSeries(
+        roomsName,
+        roomsLogs.map((roomLogs) => roomLogs.map(({ ts, spending }) => ({ ts: ts, power: spending })))
+      )
+    );
+  }
+
+  chartInstance.value!.setOption(options, true, false);
+
+  lastRooms.splice(0);
+  lastRooms.push(...props.rooms);
+}
+
+onMounted(async () => {
+  initChart(chartInstance, chartDiv.value!, { light: "vintage", dark: "dark" }[themeName.value], options);
+  options.title = { text: props.type };
+  await refresh();
+});
+
+watch(
+  () => props.rooms,
+  async () => {
+    await refresh();
+  }
+);
 </script>
 
 <style scoped></style>
