@@ -13,7 +13,7 @@
       </n-tooltip>
       <n-tooltip v-if="onRemove" :show-arrow="false" trigger="hover">
         <template #trigger>
-          <n-button text style="font-size: 24px" @click="onRemove()">
+          <n-button text style="font-size: 24px" @click="onRemove ? onRemove() : () => {}">
             <n-icon>
               <eye-off-outline />
             </n-icon>
@@ -227,8 +227,8 @@ import { ArrowClockwise24Regular } from "@vicons/fluent";
 
 const props = defineProps<{
   room: RoomPosition;
-  cardHeaderStyle?: CSSProperties;
-  onRemove?: () => Promise<void>;
+  cardHeaderStyle?: string | CSSProperties;
+  onRemove?: () => Promise<any> | any;
   refresh?: boolean;
 }>();
 
