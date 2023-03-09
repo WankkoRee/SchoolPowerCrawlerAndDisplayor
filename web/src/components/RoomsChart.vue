@@ -1,6 +1,6 @@
 <template>
   <n-card>
-    <div :id="chartName" style="height: 320px"></div>
+    <div ref="chartDiv" style="height: 320px"></div>
     <resize-observer @notify="handleResize" :showTrigger="true" />
   </n-card>
 </template>
@@ -10,7 +10,7 @@ export default {
   name: "RoomsChart",
 };
 
-import { shallowRef, onMounted, watch, inject } from "vue";
+import { ref, shallowRef, onMounted, watch, inject } from "vue";
 import type { Ref, ShallowRef } from "vue";
 import * as echarts from "echarts/core";
 import { LineChart } from "echarts/charts";
@@ -100,13 +100,14 @@ const options: Option = {
   backgroundColor: "rgba(255,255,255,0)", // 透明
 };
 
+const chartDiv = ref<HTMLInputElement>();
 const chartInstance = shallowRef<ECharts>();
 
 onMounted(() => {
-  initChart(chartInstance, document.getElementById(props.chartName)!, { light: "vintage", dark: "dark" }[themeName.value], options);
+  initChart(chartInstance, chartDiv.value!, { light: "vintage", dark: "dark" }[themeName.value], options);
 });
 watch(themeName, (newThemeName) => {
-  initChart(chartInstance, document.getElementById(props.chartName)!, { light: "vintage", dark: "dark" }[newThemeName], options);
+  initChart(chartInstance, chartDiv.value!, { light: "vintage", dark: "dark" }[newThemeName], options);
 });
 watch(
   () => JSON.stringify({ roomsName: props.roomsName, roomsLogs: props.roomsLogs }),
