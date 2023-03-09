@@ -51,6 +51,7 @@ function initChart(chartInstance: ShallowRef<ECharts | undefined>, dom: HTMLElem
 <script lang="ts" setup>
 import { NCard } from "naive-ui";
 import { ResizeObserver } from "vue3-resize";
+import { getRoomSpendings } from "@/api";
 
 const props = defineProps<{
   type: string;
@@ -138,7 +139,7 @@ async function refresh(clear: boolean = false) {
     const roomsLogs = await Promise.all(addedRooms.map((room) => getRoomLogs(room.area, room.building, room.room)));
     (options.series as LineSeriesOption[]).push(...generateSeries(roomsName, roomsLogs));
   } else if (props.type === "用电量") {
-    const roomsLogs = await Promise.all(addedRooms.map((room) => getRoomLogs(room.area, room.building, room.room)));
+    const roomsLogs = await Promise.all(addedRooms.map((room) => getRoomSpendings(room.area, room.building, room.room)));
     (options.series as LineSeriesOption[]).push(
       ...generateSeries(
         roomsName,

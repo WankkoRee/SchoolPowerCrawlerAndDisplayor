@@ -119,6 +119,12 @@ export async function getRoomLogs(area: string, building: string, room: string):
   return result;
 }
 
+export async function getRoomSpendings(area: string, building: string, room: string): Promise<GetRoomSpendingsResult> {
+  const roomSpendingsRequest = axios.get<AppResponse<GetRoomSpendingsResult>>(`./api/data/${area}/${building}/${room}/spendings`);
+  const result = await checkRequest(roomSpendingsRequest, false);
+  return result;
+}
+
 export async function getRoomDailys(area: string, building: string, room: string): Promise<GetRoomDailysResult> {
   const roomDailysRequest = axios.get<AppResponse<GetRoomDailysResult>>(`./api/data/${area}/${building}/${room}/daily`);
   const result = await checkRequest(roomDailysRequest, false);

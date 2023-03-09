@@ -84,13 +84,12 @@
 export default {
   name: "ComparisonChart",
 };
-import { ref, onMounted, watch, nextTick } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Base64 } from "js-base64";
 import type { CascaderInst, TreeSelectInst, TreeSelectOption } from "naive-ui";
 
-import { getAreas, getBuildings, getRooms, getRoomLogs, getRoomDailys } from "@/api";
-import { messageApi } from "@/utils";
+import { getAreas, getBuildings, getRooms } from "@/api";
 </script>
 
 <script setup lang="ts">
