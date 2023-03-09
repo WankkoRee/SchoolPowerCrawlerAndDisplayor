@@ -165,8 +165,8 @@ onMounted(async () => {
       canBeShow.value = area.value !== "无" && building.value !== "无" && room.value !== "无";
     }
     bed.value = userInfo.value.position.bed ? userInfo.value.position.bed.toString() : "0";
+    loading.value = false;
   }
-  loading.value = false;
 });
 </script>
 
