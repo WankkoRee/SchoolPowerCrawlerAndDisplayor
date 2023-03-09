@@ -420,7 +420,7 @@ async function api (fastify, options) {
     })
 
     /*
-    获取指定寝室`room`的电表情况和用电情况，可设置指定日期`datum`和最早日期`from`，默认30天
+    获取指定寝室`room`的电表情况，可设置指定日期`datum`和最早日期`from`，默认30天
      */
     fastify.get('/data/:area/:building/:room/logs', {
         schema: {
@@ -441,7 +441,6 @@ async function api (fastify, options) {
                         properties: {
                             ts: {type: 'integer'},
                             power: {type: 'number'},
-                            spending: {type: 'number'},
                         },
                     },
                     default: []
@@ -466,6 +465,54 @@ async function api (fastify, options) {
             from.setHours(-24 * 30)
         }
         return await fastify.sp_db.getRoomLogs(area, building, room, from, datum)
+    })
+
+    /*
+    获取指定寝室`room`的用电情况，可设置指定日期`datum`和最早日期`from`，默认30天
+     */
+    fastify.get('/data/:area/:building/:room/spendings', {
+        schema: {
+            params: {
+                area: {type: 'string'},
+                building: {type: 'string'},
+                room: {type: 'string'},
+            },
+            query: {
+              datum: {type: 'integer'},
+              from: {type: 'integer'},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            ts: {type: 'integer'},
+                            spending: {type: 'number'},
+                        },
+                    },
+                    default: []
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            area: area,
+            building: building,
+            room: room,
+        } = request.params
+        const {
+            datum: datum_timestamp,
+            from: from_timestamp,
+        } = request.query
+        const datum = datum_timestamp !== undefined ? new Date(datum_timestamp) : new Date()
+        datum.setHours(24, 0, 0, 0)
+        const from = from_timestamp !== undefined ? new Date(from_timestamp) : new Date(datum)
+        from.setHours(0, 0, 0, 0)
+        if (from_timestamp === undefined) {
+            from.setHours(-24 * 30)
+        }
+        return await fastify.sp_db.getRoomSpendings(area, building, room, from, datum)
     })
 
     /*
