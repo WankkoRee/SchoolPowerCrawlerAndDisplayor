@@ -108,7 +108,12 @@
         </template>
       </n-card>
       <RoomInfoCard style="width: min(var(--container-width), 600px)" v-if="canBeShow" :room="{ area, building, room }" refresh compare />
-      <!--      <RoomsChart chart-name="电量" rooms-name="" rooms-logs="" />-->
+    </n-space>
+    <n-space align="center" justify="center">
+      <RoomChart style="width: min(var(--container-width), 600px)" v-if="canBeShow" type="电量" :room="{ area, building, room }" />
+      <RoomChart style="width: min(var(--container-width), 600px)" v-if="canBeShow" type="用电量" :room="{ area, building, room }" />
+      <RoomChart style="width: min(var(--container-width), 600px)" v-if="canBeShow" type="日用电量" :room="{ area, building, room }" />
+      <RoomChart style="width: min(var(--container-width), 900px)" v-if="canBeShow" type="每日用电量" :room="{ area, building, room }" />
     </n-space>
   </n-space>
 </template>
@@ -131,7 +136,7 @@ import { CloudDownloadOutline } from "@vicons/ionicons5";
 
 import { userInfo } from "@/utils";
 import RoomInfoCard from "@/components/RoomInfoCard.vue";
-import RoomsChart from "@/components/RoomsChart.vue";
+import RoomChart from "@/components/RoomChart.vue";
 
 const route = useRoute();
 const router = useRouter();

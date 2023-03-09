@@ -7,7 +7,7 @@
 
 <script lang="ts">
 export default {
-  name: "RoomsChart",
+  name: "RoomChart",
 };
 
 import { ref, shallowRef, onMounted, watch, inject } from "vue";
@@ -19,6 +19,8 @@ import { TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, Lege
 import type { TitleComponentOption, GridComponentOption, TooltipComponentOption, ToolboxComponentOption, LegendComponentOption } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { UniversalTransition } from "echarts/features";
+import moment from "moment";
+import "moment/dist/locale/zh-cn";
 
 import { colors } from "@/utils";
 import { getRoomLogs, getRoomDailys } from "@/api";
@@ -28,17 +30,19 @@ type Option = echarts.ComposeOption<
 >;
 
 echarts.use([CanvasRenderer, LineChart, TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, LegendComponent, UniversalTransition]);
+moment.locale("zh-cn");
 
-function generateSeries(roomsName: string[], roomsLogs: RoomPowerData[][]): LineSeriesOption[] {
-  return roomsName
-    .map((roomName, i) => ({ roomName, roomLogs: roomsLogs[i] }))
-    .map((room) => ({
-      name: room.roomName,
-      data: room.roomLogs.map((log) => [log.ts, log.power]),
+function generateSeries(seriesName: string[], seriesLogs: RoomPowerData[][], multiXAxis: boolean = false): LineSeriesOption[] {
+  return seriesName
+    .map((seryName, i) => ({ seryName, seryLogs: seriesLogs[i] }))
+    .map((room, i) => ({
+      name: room.seryName,
+      data: room.seryLogs.map((log) => [log.ts, log.power]),
       type: "line",
       smooth: true, // 平滑
       animationDuration: 500,
       sampling: "lttb", // 降采样
+      xAxisIndex: multiXAxis ? i : 0,
     }));
 }
 
@@ -56,7 +60,7 @@ import { getRoomSpendings } from "@/api";
 
 const props = defineProps<{
   type: string;
-  rooms: RoomPosition[];
+  room: RoomPosition;
 }>();
 
 const themeName = inject<Ref<ThemeName>>("v_themeName")!;
@@ -105,56 +109,50 @@ function handleResize() {
   chartInstance.value?.resize();
 }
 
-const lastRooms: RoomPosition[] = [];
-async function refresh(clear: boolean = false) {
-  if (clear) {
-    ((options.legend as LegendComponentOption).data as string[]).splice(0);
-    (options.series as LineSeriesOption[]).splice(0);
-    lastRooms.splice(0);
-  }
-
-  const removedRooms = lastRooms.filter(
-    (room) => !props.rooms.map((r) => `${r.area}/${r.building}/${r.room}`).includes(`${room.area}/${room.building}/${room.room}`)
-  );
-  const addedRooms = props.rooms.filter(
-    (room) => !lastRooms.map((r) => `${r.area}/${r.building}/${r.room}`).includes(`${room.area}/${room.building}/${room.room}`)
-  );
-
-  // 处理 removedRooms
-  removedRooms.forEach((room) => {
-    const index = ((options.legend as LegendComponentOption).data as string[]).indexOf(room.room);
-    ((options.legend as LegendComponentOption).data as string[]).splice(index, 1);
-    (options.series as LineSeriesOption[]).splice(index, 1);
-  });
-
-  // 处理 addedRooms
-  const roomsName = addedRooms.map((room) => room.room);
-  ((options.legend as LegendComponentOption).data as string[]).push(...roomsName);
+async function refresh() {
   if (props.type === "电量") {
-    const roomsLogs = await Promise.all(addedRooms.map((room) => getRoomLogs(room.area, room.building, room.room)));
-    (options.series as LineSeriesOption[]).push(...generateSeries(roomsName, roomsLogs));
+    const roomLogs = await getRoomLogs(props.room.area, props.room.building, props.room.room);
+    (options.legend as LegendComponentOption).data = [props.room.room];
+    options.series = generateSeries([props.room.room], [roomLogs]);
   } else if (props.type === "用电量") {
-    const roomsSpendings = await Promise.all(addedRooms.map((room) => getRoomSpendings(room.area, room.building, room.room)));
-    (options.series as LineSeriesOption[]).push(
-      ...generateSeries(
-        roomsName,
-        roomsSpendings.map((roomSpendings) => roomSpendings.map(({ ts, spending }) => ({ ts: ts, power: spending })))
-      )
-    );
+    const roomSpendings = await getRoomSpendings(props.room.area, props.room.building, props.room.room);
+    (options.legend as LegendComponentOption).data = [props.room.room];
+    options.series = generateSeries([props.room.room], [roomSpendings.map(({ ts, spending }) => ({ ts: ts, power: spending }))]);
   } else if (props.type === "日用电量") {
-    const roomsSpendings = await Promise.all(addedRooms.map((room) => getRoomDailys(room.area, room.building, room.room)));
-    (options.series as LineSeriesOption[]).push(
-      ...generateSeries(
-        roomsName,
-        roomsSpendings.map((roomSpendings) => roomSpendings.map(({ ts, spending }) => ({ ts: ts, power: spending })))
-      )
+    const roomSpendings = await getRoomDailys(props.room.area, props.room.building, props.room.room);
+    (options.legend as LegendComponentOption).data = [props.room.room];
+    options.series = generateSeries([props.room.room], [roomSpendings.map(({ ts, spending }) => ({ ts: ts, power: spending }))]);
+  } else if (props.type === "每日用电量") {
+    const roomSpendings = await getRoomSpendings(props.room.area, props.room.building, props.room.room);
+    const DaysSpendings = new Map<number, RoomSpendingData[]>();
+    roomSpendings.forEach((roomSpending) => {
+      const day = Math.floor((roomSpending.ts + 28800000) / 86400000) * 86400000 - 28800000;
+      if (!DaysSpendings.has(day)) DaysSpendings.set(day, []);
+      DaysSpendings.get(day)!.push(roomSpending);
+    });
+    const seriesName = [...DaysSpendings.keys()].map((day) => moment(day).format("YYYY年MM月DD日 ddd"));
+    (options.legend as LegendComponentOption).data = seriesName;
+    options.xAxis = [...DaysSpendings.keys()].map((_, i) => ({
+      show: i === DaysSpendings.size - 1,
+      type: "time",
+      position: "bottom",
+      boundaryGap: false,
+      axisPointer: {
+        label: {
+          formatter: function (params) {
+            return moment(params.value).format("ahh时");
+          },
+        },
+      },
+    }));
+    options.series = generateSeries(
+      seriesName,
+      [...DaysSpendings.values()].map((daySpendings) => daySpendings.map(({ ts, spending }) => ({ ts: ts, power: spending }))),
+      true
     );
   }
 
   chartInstance.value!.setOption(options, true, false);
-
-  lastRooms.splice(0);
-  lastRooms.push(...props.rooms);
 }
 
 onMounted(async () => {
@@ -162,13 +160,6 @@ onMounted(async () => {
   options.title = { text: props.type };
   await refresh();
 });
-
-watch(
-  () => props.rooms,
-  async () => {
-    await refresh();
-  }
-);
 </script>
 
 <style scoped></style>
