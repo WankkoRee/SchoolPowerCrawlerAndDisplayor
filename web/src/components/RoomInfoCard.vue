@@ -1,6 +1,16 @@
 <template>
   <n-card :title="`${room.area} > ${room.building} > ${room.room}`" :header-style="cardHeaderStyle" hoverable>
     <template #header-extra>
+      <n-tooltip v-if="compare" :show-arrow="false" trigger="hover">
+        <template #trigger>
+          <n-button text style="font-size: 24px" @click="() => compareRoom(router, room.area, room.building, room.room)">
+            <n-icon>
+              <layers-outline />
+            </n-icon>
+          </n-button>
+        </template>
+        添加 {{ roomInfo.room }} 到寝室对比
+      </n-tooltip>
       <n-tooltip v-if="refresh" :show-arrow="false" trigger="hover">
         <template #trigger>
           <n-button text style="font-size: 24px" @click="refreshData">
@@ -216,21 +226,28 @@ export default {
 
 import { ref, onMounted } from "vue";
 import type { CSSProperties } from "vue";
+import { useRouter } from "vue-router";
 
 import { getRoomInfo, getRoomSumDuring, getRoomAvgDuring } from "@/api";
+import { roomNameRegex } from "@/utils";
 </script>
 
 <script lang="ts" setup>
 import { NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem, NButton, NIcon, NTag, NTooltip, NSkeleton } from "naive-ui";
-import { EyeOffOutline, CloudDownloadOutline } from "@vicons/ionicons5";
+import { EyeOffOutline, CloudDownloadOutline, LayersOutline } from "@vicons/ionicons5";
 import { ArrowClockwise24Regular } from "@vicons/fluent";
+
+import { compareRoom } from "@/utils";
 
 const props = defineProps<{
   room: RoomPosition;
   cardHeaderStyle?: string | CSSProperties;
   onRemove?: () => Promise<any> | any;
   refresh?: boolean;
+  compare?: boolean;
 }>();
+
+const router = useRouter();
 
 const loading = ref(true);
 const roomInfo = ref(<RoomInfo>{});

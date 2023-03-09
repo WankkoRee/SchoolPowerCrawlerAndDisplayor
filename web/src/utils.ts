@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import type { RouteLocationNormalizedLoaded, Router } from "vue-router";
 import type { MessageApi } from "naive-ui";
+import { Base64 } from "js-base64";
 
 import { getUserInfo } from "@/api";
 import { LoginDemand } from "@/router";
@@ -40,4 +41,24 @@ export async function refreshUserInfo(route: RouteLocationNormalizedLoaded, rout
     await router.back();
     router.push({ name: "Index" }); // 如果没有上一页则会执行这条
   }
+}
+
+export function roomNameRegex(roomName: string): [string, string, string] | [string, string] {
+  const result = roomName.match(/^([A-Z\d]+)-(\d+?)(\d{2}(?:-.+?)?)$/);
+  if (result) {
+    const [b, l, r] = result.slice(1, 4);
+    return [`${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`];
+  } else {
+    console.warn(`${roomName} 无法匹配正则表达式`);
+    return ["未分类", roomName];
+  }
+}
+
+export function compareRoom(router: Router, area: string, building: string, room: string) {
+  router.push({
+    name: "ComparisonChart",
+    query: {
+      rooms: Base64.encodeURI(JSON.stringify([[area, building, ...roomNameRegex(room)]])),
+    },
+  });
 }

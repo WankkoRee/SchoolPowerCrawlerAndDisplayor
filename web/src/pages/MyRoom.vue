@@ -107,7 +107,7 @@
           </n-space>
         </template>
       </n-card>
-      <RoomInfoCard style="width: min(var(--container-width), 600px)" v-if="canBeShow" :room="{ area, building, room }" refresh />
+      <RoomInfoCard style="width: min(var(--container-width), 600px)" v-if="canBeShow" :room="{ area, building, room }" refresh compare />
       <!--      <RoomsChart chart-name="电量" rooms-name="" rooms-logs="" />-->
     </n-space>
   </n-space>

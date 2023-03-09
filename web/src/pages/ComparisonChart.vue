@@ -51,7 +51,7 @@
     <n-space v-if="!roomsSelect.length" vertical align="center" justify="center" style="min-height: calc(var(--container-height) - 40px - 8px)">
       <n-empty description="要不咱先选几个寝室看看数据？" />
     </n-space>
-    <n-space v-show="roomsSelect.length" vertical align="center" justify="center" item-style="width: var(--container-width)">
+    <n-space v-else vertical align="center" justify="center" item-style="width: var(--container-width)">
       <n-grid :x-gap="8" :y-gap="8" cols="1 800:2 1200:3 1600:4 2000:5">
         <n-grid-item v-for="(roomPath, index) in roomsSelect" :key="roomPath">
           <RoomInfoCard
@@ -90,6 +90,7 @@ import { Base64 } from "js-base64";
 import type { CascaderInst, TreeSelectInst, TreeSelectOption } from "naive-ui";
 
 import { getAreas, getBuildings, getRooms } from "@/api";
+import { roomNameRegex } from "@/utils";
 </script>
 
 <script setup lang="ts">
@@ -161,55 +162,54 @@ async function loadRooms(area: string, building: string, parent: SelectorOption,
 
   const rooms = await getRooms(area, building);
   const roomClassified = new Map<string, Map<string, string[]>>();
-  const roomUnclassified: string[] = [];
+  const roomUnclassified = new Map<string, string[]>();
   rooms.forEach((room) => {
-    const roomRegexResult = room.match(/^([A-Z\d]+)-(\d+?)(\d{2}(?:-.+?)?)$/);
-    if (roomRegexResult === null) {
-      console.warn(`${room} 无法匹配正则表达式 /^([A-Z\\d]+)-(\\d+?)(\\d{2}(?:-.+?)?)$/`);
-      roomUnclassified.push(room);
-    } else {
-      const [b, l, r] = roomRegexResult.slice(1, 4);
-      if (!roomClassified.has(b)) roomClassified.set(b, new Map());
-      if (!roomClassified.get(b)!.has(l)) roomClassified.get(b)!.set(l, []);
-      roomClassified.get(b)!.get(l)!.push(r);
+    const roomNameRegexResult = roomNameRegex(room);
+    if (roomNameRegexResult.length === 2) {
+      if (!roomUnclassified.has(roomNameRegexResult[0])) roomUnclassified.set(roomNameRegexResult[0], []);
+      roomUnclassified.get(roomNameRegexResult[0])!.push(roomNameRegexResult[1]);
+    } else if (roomNameRegexResult.length === 3) {
+      if (!roomClassified.has(roomNameRegexResult[0])) roomClassified.set(roomNameRegexResult[0], new Map());
+      if (!roomClassified.get(roomNameRegexResult[0])!.has(roomNameRegexResult[1])) roomClassified.get(roomNameRegexResult[0])!.set(roomNameRegexResult[1], []);
+      roomClassified.get(roomNameRegexResult[0])!.get(roomNameRegexResult[1])!.push(roomNameRegexResult[2]);
     }
   });
   parent.children = <SelectorOption[]>[];
-  if (roomUnclassified.length > 0) {
-    parent.children.push({
-      value_show: "未分类",
-      value_fact: JSON.stringify({ area, building, path: "未分类" }),
+  parent.children.push(
+    ...Array.from(roomUnclassified).map(([b, l_]) => ({
+      value_show: b,
+      value_fact: JSON.stringify({ area, building, path: b }),
       depth: 3,
       isLeaf: false,
-      path: [...parent.path, "未分类"],
-      children: roomUnclassified.map((room) => ({
-        value_show: room,
-        value_fact: JSON.stringify({ area, building, room }),
+      path: [...parent.path, b],
+      children: Array.from(l_).map((l) => ({
+        value_show: l,
+        value_fact: JSON.stringify({ area, building, path: l }),
         depth: 4,
         isLeaf: true,
-        path: [...parent.path, "未分类", room],
+        path: [...parent.path, b, l],
       })),
-    });
-  }
+    }))
+  );
   parent.children.push(
     ...Array.from(roomClassified).map(([b, l_]) => ({
-      value_show: `${b}栋`,
-      value_fact: JSON.stringify({ area, building, path: `${b}栋` }),
+      value_show: b,
+      value_fact: JSON.stringify({ area, building, path: b }),
       depth: 3,
       isLeaf: false,
-      path: [...parent.path, `${b}栋`],
+      path: [...parent.path, b],
       children: Array.from(l_).map(([l, r_]) => ({
-        value_show: `${b}-${l}层`,
-        value_fact: JSON.stringify({ area, building, path: `${b}-${l}` }),
+        value_show: l,
+        value_fact: JSON.stringify({ area, building, path: l }),
         depth: 4,
         isLeaf: false,
-        path: [...parent.path, `${b}栋`, `${b}-${l}层`],
+        path: [...parent.path, b, l],
         children: Array.from(r_).map((r) => ({
-          value_show: `${b}-${l}${r}`,
-          value_fact: JSON.stringify({ area, building, room: `${b}-${l}${r}` }),
+          value_show: r,
+          value_fact: JSON.stringify({ area, building, room: r }),
           depth: 5,
           isLeaf: true,
-          path: [...parent.path, `${b}栋`, `${b}-${l}层`, `${b}-${l}${r}`],
+          path: [...parent.path, b, l, r],
         })),
       })),
     }))
