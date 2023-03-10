@@ -61,7 +61,7 @@
           </n-popover>
         </template>
         <template #footer>
-          <n-space align="center">
+          <n-space align="center" size="small">
             <n-popover trigger="hover">
               <template #trigger>
                 <n-tag type="success">
@@ -100,10 +100,10 @@
             </n-popover>
           </n-space>
         </template>
-        <template #action>
+        <template #action v-if="!loading">
           <n-space align="center" justify="space-between">
-            <n-button attr-type="button" @click=""> 修改密码 </n-button>
-            <n-button attr-type="button" @click="logoutClick"> 退出登录 </n-button>
+            <n-button attr-type="button" @click="passwordChangeShow = true"> 修改密码 </n-button>
+            <n-button attr-type="button" :loading="logouting" @click="logoutClick"> 退出登录 </n-button>
           </n-space>
         </template>
       </n-card>
@@ -116,6 +116,30 @@
       <RoomChart style="width: min(var(--container-width), 900px)" v-if="canBeShow" type="每日用电量" :room="{ area, building, room }" />
     </n-space>
   </n-space>
+  <n-modal v-model:show="passwordChangeShow">
+    <n-card style="width: min(80vw, 600px)" title="修改密码" role="dialog">
+      <n-space vertical align="center" justify="center" item-style="width: min(var(--container-width), 600px)">
+        <n-form ref="passwordChangeForm" :model="passwordChangeFormValue" :rules="passwordChangeFormRule">
+          <n-form-item label="当前密码" path="passwordOld">
+            <n-input
+              v-model:value="passwordChangeFormValue.passwordOld"
+              placeholder="默认为手机号后六位，或姓名小写全拼，取决于随行校园是否绑定已手机号"
+              type="password"
+            />
+          </n-form-item>
+          <n-form-item label="新密码" path="passwordNew">
+            <n-input v-model:value="passwordChangeFormValue.passwordNew" placeholder="就是新密码" type="password" show-password-on="mousedown" />
+          </n-form-item>
+          <n-form-item label="确认密码" path="passwordAgain">
+            <n-input v-model:value="passwordChangeFormValue.passwordAgain" placeholder="再输一遍新密码吧" type="password" show-password-on="mousedown" />
+          </n-form-item>
+        </n-form>
+        <n-space align="center" justify="space-around">
+          <n-button size="large" type="primary" :loading="passwordChanging" @click="passwordChangeFormClick" style="width: 120px"> 修改 </n-button>
+        </n-space>
+      </n-space>
+    </n-card>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -125,13 +149,14 @@ export default {
 
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import type { FormInst, FormItemRule } from "naive-ui";
 
-import { logout } from "@/api";
-import { refreshUserInfo } from "@/utils";
+import { logout, changePassword } from "@/api";
+import { messageApi, refreshUserInfo } from "@/utils";
 </script>
 
 <script lang="ts" setup>
-import { NSpace, NButton, NCard, NP, NText, NAvatar, NDivider, NTag, NPopover, NTime, NIcon, NSkeleton } from "naive-ui";
+import { NSpace, NButton, NCard, NP, NText, NAvatar, NDivider, NTag, NPopover, NTime, NIcon, NSkeleton, NModal, NForm, NFormItem, NInput } from "naive-ui";
 import { CloudDownloadOutline } from "@vicons/ionicons5";
 
 import { userInfo } from "@/utils";
@@ -142,6 +167,8 @@ const route = useRoute();
 const router = useRouter();
 
 const loading = ref(true);
+const passwordChanging = ref(false);
+const logouting = ref(false);
 
 const area = ref("");
 const building = ref("");
@@ -149,10 +176,66 @@ const room = ref("");
 const bed = ref("");
 const canBeShow = ref(false);
 
+const passwordChangeShow = ref(false);
+const passwordChangeForm = ref<FormInst>();
+const passwordChangeFormValue = ref({
+  passwordOld: "",
+  passwordNew: "",
+  passwordAgain: "",
+});
+const passwordChangeFormRule = {
+  passwordOld: {
+    required: true,
+    message: "请输入当前密码",
+    trigger: ["input", "blur"],
+  },
+  passwordNew: {
+    required: true,
+    message: "请输入新密码",
+    trigger: ["input", "blur"],
+  },
+  passwordAgain: [
+    {
+      required: true,
+      message: "请再次输入新密码",
+      trigger: ["input", "blur"],
+    },
+    {
+      validator: (rule: FormItemRule, passwordAgain: string) =>
+        passwordChangeFormValue.value.passwordNew.length >= passwordAgain.length && passwordChangeFormValue.value.passwordNew.startsWith(passwordAgain),
+      message: "请确认新密码是否输入一致",
+      trigger: "input",
+    },
+    {
+      validator: (rule: FormItemRule, passwordAgain: string) => passwordChangeFormValue.value.passwordNew === passwordAgain,
+      message: "请确认新密码是否输入一致",
+      trigger: "blur",
+    },
+  ],
+};
+
 async function logoutClick(e: MouseEvent) {
   e.preventDefault();
+  logouting.value = true;
   await logout();
   router.push({ name: "Login", query: { redirect: route.fullPath } });
+  logouting.value = false;
+}
+
+async function passwordChangeFormClick(e: MouseEvent) {
+  e.preventDefault();
+  passwordChangeForm.value?.validate(async (errors) => {
+    passwordChanging.value = true;
+    if (!errors) {
+      const passwordChangeResult = await changePassword(passwordChangeFormValue.value.passwordOld, passwordChangeFormValue.value.passwordNew);
+      if (typeof passwordChangeResult === "string") {
+        messageApi.value?.error(passwordChangeResult);
+      } else {
+        router.push({ name: "Login", query: { redirect: route.fullPath } });
+      }
+    }
+    passwordChanging.value = false;
+  });
 }
 
 onMounted(async () => {

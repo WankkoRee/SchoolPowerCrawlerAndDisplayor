@@ -83,6 +83,7 @@ type GetRankDailyAvgDuringResult = RankData[];
 type GetUserInfoResult = UserInfo;
 type LoginResult = null;
 type LogoutResult = null;
+type ChangePasswordResult = null;
 
 // ui
 type ReloadFunc = () => Promise<void>;

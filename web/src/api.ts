@@ -216,3 +216,20 @@ export async function logout(): Promise<LogoutResult> {
   const result = await checkRequest(logoutRequest, false);
   return result;
 }
+
+export async function changePassword(password: string, new_password: string): Promise<ChangePasswordResult | string> {
+  const changePasswordRequest = axios.post<AppResponse<ChangePasswordResult>>("./api/user/password/change", {
+    password,
+    new_password,
+  });
+  const result = await checkRequest(changePasswordRequest, true);
+  if (result.code === 1) {
+    return result.data!;
+  } else if (result.code === 105) {
+    return "旧密码错误";
+  } else if (result.code === 107) {
+    return "旧密码与新密码相同";
+  } else {
+    return result.error!;
+  }
+}

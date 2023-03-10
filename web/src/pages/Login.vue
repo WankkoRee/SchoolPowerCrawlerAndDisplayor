@@ -5,12 +5,17 @@
         <n-input v-model:value="loginFormValue.username" placeholder="就是你的学号" />
       </n-form-item>
       <n-form-item label="密码" path="password">
-        <n-input v-model:value="loginFormValue.password" placeholder="默认为手机号后六位，或姓名小写全拼，取决于随行校园是否绑定已手机号" type="password" />
+        <n-input
+          v-model:value="loginFormValue.password"
+          placeholder="默认为手机号后六位，或姓名小写全拼，取决于随行校园是否绑定已手机号"
+          type="password"
+          show-password-on="mousedown"
+        />
       </n-form-item>
     </n-form>
     <n-space align="center" justify="space-between">
       <n-button size="small" quaternary @click="loginFormHelpShow = true"> 忘记密码 </n-button>
-      <n-button size="large" type="primary" @click="loginFormClick" style="width: 120px"> 登录 </n-button>
+      <n-button size="large" type="primary" :loading="logining" @click="loginFormClick" style="width: 120px"> 登录 </n-button>
       <n-button size="small" quaternary @click="loginFormHelpShow = true"> 无法登录 </n-button>
     </n-space>
   </n-space>
@@ -48,6 +53,7 @@ import { NSpace, NForm, NFormItem, NInput, NButton, NModal, NCard, NP, NText, NO
 const route = useRoute();
 const router = useRouter();
 
+const logining = ref(false);
 const loginForm = ref<FormInst>();
 const loginFormHelpShow = ref(false);
 const loginFormValue = ref({
@@ -69,6 +75,7 @@ const loginFormRule = {
 function loginFormClick(e: MouseEvent) {
   e.preventDefault();
   loginForm.value?.validate(async (errors) => {
+    logining.value = true;
     if (!errors) {
       const loginResult = await login(loginFormValue.value.username, loginFormValue.value.password);
       if (typeof loginResult === "string") {
@@ -77,6 +84,7 @@ function loginFormClick(e: MouseEvent) {
         router.push(typeof route.query.redirect === "string" ? route.query.redirect : { name: "Index" });
       }
     }
+    logining.value = false;
   });
 }
 </script>
