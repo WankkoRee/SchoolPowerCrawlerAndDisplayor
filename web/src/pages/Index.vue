@@ -11,7 +11,7 @@
       </n-space>
     </n-grid-item>
     <n-grid-item span="1 700:0">
-      <n-space vertical align="center" justify="center" :size="0" style="min-height: var(--container-height)" item-style="overflow: hidden">
+      <n-space vertical align="center" justify="center" :size="0" style="min-height: var(--container-height); height: 1px" item-style="overflow: hidden">
         <n-space align="center" justify="center" :size="0" class="title mobile">
           <img src="@/assets/images/logo.png" style="width: 100px; display: inline" alt="logo" />
           <n-gradient-text size="80" type="success"> {{ title }} </n-gradient-text>
