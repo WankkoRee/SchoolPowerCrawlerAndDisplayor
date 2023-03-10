@@ -25,7 +25,8 @@
     "vue-router": "^4.1.6",
     "vue3-resize": "^0.2.0",
     "js-base64": "^3.7.5",
-    "moment": "^2.29.4"
+    "moment": "^2.29.4",
+    "screenfull": "^6.0.2"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",

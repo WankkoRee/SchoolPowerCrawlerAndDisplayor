@@ -1,8 +1,10 @@
 <template>
-  <n-card>
-    <div ref="chartDiv" style="height: 320px"></div>
-    <resize-observer @notify="handleResize" :showTrigger="true" />
-  </n-card>
+  <div ref="chartCard" style="height: 320px">
+    <n-card style="height: 100%">
+      <div ref="chartDiv" style="height: 100%"></div>
+      <resize-observer @notify="handleResize" :showTrigger="true" />
+    </n-card>
+  </div>
 </template>
 
 <script lang="ts">
@@ -19,8 +21,9 @@ import { TitleComponent, GridComponent, TooltipComponent, ToolboxComponent, Lege
 import type { TitleComponentOption, GridComponentOption, TooltipComponentOption, ToolboxComponentOption, LegendComponentOption } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { UniversalTransition } from "echarts/features";
+import screenfull from "screenfull";
 
-import { colors } from "@/utils";
+import { colors, messageApi } from "@/utils";
 import { getRoomLogs, getRoomDailys } from "@/api";
 
 type Option = echarts.ComposeOption<
@@ -80,6 +83,17 @@ const options: Option = {
   toolbox: {
     feature: {
       saveAsImage: {},
+      myScreenFull: {
+        title: "全屏",
+        icon: "image://src/assets/images/fluent/FullScreenMaximize24Regular.svg",
+        onclick: async () => {
+          if (screenfull.isEnabled) {
+            await screenfull.toggle(chartCard.value);
+          } else {
+            messageApi.value?.warning("似乎无法进入全屏，请检查相关权限");
+          }
+        },
+      },
     },
   },
   xAxis: {
@@ -93,7 +107,8 @@ const options: Option = {
   backgroundColor: "rgba(255,255,255,0)", // 透明
 };
 
-const chartDiv = ref<HTMLInputElement>();
+const chartCard = ref<HTMLElement>();
+const chartDiv = ref<HTMLElement>();
 const chartInstance = shallowRef<ECharts>();
 
 watch(themeName, (newThemeName) => {
