@@ -84,7 +84,6 @@ const options: Option = {
   },
   xAxis: {
     type: "time",
-    boundaryGap: false,
   },
   yAxis: {
     type: "value",

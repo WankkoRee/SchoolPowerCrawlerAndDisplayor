@@ -88,7 +88,6 @@ const options: Option = {
   },
   xAxis: {
     type: "time",
-    boundaryGap: false,
   },
   yAxis: {
     type: "value",
@@ -132,11 +131,12 @@ async function refresh() {
     });
     const seriesName = [...DaysSpendings.keys()].map((day) => moment(day).format("YYYY年MM月DD日 ddd"));
     (options.legend as LegendComponentOption).data = seriesName;
-    options.xAxis = [...DaysSpendings.keys()].map((_, i) => ({
-      show: i === DaysSpendings.size - 1,
+    options.xAxis = [...DaysSpendings.keys()].map((day) => ({
+      show: false,
       type: "time",
       position: "bottom",
-      boundaryGap: false,
+      min: day,
+      max: day + 86400000,
       axisPointer: {
         label: {
           formatter: function (params) {
@@ -145,6 +145,20 @@ async function refresh() {
         },
       },
     }));
+    options.xAxis.push({
+      show: true,
+      type: "time",
+      position: "bottom",
+      min: new Date().setHours(0, 0, 0, 0),
+      max: new Date().setHours(24, 0, 0, 0),
+      axisPointer: {
+        label: {
+          formatter: function (params) {
+            return moment(params.value).format("ahh时");
+          },
+        },
+      },
+    });
     options.series = generateSeries(
       seriesName,
       [...DaysSpendings.values()].map((daySpendings) => daySpendings.map(({ ts, spending }) => ({ ts: ts, power: spending }))),
