@@ -4,7 +4,7 @@
       <n-button
         v-if="roomData.area && roomData.building && roomData.room"
         text
-        @click="() => compareRoom(router, roomData.area, roomData.building, roomData.room)"
+        @click="() => compareRoom(router, roomData.area, roomData.building ?? '', roomData.room ?? '')"
       >
         {{ index + 1 }}.
         {{ roomData.area }}
