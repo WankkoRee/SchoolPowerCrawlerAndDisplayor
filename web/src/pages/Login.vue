@@ -1,5 +1,5 @@
 <template>
-  <n-space vertical align="center" justify="center" style="min-height: var(--container-height)" item-style="width: min(var(--container-width), 600px)">
+  <n-space vertical align="center" justify="center" style="min-height: var(--container-height)" item-style="width: min(var(--container-width), 300px)">
     <n-form ref="loginForm" :model="loginFormValue" :rules="loginFormRule">
       <n-form-item label="账号" path="username">
         <n-input v-model:value="loginFormValue.username" placeholder="就是你的学号" />
@@ -10,13 +10,15 @@
           placeholder="默认为手机号后六位，或姓名小写全拼，取决于随行校园是否绑定已手机号"
           type="password"
           show-password-on="mousedown"
-        />
+        >
+          <template #suffix>
+            <n-button size="small" quaternary type="tertiary" @click="loginFormHelpShow = true"> 忘记密码 </n-button>
+          </template>
+        </n-input>
       </n-form-item>
     </n-form>
-    <n-space align="center" justify="space-between">
-      <n-button size="small" quaternary @click="loginFormHelpShow = true"> 忘记密码 </n-button>
+    <n-space align="center" justify="center">
       <n-button size="large" type="primary" :loading="logining" @click="loginFormClick" style="width: 120px"> 登录 </n-button>
-      <n-button size="small" quaternary @click="loginFormHelpShow = true"> 无法登录 </n-button>
     </n-space>
   </n-space>
   <n-modal v-model:show="loginFormHelpShow">
