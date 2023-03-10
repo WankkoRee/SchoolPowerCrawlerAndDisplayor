@@ -57,6 +57,10 @@ type UserInfo = {
   app: {
     qq?: string;
     dingtalk?: string;
+    abnormal: number;
+    last_day_report: boolean;
+    last_week_report: boolean;
+    last_month_report: boolean;
   };
   update_time: Timestamp;
 };

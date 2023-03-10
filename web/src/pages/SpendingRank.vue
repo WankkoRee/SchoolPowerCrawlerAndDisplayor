@@ -25,7 +25,7 @@
               <n-grid-item :span="1">
                 <n-space align="center" justify="end" :size="[0, 0]">
                   <n-input-number
-                    style="width: 72px"
+                    style="width: 72px; text-align: center"
                     v-model:value="dayRankSumLimit"
                     :update-value-on-input="false"
                     :show-button="false"
@@ -76,7 +76,7 @@
               <n-grid-item :span="1">
                 <n-space align="center" justify="end" :size="[0, 0]">
                   <n-input-number
-                    style="width: 72px"
+                    style="width: 72px; text-align: center"
                     v-model:value="weekRankSumLimit"
                     :update-value-on-input="false"
                     :show-button="false"
@@ -127,7 +127,7 @@
               <n-grid-item :span="1">
                 <n-space align="center" justify="end" :size="[0, 0]">
                   <n-input-number
-                    style="width: 72px"
+                    style="width: 72px; text-align: center"
                     v-model:value="monthRankSumLimit"
                     :update-value-on-input="false"
                     :show-button="false"
@@ -178,7 +178,7 @@
               <n-grid-item :span="1">
                 <n-space align="center" justify="end" :size="[0, 0]">
                   <n-input-number
-                    style="width: 72px"
+                    style="width: 72px; text-align: center"
                     v-model:value="weekRankDailyAvgLimit"
                     :update-value-on-input="false"
                     :show-button="false"
@@ -229,7 +229,7 @@
               <n-grid-item :span="1">
                 <n-space align="center" justify="end" :size="[0, 0]">
                   <n-input-number
-                    style="width: 72px"
+                    style="width: 72px; text-align: center"
                     v-model:value="monthRankDailyAvgLimit"
                     :update-value-on-input="false"
                     :show-button="false"

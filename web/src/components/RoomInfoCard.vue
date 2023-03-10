@@ -1,36 +1,57 @@
 <template>
-  <n-card :title="`${room.area} > ${room.building} > ${room.room}`" :header-style="cardHeaderStyle" hoverable>
+  <n-card :header-style="cardHeaderStyle" hoverable>
+    <template #header>
+      <n-h2 style="margin-bottom: 0">{{ room.room }}</n-h2>
+    </template>
     <template #header-extra>
-      <n-tooltip v-if="compare" :show-arrow="false" trigger="hover">
-        <template #trigger>
-          <n-button text style="font-size: 24px" @click="() => compareRoom(router, room.area, room.building, room.room)">
-            <n-icon>
-              <layers-outline />
-            </n-icon>
-          </n-button>
-        </template>
-        添加 {{ roomInfo.room }} 到寝室对比
-      </n-tooltip>
-      <n-tooltip v-if="refresh" :show-arrow="false" trigger="hover">
-        <template #trigger>
-          <n-button text style="font-size: 24px" @click="refreshData">
-            <n-icon>
-              <arrow-clockwise-24-regular />
-            </n-icon>
-          </n-button>
-        </template>
-        刷新 {{ roomInfo.room }} 的数据
-      </n-tooltip>
-      <n-tooltip v-if="onRemove" :show-arrow="false" trigger="hover">
-        <template #trigger>
-          <n-button text style="font-size: 24px" @click="onRemove ? onRemove() : () => {}">
-            <n-icon>
-              <eye-off-outline />
-            </n-icon>
-          </n-button>
-        </template>
-        取消对 {{ roomInfo.room }} 的对比
-      </n-tooltip>
+      <n-space align="center" justify="end">
+        <n-tooltip v-if="compare" :show-arrow="false" trigger="hover">
+          <template #trigger>
+            <n-button text style="font-size: 24px" @click="() => compareRoom(router, room.area, room.building, room.room)">
+              <n-icon>
+                <layers-outline />
+              </n-icon>
+            </n-button>
+          </template>
+          添加 {{ roomInfo.room }} 到寝室对比
+        </n-tooltip>
+        <n-tooltip v-if="refresh" :show-arrow="false" trigger="hover">
+          <template #trigger>
+            <n-button text style="font-size: 24px" @click="refreshData">
+              <n-icon>
+                <arrow-clockwise-24-regular />
+              </n-icon>
+            </n-button>
+          </template>
+          刷新 {{ roomInfo.room }} 的数据
+        </n-tooltip>
+        <n-tooltip v-if="onRemove" :show-arrow="false" trigger="hover">
+          <template #trigger>
+            <n-button text style="font-size: 24px" @click="onRemove ? onRemove() : () => {}">
+              <n-icon>
+                <eye-off-outline />
+              </n-icon>
+            </n-button>
+          </template>
+          取消对 {{ roomInfo.room }} 的对比
+        </n-tooltip>
+        <n-popover placement="left" trigger="hover">
+          <template #trigger>
+            <n-tag round :bordered="false">
+              <template #icon>
+                <n-icon>
+                  <cloud-download-outline />
+                </n-icon>
+              </template>
+              <n-skeleton v-if="loading" text :width="62" round />
+              <n-time v-else :time="roomInfo.ts" type="relative" />
+            </n-tag>
+          </template>
+          <span>数据同步于：</span>
+          <n-skeleton v-if="loading" text :width="138" round />
+          <n-time v-else :time="roomInfo.ts" type="datetime" />
+        </n-popover>
+      </n-space>
     </template>
     <n-grid :cols="3">
       <n-grid-item>
@@ -198,24 +219,6 @@
         </n-popover>
       </n-grid-item>
     </n-grid>
-    <template #footer>
-      <n-popover placement="right" trigger="hover">
-        <template #trigger>
-          <n-tag round :bordered="false">
-            <template #icon>
-              <n-icon>
-                <cloud-download-outline />
-              </n-icon>
-            </template>
-            <n-skeleton v-if="loading" text :width="62" round />
-            <n-time v-else :time="roomInfo.ts" type="relative" />
-          </n-tag>
-        </template>
-        <span>数据同步于：</span>
-        <n-skeleton v-if="loading" text :width="138" round />
-        <n-time v-else :time="roomInfo.ts" type="datetime" />
-      </n-popover>
-    </template>
   </n-card>
 </template>
 
@@ -233,7 +236,7 @@ import { roomNameRegex } from "@/utils";
 </script>
 
 <script lang="ts" setup>
-import { NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem, NButton, NIcon, NTag, NTooltip, NSkeleton } from "naive-ui";
+import { NStatistic, NNumberAnimation, NCard, NTime, NPopover, NGrid, NGridItem, NButton, NIcon, NTag, NTooltip, NSkeleton, NH2, NSpace } from "naive-ui";
 import { EyeOffOutline, CloudDownloadOutline, LayersOutline } from "@vicons/ionicons5";
 import { ArrowClockwise24Regular } from "@vicons/fluent";
 

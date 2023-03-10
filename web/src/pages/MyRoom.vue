@@ -1,47 +1,235 @@
 <template>
   <n-space vertical align="center" justify="center" style="min-height: var(--container-height)">
     <n-space align="center" justify="center">
-      <n-card hoverable style="width: min(var(--container-width), 600px)">
+      <n-card hoverable style="width: min(var(--container-width), 1200px)">
         <template #header>
           <n-skeleton v-if="loading" text :width="80" :sharp="false" />
-          <span v-else>{{ userInfo?.info.name }}</span>
+          <n-h2 v-else style="margin-bottom: 0">{{ userInfo?.info.name }}</n-h2>
         </template>
-        <n-space align="center" justify="space-between">
-          <n-p>
-            <n-text>学号</n-text>
-            <n-divider vertical />
-            <n-skeleton v-if="loading" text :width="100" round />
-            <n-text v-else>{{ userInfo?.info.number }}</n-text>
-            <br />
-            <n-text>学院</n-text>
-            <n-divider vertical />
-            <n-skeleton v-if="loading" text :width="120" round />
-            <n-text v-else>{{ userInfo?.info.faculty }} </n-text>
-            <br />
-            <n-text>年级</n-text>
-            <n-divider vertical />
-            <n-skeleton v-if="loading" text :width="60" round />
-            <n-text v-else>{{ userInfo?.info.grade }} </n-text>
-            <br />
-            <n-text>专业</n-text>
-            <n-divider vertical />
-
-            <n-skeleton v-if="loading" text :width="80" round />
-            <n-text v-else>{{ userInfo?.info.major }} </n-text>
-            <br />
-            <n-text>班级</n-text>
-            <n-divider vertical />
-            <n-skeleton v-if="loading" text :width="60" round />
-            <n-text v-else>{{ userInfo?.info.class }} </n-text>
-          </n-p>
-          <n-popover trigger="hover">
-            <template #trigger>
-              <n-skeleton v-if="loading" :width="64" :height="90" :sharp="false" />
-              <n-avatar v-else :size="64" :src="'https://dk.nynu.edu.cn/' + userInfo?.info.picture" style="height: unset" />
-            </template>
-            照片来自<n-tag :bordered="false">随行校园</n-tag>，本应用不保存任何隐私信息。
-          </n-popover>
-        </n-space>
+        <n-grid item-responsive :cols="1">
+          <n-grid-item span="0 800:1">
+            <n-space align="center" justify="space-around">
+              <n-space vertical align="start" justify="center">
+                <n-popover placement="right" trigger="hover">
+                  <template #trigger>
+                    <n-space align="center" justify="start" :size="0">
+                      <n-text>QQ</n-text>
+                      <n-divider vertical />
+                      <n-skeleton v-if="loading" text :width="100" round />
+                      <n-text v-else-if="userInfo?.app.qq">{{ userInfo?.app.qq }}</n-text>
+                      <n-button v-else text>未绑定，点击绑定</n-button>
+                    </n-space>
+                  </template>
+                  <n-text>用于发送各类订阅的消息通知</n-text>
+                </n-popover>
+                <n-popover placement="right" trigger="hover">
+                  <template #trigger>
+                    <n-space align="center" justify="start" :size="0">
+                      <n-text>钉钉</n-text>
+                      <n-divider vertical />
+                      <n-skeleton v-if="loading" text :width="120" round />
+                      <n-text v-else-if="userInfo?.app.dingtalk">{{ userInfo?.app.dingtalk }} </n-text>
+                      <n-button v-else text>未绑定，点击绑定</n-button>
+                    </n-space>
+                  </template>
+                  <n-text>用于发送各类订阅的消息通知</n-text>
+                </n-popover>
+                <n-popover placement="right" trigger="hover">
+                  <template #trigger>
+                    <n-space align="center" justify="start" :size="0">
+                      <n-text>异常耗电提醒</n-text>
+                      <n-divider vertical />
+                      <n-skeleton v-if="loading" :width="140" :height="30" :sharp="false" />
+                      <n-input-number
+                        v-else
+                        size="small"
+                        button-placement="both"
+                        style="width: 140px; text-align: center"
+                        v-model:value="abnormalThreshold"
+                        :precision="0"
+                        :min="0"
+                        :max="20"
+                        :parse="(input: string) => input.match(/\d+/) ? Number(input.match(/\d+/)[0]) : 0"
+                        :format="(value: number) => value === 0 ? '关闭' : String(value) + ' kWh'"
+                      />
+                    </n-space>
+                  </template>
+                  <n-text>开启订阅后，在当天用电量超过设定范围时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
+                </n-popover>
+                <n-popover placement="right" trigger="hover">
+                  <template #trigger>
+                    <n-space align="center" justify="start" :size="0">
+                      <n-text>用电报告推送</n-text>
+                      <n-divider vertical />
+                      <n-space align="center" justify="start" :size="4">
+                        <n-skeleton v-if="loading" :width="74" :height="18" round />
+                        <n-switch v-else v-model:value="lastDayReport" :loading="lastDayReportSubscribing" size="large">
+                          <template #checked-icon>
+                            <n-icon>
+                              <AlertOn24Regular />
+                            </n-icon>
+                          </template>
+                          <template #checked>日报</template>
+                          <template #unchecked-icon>
+                            <n-icon>
+                              <AlertOff24Regular />
+                            </n-icon>
+                          </template>
+                          <template #unchecked>日报</template>
+                        </n-switch>
+                        <n-skeleton v-if="loading" :width="74" :height="18" round />
+                        <n-switch v-else v-model:value="lastWeekReport" :loading="lastWeekReportSubscribing" size="large">
+                          <template #checked-icon>
+                            <n-icon>
+                              <AlertOn24Regular />
+                            </n-icon>
+                          </template>
+                          <template #checked>周报</template>
+                          <template #unchecked-icon>
+                            <n-icon>
+                              <AlertOff24Regular />
+                            </n-icon>
+                          </template>
+                          <template #unchecked>周报</template>
+                        </n-switch>
+                        <n-skeleton v-if="loading" :width="74" :height="18" round />
+                        <n-switch v-else v-model:value="lastMonthReport" :loading="lastMonthReportSubscribing" size="large">
+                          <template #checked-icon>
+                            <n-icon>
+                              <AlertOn24Regular />
+                            </n-icon>
+                          </template>
+                          <template #checked>月报</template>
+                          <template #unchecked-icon>
+                            <n-icon>
+                              <AlertOff24Regular />
+                            </n-icon>
+                          </template>
+                          <template #unchecked>月报</template>
+                        </n-switch>
+                      </n-space>
+                    </n-space>
+                  </template>
+                  <n-text
+                    >开启订阅后，在<b>每天</b>/<b>每周一</b>/<b>每月1号</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送<b>昨日</b>/<b>上周</b>/<b>上月</b>用电报告</n-text
+                  >
+                </n-popover>
+              </n-space>
+              <n-divider
+                v-if="canBeShow"
+                vertical
+                dashed
+                style="height: 240px; border-width: 0 0 0 3px; border-style: dashed; border-color: var(--n-color); background-color: unset"
+              />
+              <RoomInfoCard
+                v-if="canBeShow"
+                ref="roomInfoPC"
+                style="width: min(var(--container-width), 500px)"
+                :room="{ area, building, room }"
+                refresh
+                compare
+              />
+            </n-space>
+          </n-grid-item>
+          <n-grid-item span="1 800:0">
+            <n-space vertical align="start" justify="center">
+              <n-popover placement="right" trigger="hover">
+                <template #trigger>
+                  <n-space align="center" justify="start" :size="0">
+                    <n-text>QQ</n-text>
+                    <n-divider vertical />
+                    <n-skeleton v-if="loading" text :width="100" round />
+                    <n-text v-else-if="userInfo?.app.qq">{{ userInfo?.app.qq }}</n-text>
+                    <n-button v-else text>未绑定，点击绑定</n-button>
+                  </n-space>
+                </template>
+                <n-text>用于发送各类订阅的消息通知</n-text>
+              </n-popover>
+              <n-popover placement="right" trigger="hover">
+                <template #trigger>
+                  <n-space align="center" justify="start" :size="0">
+                    <n-text>钉钉</n-text>
+                    <n-divider vertical />
+                    <n-skeleton v-if="loading" text :width="120" round />
+                    <n-text v-else-if="userInfo?.app.dingtalk">{{ userInfo?.app.dingtalk }} </n-text>
+                    <n-button v-else text>未绑定，点击绑定</n-button>
+                  </n-space>
+                </template>
+                <n-text>用于发送各类订阅的消息通知</n-text>
+              </n-popover>
+              <n-popover placement="right" trigger="hover">
+                <template #trigger>
+                  <n-space align="center" justify="start" :size="0">
+                    <n-text>异常耗电提醒</n-text>
+                    <n-divider vertical />
+                    <n-skeleton v-if="loading" :width="140" :height="30" :sharp="false" />
+                    <n-input-number
+                      v-else
+                      size="small"
+                      button-placement="both"
+                      style="width: 140px; text-align: center"
+                      v-model:value="abnormalThreshold"
+                      :precision="0"
+                      :min="0"
+                      :max="20"
+                      :parse="(input: string) => input.match(/\d+/) ? Number(input.match(/\d+/)[0]) : 0"
+                      :format="(value: number) => value === 0 ? '关闭' : String(value) + ' kWh'"
+                    />
+                  </n-space>
+                </template>
+                <n-text>开启订阅后，在当天用电量超过设定范围时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
+              </n-popover>
+              <n-popover placement="right" trigger="hover">
+                <template #trigger>
+                  <n-space align="center" justify="start" :size="0">
+                    <n-text>昨日用电报告推送</n-text>
+                    <n-divider vertical />
+                    <n-skeleton v-if="loading" :width="74" :height="18" round />
+                    <n-switch v-else v-model:value="lastDayReport" :loading="lastDayReportSubscribing" size="medium">
+                      <template #checked-icon>☺️</template>
+                      <template #checked>已开启</template>
+                      <template #unchecked-icon>😔</template>
+                      <template #unchecked>已关闭</template>
+                    </n-switch>
+                  </n-space>
+                </template>
+                <n-text>开启订阅后，在<b>每天</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送昨日用电报告</n-text>
+              </n-popover>
+              <n-popover placement="right" trigger="hover">
+                <template #trigger>
+                  <n-space align="center" justify="start" :size="0">
+                    <n-text>上周用电报告推送</n-text>
+                    <n-divider vertical />
+                    <n-skeleton v-if="loading" :width="74" :height="18" round />
+                    <n-switch v-else v-model:value="lastWeekReport" :loading="lastWeekReportSubscribing" size="medium">
+                      <template #checked-icon>☺️</template>
+                      <template #checked>已开启</template>
+                      <template #unchecked-icon>😔</template>
+                      <template #unchecked>已关闭</template>
+                    </n-switch>
+                  </n-space>
+                </template>
+                <n-text>开启订阅后，在<b>每周一</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送上周用电报告</n-text>
+              </n-popover>
+              <n-popover placement="right" trigger="hover">
+                <template #trigger>
+                  <n-space align="center" justify="start" :size="0">
+                    <n-text>上月用电报告推送</n-text>
+                    <n-divider vertical />
+                    <n-skeleton v-if="loading" :width="74" :height="18" round />
+                    <n-switch v-else v-model:value="lastMonthReport" :loading="lastMonthReportSubscribing" size="medium">
+                      <template #checked-icon>☺️</template>
+                      <template #checked>已开启</template>
+                      <template #unchecked-icon>😔</template>
+                      <template #unchecked>已关闭</template>
+                    </n-switch>
+                  </n-space>
+                </template>
+                <n-text>开启订阅后，在<b>每月1号</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送上月用电报告</n-text>
+              </n-popover>
+            </n-space>
+          </n-grid-item>
+        </n-grid>
         <template #header-extra>
           <n-popover placement="left" trigger="hover">
             <template #trigger>
@@ -91,12 +279,67 @@
             </n-popover>
             <n-popover trigger="hover">
               <template #trigger>
-                <n-tag round type="success">
+                <n-tag type="success">
                   <n-skeleton v-if="loading" text :width="16" round />
                   <span v-else>{{ bed }}</span>
                 </n-tag>
               </template>
               <n-text>床位</n-text>
+            </n-popover>
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag round type="success">
+                  <n-skeleton v-if="loading" text :width="16" round />
+                  <span v-else>{{ mates }}</span>
+                </n-tag>
+              </template>
+              <n-text>寝室人数</n-text>
+            </n-popover>
+
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag type="info">
+                  <n-skeleton v-if="loading" text :width="50" :sharp="false" />
+                  <span v-else>{{ userInfo?.info.number }}</span>
+                </n-tag>
+              </template>
+              <n-text>学号</n-text>
+            </n-popover>
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag type="info">
+                  <n-skeleton v-if="loading" text :width="50" :sharp="false" />
+                  <span v-else>{{ userInfo?.info.faculty }}</span>
+                </n-tag>
+              </template>
+              <n-text>学院</n-text>
+            </n-popover>
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag type="info">
+                  <n-skeleton v-if="loading" text :width="50" :sharp="false" />
+                  <span v-else>{{ userInfo?.info.grade }}</span>
+                </n-tag>
+              </template>
+              <n-text>年级</n-text>
+            </n-popover>
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag type="info">
+                  <n-skeleton v-if="loading" text :width="50" :sharp="false" />
+                  <span v-else>{{ userInfo?.info.major }}</span>
+                </n-tag>
+              </template>
+              <n-text>专业</n-text>
+            </n-popover>
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag type="info">
+                  <n-skeleton v-if="loading" text :width="50" :sharp="false" />
+                  <span v-else>{{ userInfo?.info.class }}</span>
+                </n-tag>
+              </template>
+              <n-text>班级</n-text>
             </n-popover>
           </n-space>
         </template>
@@ -107,7 +350,7 @@
           </n-space>
         </template>
       </n-card>
-      <RoomInfoCard style="width: min(var(--container-width), 600px)" v-if="canBeShow" :room="{ area, building, room }" refresh compare />
+      <RoomInfoCard v-if="roomInfoMobile" style="width: min(var(--container-width), 1200px)" :room="{ area, building, room }" refresh compare />
     </n-space>
     <n-space align="center" justify="center">
       <RoomChart style="width: min(var(--container-width), 600px)" v-if="canBeShow" type="电量" :room="{ area, building, room }" />
@@ -147,7 +390,7 @@ export default {
   name: "MyRoom",
 };
 
-import { ref, onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { FormInst, FormItemRule } from "naive-ui";
 
@@ -156,8 +399,29 @@ import { messageApi, refreshUserInfo } from "@/utils";
 </script>
 
 <script lang="ts" setup>
-import { NSpace, NButton, NCard, NP, NText, NAvatar, NDivider, NTag, NPopover, NTime, NIcon, NSkeleton, NModal, NForm, NFormItem, NInput } from "naive-ui";
+import {
+  NSpace,
+  NButton,
+  NCard,
+  NH2,
+  NText,
+  NDivider,
+  NTag,
+  NPopover,
+  NTime,
+  NIcon,
+  NSkeleton,
+  NModal,
+  NForm,
+  NFormItem,
+  NInput,
+  NGrid,
+  NGridItem,
+  NInputNumber,
+  NSwitch,
+} from "naive-ui";
 import { CloudDownloadOutline } from "@vicons/ionicons5";
+import { AlertOff24Regular, AlertOn24Regular } from "@vicons/fluent";
 
 import { userInfo } from "@/utils";
 import RoomInfoCard from "@/components/RoomInfoCard.vue";
@@ -170,11 +434,20 @@ const loading = ref(true);
 const passwordChanging = ref(false);
 const logouting = ref(false);
 
+const roomInfoPC = ref<typeof RoomInfoCard>();
+const roomInfoMobile = ref(false);
+
 const area = ref("");
 const building = ref("");
 const room = ref("");
 const bed = ref("");
+const mates = ref("");
 const canBeShow = ref(false);
+
+const abnormalThreshold = ref(0);
+const lastDayReport = ref(false);
+const lastWeekReport = ref(false);
+const lastMonthReport = ref(false);
 
 const passwordChangeShow = ref(false);
 const passwordChangeForm = ref<FormInst>();
@@ -238,9 +511,18 @@ async function passwordChangeFormClick(e: MouseEvent) {
   });
 }
 
+watch(roomInfoPC, (newState) => {
+  roomInfoMobile.value = !newState && canBeShow.value;
+});
+
 onMounted(async () => {
   await refreshUserInfo(route, router);
   if (userInfo.value) {
+    abnormalThreshold.value = userInfo.value.app.abnormal;
+    lastDayReport.value = userInfo.value.app.last_day_report;
+    lastWeekReport.value = userInfo.value.app.last_week_report;
+    lastMonthReport.value = userInfo.value.app.last_month_report;
+
     if (userInfo.value.position.custom.state) {
       area.value = userInfo.value.position.custom.area ?? userInfo.value.position.area ?? "存在问题";
       building.value = userInfo.value.position.custom.building ?? userInfo.value.position.building ?? "存在问题";
@@ -252,7 +534,8 @@ onMounted(async () => {
       room.value = userInfo.value.position.room ?? "无";
       canBeShow.value = area.value !== "无" && building.value !== "无" && room.value !== "无";
     }
-    bed.value = userInfo.value.position.bed ? userInfo.value.position.bed.toString() : "0";
+    bed.value = (userInfo.value.position.bed ? String(userInfo.value.position.bed) : "?") + "号床";
+    mates.value = (userInfo.value.position.bed ? String(userInfo.value.position.bed) : "n") + "人寝";
     loading.value = false;
   }
 });
