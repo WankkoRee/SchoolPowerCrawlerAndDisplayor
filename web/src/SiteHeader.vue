@@ -25,10 +25,12 @@
         <n-button @click="showMobileMenu = !showMobileMenu">=</n-button>
       </n-space>
       <n-drawer v-model:show="showMobileMenu" width="auto" placement="right" to="#container" :trap-focus="false" :block-scroll="false">
-        <n-space vertical align="center" justify="space-between" style="width: 100%; height: 100%">
-          <n-menu mode="vertical" :options="menuOptions" v-model:value="menuKey" />
-          <theme-switch style="padding: 8px" />
-        </n-space>
+        <n-scrollbar>
+          <n-space vertical align="center" justify="space-between" style="width: 100%; height: 100%">
+            <n-menu mode="vertical" :options="menuOptions" v-model:value="menuKey" style="margin-right: 12px" />
+            <theme-switch style="padding: 8px" />
+          </n-space>
+        </n-scrollbar>
       </n-drawer>
     </n-grid-item>
   </n-grid>
@@ -54,7 +56,7 @@ const renderIcon = (icon: Component) => {
 </script>
 
 <script lang="ts" setup>
-import { NGrid, NGridItem, NSpace, NH2, NMenu, NButton, NDrawer } from "naive-ui";
+import { NGrid, NGridItem, NSpace, NH2, NMenu, NButton, NDrawer, NScrollbar } from "naive-ui";
 
 import { loadingBarApi, messageApi } from "@/utils";
 import ThemeSwitch from "@/components/ThemeSwitch.vue";
