@@ -51,6 +51,54 @@ function spDb (fastify, options, next) {
                     return fastify.sp_error.ApiErrorReturn(error)
                 }
             },
+            setUserSubscribeAbnormal: async function (id, abnormal) {
+                try {
+                    const setUserSubscribeAbnormalResult = await mongo.updateOne({
+                        '_id': id,
+                    }, {
+                        '$set': {
+                            'app.subscribe.abnormal': abnormal,
+                        }
+                    })
+                    if (setUserSubscribeAbnormalResult.modifiedCount !== 1)
+                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${password}`)
+                    return {code: 1, data: null}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                }
+            },
+            setUserSubscribeLow: async function (id, low) {
+                try {
+                    const setUserSubscribeLowResult = await mongo.updateOne({
+                        '_id': id,
+                    }, {
+                        '$set': {
+                            'app.subscribe.low': low,
+                        }
+                    })
+                    if (setUserSubscribeLowResult.modifiedCount !== 1)
+                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${password}`)
+                    return {code: 1, data: null}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                }
+            },
+            setUserSubscribeReport: async function (id, during, enable) {
+                try {
+                    const setUserSubscribeReportResult = await mongo.updateOne({
+                        '_id': id,
+                    }, {
+                        '$set': {
+                            [`app.subscribe.report.${during}`]: enable,
+                        }
+                    })
+                    if (setUserSubscribeReportResult.modifiedCount !== 1)
+                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${password}`)
+                    return {code: 1, data: null}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                }
+            },
 
             getLastTime: async function () {
                 const cur = tde.cursor()
@@ -243,18 +291,55 @@ function spDb (fastify, options, next) {
                 const cur = tde.cursor()
                 try {
                     const roomInfo = (await cur.query(`
-                        SELECT
-                            LAST_ROW(ts, power),
+                        SELECT DISTINCT
                             area,
                             building,
-                            room
+                            room,
+                            nums
+                        FROM (
+                            SELECT DISTINCT
+                                tbname,
+                                area,
+                                building,
+                                room,
+                                nums
+                            FROM powers
+                            WHERE
+                                is_show=true
+                              AND
+                                area=${SqlString.escape(area)}
+                              AND
+                                building=${SqlString.escape(building)}
+                              AND
+                                room=${SqlString.escape(room)}
+                        )
+                    `, true))
+                        .data.map(record => {
+                            const [area, building, room, nums] = record.data
+                            return {area, building, room, nums}
+                        })[0]
+                    if (roomInfo === undefined)
+                        throw new fastify.spError('非法输入', 101, `area="${area}" AND building="${building}" AND room="${room}" not in database`)
+                    return {code: 1, data: roomInfo}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                } finally {
+                    cur.close()
+                }
+            },
+            getRoomLast: async function (area, building, room) {
+                const cur = tde.cursor()
+                try {
+                    const roomInfo = (await cur.query(`
+                        SELECT
+                            LAST_ROW(ts, power)
                         FROM ${SqlString.escapeId(area+building+room)}
                         WHERE
                             is_show=true
                     `, true))
                         .data.map(record => {
-                            const [ts, power, area, building, room] = record.data
-                            return {ts, power: power / 100, area, building, room}
+                            const [ts, power] = record.data
+                            return {ts, power: power / 100}
                         })[0]
                     if (roomInfo === undefined)
                         throw new fastify.spError('非法输入', 101, `area="${area}" AND building="${building}" AND room="${room}" not in database`)

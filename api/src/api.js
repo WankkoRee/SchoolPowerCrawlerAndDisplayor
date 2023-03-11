@@ -63,7 +63,7 @@ async function api (fastify, options) {
     })
 
     /*
-    获取用户信息
+    修改用户密码
      */
     fastify.post('/user/password/change', {
         schema: {
@@ -92,6 +92,90 @@ async function api (fastify, options) {
         if (password === new_password)
             return fastify.sp_error.ApiErrorReturn(new fastify.spError('修改失败', 107, `旧密码与新密码相同，${password}, ${new_password}`))
         return await fastify.sp_db.setUserPassword(request.session.user._id, new_password)
+    })
+
+    /*
+    修改异常耗电的订阅
+     */
+    fastify.post('/user/subscribe/abnormal', {
+        schema: {
+            body: {
+                type: 'object',
+                properties: {
+                    abnormal: { type: 'number', minimum: 0, default: 10, maximum: 20 },
+                }
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'null',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        if (!request.session.user)
+            return fastify.sp_error.ApiErrorReturn(new fastify.spError('未登录', 104, '就是未登录'))
+        const {
+            abnormal: abnormal,
+        } = request.body
+        return await fastify.sp_db.setUserSubscribeAbnormal(request.session.user._id, abnormal)
+    })
+
+    /*
+    修改电量不足的订阅
+     */
+    fastify.post('/user/subscribe/low', {
+        schema: {
+            body: {
+                type: 'object',
+                properties: {
+                    low: { type: 'number', minimum: 0, default: 4, maximum: 7 },
+                }
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'null',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        if (!request.session.user)
+            return fastify.sp_error.ApiErrorReturn(new fastify.spError('未登录', 104, '就是未登录'))
+        const {
+            low: low,
+        } = request.body
+        return await fastify.sp_db.setUserSubscribeLow(request.session.user._id, low)
+    })
+
+    /*
+    修改用电报告的订阅
+     */
+    fastify.post('/user/subscribe/report/:during', {
+        schema: {
+            params: {
+                during: {type: 'string', enum: ["day", "week", "month"]},
+            },
+            body: {
+                type: 'object',
+                properties: {
+                    enable: { type: 'boolean', default: true },
+                }
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'null',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        if (!request.session.user)
+            return fastify.sp_error.ApiErrorReturn(new fastify.spError('未登录', 104, '就是未登录'))
+        const {
+            during: during,
+        } = request.params
+        const {
+            enable: enable,
+        } = request.body
+        return await fastify.sp_db.setUserSubscribeReport(request.session.user._id, during, enable)
     })
 
     /*
@@ -140,6 +224,21 @@ async function api (fastify, options) {
                             properties: {
                                 'qq': { type: 'string', nullable: true },
                                 'dingtalk': { type: 'string', nullable: true },
+                                'subscribe': {
+                                    type: 'object',
+                                    properties: {
+                                        'abnormal': { type: 'integer' },
+                                        'low': { type: 'integer' },
+                                        'report': {
+                                            type: 'object',
+                                            properties: {
+                                                'day': { type: 'boolean' },
+                                                'week': { type: 'boolean' },
+                                                'month': { type: 'boolean' },
+                                            },
+                                        },
+                                    },
+                                },
                             },
                         },
                         'update_time': { type: 'integer' },
@@ -271,11 +370,10 @@ async function api (fastify, options) {
                 200: fastify.sp_util.getApiSchema({
                     type: 'object',
                     properties: {
-                        ts: {type: 'integer'},
-                        power: {type: 'number'},
                         area: {type: 'string'},
                         building: {type: 'string'},
                         room: {type: 'string'},
+                        nums: {type: 'integer'},
                     },
                 }),
             },
@@ -287,6 +385,35 @@ async function api (fastify, options) {
             room: room,
         } = request.params
         return await fastify.sp_db.getRoomInfo(area, building, room)
+    })
+
+    /*
+    获取指定寝室`room`的最新数据
+     */
+    fastify.get('/data/:area/:building/:room/last', {
+        schema: {
+            params: {
+                area: {type: 'string'},
+                building: {type: 'string'},
+                room: {type: 'string'},
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'object',
+                    properties: {
+                        ts: {type: 'integer'},
+                        power: {type: 'number'},
+                    },
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        const {
+            area: area,
+            building: building,
+            room: room,
+        } = request.params
+        return await fastify.sp_db.getRoomLast(area, building, room)
     })
 
     /*
