@@ -62,3 +62,7 @@ export function compareRoom(router: Router, area: string, building: string, room
     },
   });
 }
+
+export function parseInputInt(input: string): number {
+  return Number(input.match(/\d+/)?.["0"]) || 0;
+}

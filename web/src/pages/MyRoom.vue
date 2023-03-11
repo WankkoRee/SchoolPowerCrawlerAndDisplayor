@@ -52,8 +52,8 @@
                         :precision="0"
                         :min="0"
                         :max="20"
-                        :parse="(input: string) => input.match(/\d+/) ? Number(input.match(/\d+/)[0]) : 0"
-                        :format="(value: number) => value === 0 ? '关闭' : String(value) + ' kWh'"
+                        :parse="parseInputInt"
+                        :format="(value: number | null) => !value ? '关闭' : String(value) + ' kWh'"
                       />
                     </n-space>
                   </template>
@@ -77,8 +77,8 @@
                         :precision="0"
                         :min="0"
                         :max="7"
-                        :parse="(input: string) => input.match(/\d+/) ? Number(input.match(/\d+/)[0]) : 0"
-                        :format="(value: number) => value === 0 ? '关闭' : String(value) + ' 天'"
+                        :parse="parseInputInt"
+                        :format="(value: number | null) => !value ? '关闭' : String(value) + ' 天'"
                       />
                     </n-space>
                   </template>
@@ -224,8 +224,8 @@
                       :precision="0"
                       :min="0"
                       :max="20"
-                      :parse="(input: string) => input.match(/\d+/) ? Number(input.match(/\d+/)[0]) : 0"
-                      :format="(value: number) => value === 0 ? '关闭' : String(value) + ' kWh'"
+                      :parse="parseInputInt"
+                      :format="(value: number | null) => !value ? '关闭' : String(value) + ' kWh'"
                     />
                   </n-space>
                 </template>
@@ -249,8 +249,8 @@
                       :precision="0"
                       :min="0"
                       :max="7"
-                      :parse="(input: string) => input.match(/\d+/) ? Number(input.match(/\d+/)[0]) : 0"
-                      :format="(value: number) => value === 0 ? '关闭' : String(value) + ' 天'"
+                      :parse="parseInputInt"
+                      :format="(value: number | null) => !value ? '关闭' : String(value) + ' 天'"
                     />
                   </n-space>
                 </template>
@@ -531,7 +531,7 @@ import {
 import { CloudDownloadOutline } from "@vicons/ionicons5";
 import { AlertOff24Regular, AlertOn24Regular } from "@vicons/fluent";
 
-import { userInfo } from "@/utils";
+import { parseInputInt, userInfo } from "@/utils";
 import RoomInfoCard from "@/components/RoomInfoCard.vue";
 import RoomChart from "@/components/RoomChart.vue";
 
@@ -548,7 +548,11 @@ watch(roomInfoPC, (newState) => {
 
 const abnormalThreshold = ref(0);
 const abnormalThresholdSubscribing = ref(false);
-async function abnormalThresholdSubscribe(abnormal: number) {
+async function abnormalThresholdSubscribe(abnormal: number | null) {
+  if (abnormal === null) {
+    messageApi.value?.error("输入数值异常");
+    return;
+  }
   abnormalThresholdSubscribing.value = true;
   const abnormalThresholdSubscribeResult = await subscribeAbnormal(abnormal);
   if (typeof abnormalThresholdSubscribeResult === "string") {
@@ -561,7 +565,11 @@ async function abnormalThresholdSubscribe(abnormal: number) {
 
 const lowThreshold = ref(0);
 const lowThresholdSubscribing = ref(false);
-async function lowThresholdSubscribe(low: number) {
+async function lowThresholdSubscribe(low: number | null) {
+  if (low === null) {
+    messageApi.value?.error("输入数值异常");
+    return;
+  }
   lowThresholdSubscribing.value = true;
   const lowThresholdSubscribeResult = await subscribeLow(low);
   if (typeof lowThresholdSubscribeResult === "string") {
