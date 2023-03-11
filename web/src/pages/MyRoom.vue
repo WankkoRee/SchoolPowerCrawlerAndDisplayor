@@ -10,7 +10,7 @@
           <n-grid-item span="0 800:1">
             <n-space align="center" justify="space-around">
               <n-space vertical align="start" justify="center">
-                <n-popover placement="right" trigger="hover">
+                <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
                     <n-space align="center" justify="start" :size="0">
                       <n-text>QQ</n-text>
@@ -22,7 +22,7 @@
                   </template>
                   <n-text>用于发送各类订阅的消息通知</n-text>
                 </n-popover>
-                <n-popover placement="right" trigger="hover">
+                <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
                     <n-space align="center" justify="start" :size="0">
                       <n-text>钉钉</n-text>
@@ -34,7 +34,7 @@
                   </template>
                   <n-text>用于发送各类订阅的消息通知</n-text>
                 </n-popover>
-                <n-popover placement="right" trigger="hover">
+                <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
                     <n-space align="center" justify="start" :size="0">
                       <n-text>异常耗电提醒</n-text>
@@ -59,7 +59,7 @@
                   </template>
                   <n-text>开启订阅后，在当天用电量超过设定范围时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
                 </n-popover>
-                <n-popover placement="right" trigger="hover">
+                <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
                     <n-space align="center" justify="start" :size="0">
                       <n-text>电量过低提醒</n-text>
@@ -84,7 +84,7 @@
                   </template>
                   <n-text>开启订阅后，在剩余电量预计可用天数不足设定天数时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
                 </n-popover>
-                <n-popover placement="right" trigger="hover">
+                <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
                     <n-space align="center" justify="start" :size="0">
                       <n-text>用电报告推送</n-text>
@@ -182,7 +182,7 @@
           </n-grid-item>
           <n-grid-item span="1 800:0">
             <n-space vertical align="start" justify="center">
-              <n-popover placement="right" trigger="hover">
+              <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
                   <n-space align="center" justify="start" :size="0">
                     <n-text>QQ</n-text>
@@ -194,7 +194,7 @@
                 </template>
                 <n-text>用于发送各类订阅的消息通知</n-text>
               </n-popover>
-              <n-popover placement="right" trigger="hover">
+              <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
                   <n-space align="center" justify="start" :size="0">
                     <n-text>钉钉</n-text>
@@ -206,7 +206,7 @@
                 </template>
                 <n-text>用于发送各类订阅的消息通知</n-text>
               </n-popover>
-              <n-popover placement="right" trigger="hover">
+              <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
                   <n-space align="center" justify="start" :size="0">
                     <n-text>异常耗电提醒</n-text>
@@ -231,7 +231,7 @@
                 </template>
                 <n-text>开启订阅后，在当天用电量超过设定范围时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
               </n-popover>
-              <n-popover placement="right" trigger="hover">
+              <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
                   <n-space align="center" justify="start" :size="0">
                     <n-text>电量过低提醒</n-text>
@@ -256,7 +256,7 @@
                 </template>
                 <n-text>开启订阅后，在剩余电量预计可用天数不足设定天数时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
               </n-popover>
-              <n-popover placement="right" trigger="hover">
+              <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
                   <n-space align="center" justify="start" :size="0">
                     <n-text>用电报告推送</n-text>
