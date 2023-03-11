@@ -22,6 +22,7 @@ import type { TitleComponentOption, GridComponentOption, TooltipComponentOption,
 import { CanvasRenderer } from "echarts/renderers";
 import { UniversalTransition } from "echarts/features";
 import screenfull from "screenfull";
+import FullScreenMaximize24Regular from "@sicons/fluent/FullScreenMaximize24Regular.svg";
 
 import { colors, messageApi } from "@/utils";
 import { getRoomLogs, getRoomDailys } from "@/api";
@@ -85,7 +86,7 @@ const options: Option = {
       saveAsImage: {},
       myScreenFull: {
         title: "全屏",
-        icon: "image://src/assets/images/fluent/FullScreenMaximize24Regular.svg",
+        icon: "image://" + FullScreenMaximize24Regular,
         onclick: async () => {
           if (screenfull.isEnabled) {
             await screenfull.toggle(chartCard.value);
