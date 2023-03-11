@@ -46,6 +46,9 @@
                         button-placement="both"
                         style="width: 140px; text-align: center"
                         v-model:value="abnormalThreshold"
+                        @update:value="abnormalThresholdSubscribe"
+                        :disabled="abnormalThresholdSubscribing"
+                        :loading="abnormalThresholdSubscribing"
                         :precision="0"
                         :min="0"
                         :max="20"
@@ -59,11 +62,43 @@
                 <n-popover placement="right" trigger="hover">
                   <template #trigger>
                     <n-space align="center" justify="start" :size="0">
+                      <n-text>电量过低提醒</n-text>
+                      <n-divider vertical />
+                      <n-skeleton v-if="loading" :width="140" :height="30" :sharp="false" />
+                      <n-input-number
+                        v-else
+                        size="small"
+                        button-placement="both"
+                        style="width: 140px; text-align: center"
+                        v-model:value="lowThreshold"
+                        @update:value="lowThresholdSubscribe"
+                        :disabled="lowThresholdSubscribing"
+                        :loading="lowThresholdSubscribing"
+                        :precision="0"
+                        :min="0"
+                        :max="7"
+                        :parse="(input: string) => input.match(/\d+/) ? Number(input.match(/\d+/)[0]) : 0"
+                        :format="(value: number) => value === 0 ? '关闭' : String(value) + ' 天'"
+                      />
+                    </n-space>
+                  </template>
+                  <n-text>开启订阅后，在剩余电量预计可用天数不足设定天数时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
+                </n-popover>
+                <n-popover placement="right" trigger="hover">
+                  <template #trigger>
+                    <n-space align="center" justify="start" :size="0">
                       <n-text>用电报告推送</n-text>
                       <n-divider vertical />
                       <n-space align="center" justify="start" :size="4">
                         <n-skeleton v-if="loading" :width="74" :height="18" round />
-                        <n-switch v-else v-model:value="lastDayReport" :loading="lastDayReportSubscribing" size="large">
+                        <n-switch
+                          v-else
+                          size="large"
+                          v-model:value="reportDay"
+                          @update:value="reportDaySubscribe"
+                          :loading="reportDaySubscribing"
+                          :disabled="reportDaySubscribing"
+                        >
                           <template #checked-icon>
                             <n-icon>
                               <AlertOn24Regular />
@@ -78,7 +113,14 @@
                           <template #unchecked>日报</template>
                         </n-switch>
                         <n-skeleton v-if="loading" :width="74" :height="18" round />
-                        <n-switch v-else v-model:value="lastWeekReport" :loading="lastWeekReportSubscribing" size="large">
+                        <n-switch
+                          v-else
+                          size="large"
+                          v-model:value="reportWeek"
+                          @update:value="reportWeekSubscribe"
+                          :loading="reportWeekSubscribing"
+                          :disabled="reportWeekSubscribing"
+                        >
                           <template #checked-icon>
                             <n-icon>
                               <AlertOn24Regular />
@@ -93,7 +135,14 @@
                           <template #unchecked>周报</template>
                         </n-switch>
                         <n-skeleton v-if="loading" :width="74" :height="18" round />
-                        <n-switch v-else v-model:value="lastMonthReport" :loading="lastMonthReportSubscribing" size="large">
+                        <n-switch
+                          v-else
+                          size="large"
+                          v-model:value="reportMonth"
+                          @update:value="reportMonthSubscribe"
+                          :loading="reportMonthSubscribing"
+                          :disabled="reportMonthSubscribing"
+                        >
                           <template #checked-icon>
                             <n-icon>
                               <AlertOn24Regular />
@@ -169,6 +218,9 @@
                       button-placement="both"
                       style="width: 140px; text-align: center"
                       v-model:value="abnormalThreshold"
+                      @update:value="abnormalThresholdSubscribe"
+                      :disabled="abnormalThresholdSubscribing"
+                      :loading="abnormalThresholdSubscribing"
                       :precision="0"
                       :min="0"
                       :max="20"
@@ -182,50 +234,106 @@
               <n-popover placement="right" trigger="hover">
                 <template #trigger>
                   <n-space align="center" justify="start" :size="0">
-                    <n-text>昨日用电报告推送</n-text>
+                    <n-text>电量过低提醒</n-text>
                     <n-divider vertical />
-                    <n-skeleton v-if="loading" :width="74" :height="18" round />
-                    <n-switch v-else v-model:value="lastDayReport" :loading="lastDayReportSubscribing" size="medium">
-                      <template #checked-icon>☺️</template>
-                      <template #checked>已开启</template>
-                      <template #unchecked-icon>😔</template>
-                      <template #unchecked>已关闭</template>
-                    </n-switch>
+                    <n-skeleton v-if="loading" :width="140" :height="30" :sharp="false" />
+                    <n-input-number
+                      v-else
+                      size="small"
+                      button-placement="both"
+                      style="width: 140px; text-align: center"
+                      v-model:value="lowThreshold"
+                      @update:value="lowThresholdSubscribe"
+                      :disabled="lowThresholdSubscribing"
+                      :loading="lowThresholdSubscribing"
+                      :precision="0"
+                      :min="0"
+                      :max="7"
+                      :parse="(input: string) => input.match(/\d+/) ? Number(input.match(/\d+/)[0]) : 0"
+                      :format="(value: number) => value === 0 ? '关闭' : String(value) + ' 天'"
+                    />
                   </n-space>
                 </template>
-                <n-text>开启订阅后，在<b>每天</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送昨日用电报告</n-text>
+                <n-text>开启订阅后，在剩余电量预计可用天数不足设定天数时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
               </n-popover>
               <n-popover placement="right" trigger="hover">
                 <template #trigger>
                   <n-space align="center" justify="start" :size="0">
-                    <n-text>上周用电报告推送</n-text>
+                    <n-text>用电报告推送</n-text>
                     <n-divider vertical />
-                    <n-skeleton v-if="loading" :width="74" :height="18" round />
-                    <n-switch v-else v-model:value="lastWeekReport" :loading="lastWeekReportSubscribing" size="medium">
-                      <template #checked-icon>☺️</template>
-                      <template #checked>已开启</template>
-                      <template #unchecked-icon>😔</template>
-                      <template #unchecked>已关闭</template>
-                    </n-switch>
+                    <n-space align="center" justify="start" :size="4">
+                      <n-skeleton v-if="loading" :width="74" :height="18" round />
+                      <n-switch
+                        v-else
+                        size="large"
+                        v-model:value="reportDay"
+                        @update:value="reportDaySubscribe"
+                        :loading="reportDaySubscribing"
+                        :disabled="reportDaySubscribing"
+                      >
+                        <template #checked-icon>
+                          <n-icon>
+                            <AlertOn24Regular />
+                          </n-icon>
+                        </template>
+                        <template #checked>日报</template>
+                        <template #unchecked-icon>
+                          <n-icon>
+                            <AlertOff24Regular />
+                          </n-icon>
+                        </template>
+                        <template #unchecked>日报</template>
+                      </n-switch>
+                      <n-skeleton v-if="loading" :width="74" :height="18" round />
+                      <n-switch
+                        v-else
+                        size="large"
+                        v-model:value="reportWeek"
+                        @update:value="reportWeekSubscribe"
+                        :loading="reportWeekSubscribing"
+                        :disabled="reportWeekSubscribing"
+                      >
+                        <template #checked-icon>
+                          <n-icon>
+                            <AlertOn24Regular />
+                          </n-icon>
+                        </template>
+                        <template #checked>周报</template>
+                        <template #unchecked-icon>
+                          <n-icon>
+                            <AlertOff24Regular />
+                          </n-icon>
+                        </template>
+                        <template #unchecked>周报</template>
+                      </n-switch>
+                      <n-skeleton v-if="loading" :width="74" :height="18" round />
+                      <n-switch
+                        v-else
+                        size="large"
+                        v-model:value="reportMonth"
+                        @update:value="reportMonthSubscribe"
+                        :loading="reportMonthSubscribing"
+                        :disabled="reportMonthSubscribing"
+                      >
+                        <template #checked-icon>
+                          <n-icon>
+                            <AlertOn24Regular />
+                          </n-icon>
+                        </template>
+                        <template #checked>月报</template>
+                        <template #unchecked-icon>
+                          <n-icon>
+                            <AlertOff24Regular />
+                          </n-icon>
+                        </template>
+                        <template #unchecked>月报</template>
+                      </n-switch>
+                    </n-space>
                   </n-space>
                 </template>
-                <n-text>开启订阅后，在<b>每周一</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送上周用电报告</n-text>
-              </n-popover>
-              <n-popover placement="right" trigger="hover">
-                <template #trigger>
-                  <n-space align="center" justify="start" :size="0">
-                    <n-text>上月用电报告推送</n-text>
-                    <n-divider vertical />
-                    <n-skeleton v-if="loading" :width="74" :height="18" round />
-                    <n-switch v-else v-model:value="lastMonthReport" :loading="lastMonthReportSubscribing" size="medium">
-                      <template #checked-icon>☺️</template>
-                      <template #checked>已开启</template>
-                      <template #unchecked-icon>😔</template>
-                      <template #unchecked>已关闭</template>
-                    </n-switch>
-                  </n-space>
-                </template>
-                <n-text>开启订阅后，在<b>每月1号</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送上月用电报告</n-text>
+                <n-text
+                  >开启订阅后，在<b>每天</b>/<b>每周一</b>/<b>每月1号</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送<b>昨日</b>/<b>上周</b>/<b>上月</b>用电报告</n-text
+                >
               </n-popover>
             </n-space>
           </n-grid-item>
@@ -394,7 +502,7 @@ import { ref, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { FormInst, FormItemRule } from "naive-ui";
 
-import { logout, changePassword } from "@/api";
+import { subscribeAbnormal, subscribeLow, subscribeReport, getRoomInfo, logout, changePassword } from "@/api";
 import { messageApi, refreshUserInfo } from "@/utils";
 </script>
 
@@ -431,25 +539,80 @@ const route = useRoute();
 const router = useRouter();
 
 const loading = ref(true);
-const passwordChanging = ref(false);
-const logouting = ref(false);
 
 const roomInfoPC = ref<typeof RoomInfoCard>();
 const roomInfoMobile = ref(false);
-
-const area = ref("");
-const building = ref("");
-const room = ref("");
-const bed = ref("");
-const mates = ref("");
-const canBeShow = ref(false);
+watch(roomInfoPC, (newState) => {
+  roomInfoMobile.value = !newState && canBeShow.value;
+});
 
 const abnormalThreshold = ref(0);
-const lastDayReport = ref(false);
-const lastWeekReport = ref(false);
-const lastMonthReport = ref(false);
+const abnormalThresholdSubscribing = ref(false);
+async function abnormalThresholdSubscribe(abnormal: number) {
+  abnormalThresholdSubscribing.value = true;
+  const abnormalThresholdSubscribeResult = await subscribeAbnormal(abnormal);
+  if (typeof abnormalThresholdSubscribeResult === "string") {
+    messageApi.value?.error(abnormalThresholdSubscribeResult);
+  } else {
+    messageApi.value?.success("修改成功");
+  }
+  abnormalThresholdSubscribing.value = false;
+}
+
+const lowThreshold = ref(0);
+const lowThresholdSubscribing = ref(false);
+async function lowThresholdSubscribe(low: number) {
+  lowThresholdSubscribing.value = true;
+  const lowThresholdSubscribeResult = await subscribeLow(low);
+  if (typeof lowThresholdSubscribeResult === "string") {
+    messageApi.value?.error(lowThresholdSubscribeResult);
+  } else {
+    messageApi.value?.success("修改成功");
+  }
+  lowThresholdSubscribing.value = false;
+}
+
+const reportDay = ref(false);
+const reportDaySubscribing = ref(false);
+async function reportDaySubscribe(enable: boolean) {
+  reportDaySubscribing.value = true;
+  const reportDaySubscribeResult = await subscribeReport("day", enable);
+  if (typeof reportDaySubscribeResult === "string") {
+    messageApi.value?.error(reportDaySubscribeResult);
+  } else {
+    messageApi.value?.success("修改成功");
+  }
+  reportDaySubscribing.value = false;
+}
+
+const reportWeek = ref(false);
+const reportWeekSubscribing = ref(false);
+async function reportWeekSubscribe(enable: boolean) {
+  reportWeekSubscribing.value = true;
+  const reportWeekSubscribeResult = await subscribeReport("week", enable);
+  if (typeof reportWeekSubscribeResult === "string") {
+    messageApi.value?.error(reportWeekSubscribeResult);
+  } else {
+    messageApi.value?.success("修改成功");
+  }
+  reportWeekSubscribing.value = false;
+}
+
+const reportMonth = ref(false);
+const reportMonthSubscribing = ref(false);
+async function reportMonthSubscribe(enable: boolean) {
+  reportMonthSubscribing.value = true;
+  const reportMonthSubscribeResult = await subscribeReport("month", enable);
+  if (typeof reportMonthSubscribeResult === "string") {
+    messageApi.value?.error(reportMonthSubscribeResult);
+  } else {
+    messageApi.value?.success("修改成功");
+  }
+  reportMonthSubscribing.value = false;
+}
 
 const passwordChangeShow = ref(false);
+const passwordChanging = ref(false);
 const passwordChangeForm = ref<FormInst>();
 const passwordChangeFormValue = ref({
   passwordOld: "",
@@ -487,14 +650,6 @@ const passwordChangeFormRule = {
   ],
 };
 
-async function logoutClick(e: MouseEvent) {
-  e.preventDefault();
-  logouting.value = true;
-  await logout();
-  router.push({ name: "Login", query: { redirect: route.fullPath } });
-  logouting.value = false;
-}
-
 async function passwordChangeFormClick(e: MouseEvent) {
   e.preventDefault();
   passwordChangeForm.value?.validate(async (errors) => {
@@ -511,17 +666,30 @@ async function passwordChangeFormClick(e: MouseEvent) {
   });
 }
 
-watch(roomInfoPC, (newState) => {
-  roomInfoMobile.value = !newState && canBeShow.value;
-});
+const logouting = ref(false);
+async function logoutClick(e: MouseEvent) {
+  e.preventDefault();
+  logouting.value = true;
+  await logout();
+  router.push({ name: "Login", query: { redirect: route.fullPath } });
+  logouting.value = false;
+}
+
+const area = ref("");
+const building = ref("");
+const room = ref("");
+const bed = ref("");
+const mates = ref("");
+const canBeShow = ref(false);
 
 onMounted(async () => {
   await refreshUserInfo(route, router);
   if (userInfo.value) {
-    abnormalThreshold.value = userInfo.value.app.abnormal;
-    lastDayReport.value = userInfo.value.app.last_day_report;
-    lastWeekReport.value = userInfo.value.app.last_week_report;
-    lastMonthReport.value = userInfo.value.app.last_month_report;
+    abnormalThreshold.value = userInfo.value.app.subscribe.abnormal;
+    lowThreshold.value = userInfo.value.app.subscribe.low;
+    reportDay.value = userInfo.value.app.subscribe.report.day;
+    reportWeek.value = userInfo.value.app.subscribe.report.week;
+    reportMonth.value = userInfo.value.app.subscribe.report.month;
 
     if (userInfo.value.position.custom.state) {
       area.value = userInfo.value.position.custom.area ?? userInfo.value.position.area ?? "存在问题";
@@ -534,8 +702,13 @@ onMounted(async () => {
       room.value = userInfo.value.position.room ?? "无";
       canBeShow.value = area.value !== "无" && building.value !== "无" && room.value !== "无";
     }
-    bed.value = (userInfo.value.position.bed ? String(userInfo.value.position.bed) : "?") + "号床";
-    mates.value = (userInfo.value.position.bed ? String(userInfo.value.position.bed) : "n") + "人寝";
+    bed.value = (userInfo.value.position.bed ? String(userInfo.value.position.bed) : "🤔") + "号床";
+    if (canBeShow.value) {
+      const roomInfo = await getRoomInfo(area.value, building.value, room.value);
+      mates.value = String(roomInfo.nums) + "人寝";
+    } else {
+      mates.value = "🤔人寝";
+    }
     loading.value = false;
   }
 });

@@ -8,8 +8,7 @@ type RoomPosition = {
   room: string;
 };
 type RoomInfo = RoomPosition & {
-  ts: Timestamp;
-  power: number;
+  nums: number;
 };
 type RoomStatisticalData = {
   from: Timestamp;
@@ -57,10 +56,15 @@ type UserInfo = {
   app: {
     qq?: string;
     dingtalk?: string;
-    abnormal: number;
-    last_day_report: boolean;
-    last_week_report: boolean;
-    last_month_report: boolean;
+    subscribe: {
+      abnormal: number;
+      low: number;
+      report: {
+        day: boolean;
+        week: boolean;
+        month: boolean;
+      };
+    };
   };
   update_time: Timestamp;
 };
@@ -77,6 +81,7 @@ type GetAreasResult = string[];
 type GetBuildingsResult = string[];
 type GetRoomsResult = string[];
 type GetRoomInfoResult = RoomInfo;
+type GetRoomLastDataResult = RoomPowerData;
 type GetRoomSumDuringResult = RoomStatisticalData;
 type GetRoomAvgDuringResult = RoomStatisticalData;
 type GetRoomLogsResult = RoomPowerData[];
@@ -88,6 +93,9 @@ type GetUserInfoResult = UserInfo;
 type LoginResult = null;
 type LogoutResult = null;
 type ChangePasswordResult = null;
+type SubscribeAbnormalResult = null;
+type SubscribeLowResult = null;
+type SubscribeReportResult = null;
 
 // ui
 type ReloadFunc = () => Promise<void>;

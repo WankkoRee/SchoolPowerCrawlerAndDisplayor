@@ -101,6 +101,12 @@ export async function getRoomInfo(area: string, building: string, room: string):
   return result;
 }
 
+export async function getRoomLastData(area: string, building: string, room: string): Promise<GetRoomLastDataResult> {
+  const roomLastDataRequest = axios.get<AppResponse<GetRoomLastDataResult>>(`./api/data/${area}/${building}/${room}/last`);
+  const result = await checkRequest(roomLastDataRequest, false);
+  return result;
+}
+
 export async function getRoomSumDuring(area: string, building: string, room: string, during: string = ""): Promise<GetRoomSumDuringResult> {
   const roomSumDuringRequest = axios.get<AppResponse<GetRoomSumDuringResult>>(`./api/data/${area}/${building}/${room}/sum/${during}`);
   const result = await checkRequest(roomSumDuringRequest, false);
@@ -229,6 +235,42 @@ export async function changePassword(password: string, new_password: string): Pr
     return "旧密码错误";
   } else if (result.code === 107) {
     return "旧密码与新密码相同";
+  } else {
+    return result.error!;
+  }
+}
+
+export async function subscribeAbnormal(abnormal: number): Promise<SubscribeAbnormalResult | string> {
+  const subscribeAbnormalRequest = axios.post<AppResponse<SubscribeAbnormalResult>>("./api/user/subscribe/abnormal", {
+    abnormal,
+  });
+  const result = await checkRequest(subscribeAbnormalRequest, true);
+  if (result.code === 1) {
+    return result.data!;
+  } else {
+    return result.error!;
+  }
+}
+
+export async function subscribeLow(low: number): Promise<SubscribeLowResult | string> {
+  const subscribeLowRequest = axios.post<AppResponse<SubscribeLowResult>>("./api/user/subscribe/low", {
+    low,
+  });
+  const result = await checkRequest(subscribeLowRequest, true);
+  if (result.code === 1) {
+    return result.data!;
+  } else {
+    return result.error!;
+  }
+}
+
+export async function subscribeReport(during: "day" | "week" | "month", enable: boolean): Promise<SubscribeReportResult | string> {
+  const subscribeReportRequest = axios.post<AppResponse<SubscribeReportResult>>(`./api/user/subscribe/report/${during}`, {
+    enable,
+  });
+  const result = await checkRequest(subscribeReportRequest, true);
+  if (result.code === 1) {
+    return result.data!;
   } else {
     return result.error!;
   }

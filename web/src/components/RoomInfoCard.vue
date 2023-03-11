@@ -13,7 +13,7 @@
               </n-icon>
             </n-button>
           </template>
-          添加 {{ roomInfo.room }} 到寝室对比
+          添加 {{ room.room }} 到寝室对比
         </n-tooltip>
         <n-tooltip v-if="refresh" :show-arrow="false" trigger="hover">
           <template #trigger>
@@ -23,7 +23,7 @@
               </n-icon>
             </n-button>
           </template>
-          刷新 {{ roomInfo.room }} 的数据
+          刷新 {{ room.room }} 的数据
         </n-tooltip>
         <n-tooltip v-if="onRemove" :show-arrow="false" trigger="hover">
           <template #trigger>
@@ -33,7 +33,7 @@
               </n-icon>
             </n-button>
           </template>
-          取消对 {{ roomInfo.room }} 的对比
+          取消对 {{ room.room }} 的对比
         </n-tooltip>
         <n-popover placement="left" trigger="hover">
           <template #trigger>
@@ -44,12 +44,12 @@
                 </n-icon>
               </template>
               <n-skeleton v-if="loading" text :width="62" round />
-              <n-time v-else :time="roomInfo.ts" type="relative" />
+              <n-time v-else :time="roomLastData.ts" type="relative" />
             </n-tag>
           </template>
           <span>数据同步于：</span>
           <n-skeleton v-if="loading" text :width="138" round />
-          <n-time v-else :time="roomInfo.ts" type="datetime" />
+          <n-time v-else :time="roomLastData.ts" type="datetime" />
         </n-popover>
       </n-space>
     </template>
@@ -143,7 +143,7 @@
           <template #trigger>
             <n-statistic label="剩余电量" tabular-nums>
               <n-skeleton v-if="loading" text :width="60" :sharp="false" />
-              <n-number-animation v-else ref="remainingPower" :from="0" :to="roomInfo.power" :duration="500" :active="true" :precision="2" />
+              <n-number-animation v-else ref="remainingPower" :from="0" :to="roomLastData.power" :duration="500" :active="true" :precision="2" />
               <template #suffix><span style="font-size: var(--n-label-font-size)">kWh</span></template>
             </n-statistic>
           </template>
@@ -157,7 +157,7 @@
           <span>预计可用 </span>
           <b>
             <n-skeleton v-if="loading" text :width="30" round />
-            <span v-else>{{ Math.floor(roomInfo.power / roomAvgLast30d.spending) }}</span>
+            <span v-else>{{ Math.floor(roomLastData.power / roomAvgLast30d.spending) }}</span>
           </b>
           <span> 天</span>
         </n-popover>
@@ -231,7 +231,7 @@ import { ref, onMounted } from "vue";
 import type { CSSProperties } from "vue";
 import { useRouter } from "vue-router";
 
-import { getRoomInfo, getRoomSumDuring, getRoomAvgDuring } from "@/api";
+import { getRoomLastData, getRoomSumDuring, getRoomAvgDuring } from "@/api";
 import { roomNameRegex } from "@/utils";
 </script>
 
@@ -253,7 +253,7 @@ const props = defineProps<{
 const router = useRouter();
 
 const loading = ref(true);
-const roomInfo = ref(<RoomInfo>{});
+const roomLastData = ref(<RoomPowerData>{});
 const roomSumDay = ref(<RoomStatisticalData>{});
 const roomSumWeek = ref(<RoomStatisticalData>{});
 const roomSumMonth = ref(<RoomStatisticalData>{});
@@ -288,15 +288,16 @@ function timeInterval(from: Timestamp, to: Timestamp): string {
 
 async function refreshData() {
   loading.value = true;
-  [roomInfo.value, roomSumDay.value, roomSumWeek.value, roomSumMonth.value, roomAvgWeek.value, roomAvgMonth.value, roomAvgLast30d.value] = await Promise.all([
-    getRoomInfo(props.room.area, props.room.building, props.room.room),
-    getRoomSumDuring(props.room.area, props.room.building, props.room.room, "day"),
-    getRoomSumDuring(props.room.area, props.room.building, props.room.room, "week"),
-    getRoomSumDuring(props.room.area, props.room.building, props.room.room, "month"),
-    getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "week"),
-    getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "month"),
-    getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "last30d"),
-  ]);
+  [roomLastData.value, roomSumDay.value, roomSumWeek.value, roomSumMonth.value, roomAvgWeek.value, roomAvgMonth.value, roomAvgLast30d.value] =
+    await Promise.all([
+      getRoomLastData(props.room.area, props.room.building, props.room.room),
+      getRoomSumDuring(props.room.area, props.room.building, props.room.room, "day"),
+      getRoomSumDuring(props.room.area, props.room.building, props.room.room, "week"),
+      getRoomSumDuring(props.room.area, props.room.building, props.room.room, "month"),
+      getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "week"),
+      getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "month"),
+      getRoomAvgDuring(props.room.area, props.room.building, props.room.room, "last30d"),
+    ]);
   loading.value = false;
 }
 
