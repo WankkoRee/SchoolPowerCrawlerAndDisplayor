@@ -16,7 +16,7 @@ object Main {
                 if (!exists())
                     mkdirs()
             }
-            protocol = MiraiProtocol.ANDROID_PHONE
+            protocol = MiraiProtocol.ANDROID_PAD
             fileBasedDeviceInfo()
             autoReconnectOnForceOffline = true
             contactListCache {
