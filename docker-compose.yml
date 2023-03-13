@@ -167,6 +167,7 @@ services:
       SP_QQ: 0
       SP_PASSWORD: ""
       SP_ADMIN: 0
+    stdin_open: true
     restart: unless-stopped
     logging:
       driver: "json-file"
