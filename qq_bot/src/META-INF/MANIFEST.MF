@@ -1,0 +1,33 @@
+Manifest-Version: 1.0
+Main-Class: cn.wankkoree.sp.bot.qq.Main
+Class-Path: libs/netty-buffer-4.1.85.Final.jar libs/kotlin-stdlib-jdk7-1
+ .8.10.jar libs/kmongo-async-shared-4.8.0.jar libs/result-3.1.0.jar libs
+ /kotlin-jvm-blocking-bridge-runtime-jvm-2.1.0-170.1.jar libs/netty-reso
+ lver-4.1.85.Final.jar libs/jackson-core-2.14.1.jar libs/mirai-core-util
+ s-jvm-2.14.0.jar libs/kotlinx-coroutines-core-jvm-1.6.4.jar libs/netty-
+ common-4.1.85.Final.jar libs/kmongo-id-jackson-4.8.0.jar libs/netty-cod
+ ec-redis-4.1.85.Final.jar libs/jackson-module-loader-0.4.0.jar libs/kot
+ lin-stdlib-common-1.8.10.jar libs/bson-record-codec-4.8.0.jar libs/fuel
+ -jackson-2.3.1.jar libs/netty-handler-4.1.85.Final.jar libs/kotlin-stdl
+ ib-1.8.10.jar libs/kmongo-jackson-mapping-4.8.0.jar libs/kotlin-dynamic
+ -delegation-jvm-0.3.0-170.1.jar libs/kotlinx-coroutines-jdk8-1.6.4.jar 
+ libs/jackson-module-kotlin-2.14.1.jar libs/kmongo-coroutine-core-4.8.0.
+ jar libs/annotations-19.0.0.jar libs/kotlinx-serialization-json-jvm-1.3
+ .3.jar libs/bson-4.8.0.jar libs/jackson-databind-2.14.1.jar libs/jackso
+ n-datatype-jsr310-2.14.1.jar libs/slf4j-api-2.0.3.jar libs/bson4jackson
+ -2.13.1.jar libs/kreflect-1.0.0.jar libs/netty-transport-native-unix-co
+ mmon-4.1.85.Final.jar libs/atomicfu-jvm-0.18.3.jar libs/kotlin-reflect-
+ 1.7.21.jar libs/kotlinx-coroutines-reactive-1.6.4.jar libs/kreds-0.8.1.
+ jar libs/kmongo-coroutine-4.8.0.jar libs/kotlinx-serialization-protobuf
+ -jvm-1.3.3.jar libs/reactor-core-3.5.0.jar libs/kmongo-id-4.8.0.jar lib
+ s/log4j-api-2.19.0.jar libs/fuel-2.3.1.jar libs/kmongo-data-4.8.0.jar l
+ ibs/kotlinx-serialization-core-jvm-1.3.3.jar libs/kmongo-property-4.8.0
+ .jar libs/netty-transport-4.1.85.Final.jar libs/kotlin-stdlib-jdk8-1.8.
+ 10.jar libs/mongodb-driver-reactivestreams-4.8.0.jar libs/bcprov-jdk15o
+ n-1.64.jar libs/mirai-core-jvm-2.14.0.jar libs/mongodb-driver-core-4.8.
+ 0.jar libs/fuel-coroutines-2.3.1.jar libs/netty-codec-4.1.85.Final.jar 
+ libs/reactive-streams-1.0.4.jar libs/jackson-annotations-2.14.1.jar lib
+ s/mirai-core-api-jvm-2.14.0.jar libs/kotlin-logging-jvm-3.0.4.jar libs/
+ kmongo-shared-4.8.0.jar libs/mirai-console-compiler-annotations-jvm-2.1
+ 4.0.jar
+

@@ -146,6 +146,38 @@ services:
       school_power_net:
         ipv4_address: 192.168.1.6
 
+  school_power_bot_qq:
+    container_name: school_power_bot_qq
+    image: "openjdk:11.0.16-jre-bullseye"
+    volumes:
+      - ./qq_bot/atifact/:/home/school_power_bot_qq/bin/
+      - ./qq_bot/runtime/:/home/school_power_bot_qq/runtime/
+    working_dir: /home/school_power_bot_qq/
+    command: /bin/bash -c "echo \"Asia/Shanghai\" > /etc/timezone && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && java -jar ./bin/qq_bot.jar"
+    environment:
+      SP_MONGO_HOST: "school_power_mongo"
+      SP_MONGO_PORT: 27017
+      SP_MONGO_USER: "root"
+      SP_MONGO_PASS: "123456"
+      SP_MONGO_NAME: "school_power"
+      SP_REDIS_HOST: "school_power_redis"
+      SP_REDIS_PORT: 6379
+      SP_REDIS_DB: 0
+      SP_API: "school_power_api:3000"
+      SP_QQ: 0
+      SP_PASSWORD: ""
+      SP_ADMIN: 0
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 1
+    networks:
+      school_power_net:
+        ipv4_address: 192.168.1.7
+
+
 #  school_power_mirai:
 #    container_name: school_power_mirai
 #    depends_on:
