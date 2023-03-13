@@ -373,7 +373,7 @@ function spDb (fastify, options, next) {
                             return {from, to, spending: Number(spending_range) / 100}
                         })[0]
                     if (roomSpendingSumInDuring === undefined)
-                        throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
+                        return {code: 1, data: { from, to, spending: 0 }}
                     return {code: 1, data: roomSpendingSumInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -411,7 +411,7 @@ function spDb (fastify, options, next) {
                             return {from, to, spending: spending_daily_avg / 100}
                         })[0]
                     if (roomSpendingDailyAvgInDuring === undefined)
-                        throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
+                        return {code: 1, data: { from, to, spending: 0 }}
                     return {code: 1, data: roomSpendingDailyAvgInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -438,8 +438,6 @@ function spDb (fastify, options, next) {
                             const [ts, power] = record.data
                             return {ts, power: power / 100}
                         })
-                    if (roomLogs.length === 0)
-                        throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
                     return {code: 1, data: roomLogs}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -468,8 +466,6 @@ function spDb (fastify, options, next) {
                             const [ts, spending] = record.data
                             return {ts, spending: spending / 100}
                         })
-                    if (roomLogs.length === 0)
-                        throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
                     return {code: 1, data: roomLogs}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -499,8 +495,6 @@ function spDb (fastify, options, next) {
                             const [ts, spending_daily] = record.data
                             return {ts, spending: Number(spending_daily) / 100}
                         })
-                    if (roomLogs.length === 0)
-                        throw new fastify.spError('非法输入', 101, `"${area+building+room}" have no data from ${from} to ${to}`)
                     return {code: 1, data: roomLogs}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -532,8 +526,6 @@ function spDb (fastify, options, next) {
                             const [area, spending] = record.data
                             return {area, spending: Number(spending) / 100}
                         })
-                    if (areaSpendingRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: areaSpendingRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -566,8 +558,6 @@ function spDb (fastify, options, next) {
                             const [area, building, spending] = record.data
                             return {area, building, spending: Number(spending) / 100}
                         })
-                    if (buildingSpendingRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: buildingSpendingRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -602,8 +592,6 @@ function spDb (fastify, options, next) {
                             const [area, building, spending] = record.data
                             return {area, building, spending: Number(spending) / 100}
                         })
-                    if (buildingSpendingRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: buildingSpendingRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -637,8 +625,6 @@ function spDb (fastify, options, next) {
                             const [area, building, room, spending] = record.data
                             return {area, building, room, spending: Number(spending) / 100}
                         })
-                    if (roomSpendingRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: roomSpendingRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -674,8 +660,6 @@ function spDb (fastify, options, next) {
                             const [area, building, room, spending] = record.data
                             return {area, building, room, spending: Number(spending) / 100}
                         })
-                    if (roomSpendingRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: roomSpendingRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -713,8 +697,6 @@ function spDb (fastify, options, next) {
                             const [area, building, room, spending] = record.data
                             return {area, building, room, spending: Number(spending) / 100}
                         })
-                    if (roomSpendingRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: roomSpendingRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -754,8 +736,6 @@ function spDb (fastify, options, next) {
                             const [area, spending] = record.data
                             return {area, spending: spending / 100}
                         })
-                    if (areaSpendingDailyAvgRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: areaSpendingDailyAvgRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -797,8 +777,6 @@ function spDb (fastify, options, next) {
                             const [area, building, spending] = record.data
                             return {area, building, spending: spending / 100}
                         })
-                    if (buildingSpendingDailyAvgRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: buildingSpendingDailyAvgRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -842,8 +820,6 @@ function spDb (fastify, options, next) {
                             const [area, building, spending] = record.data
                             return {area, building, spending: spending / 100}
                         })
-                    if (buildingSpendingDailyAvgRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: buildingSpendingDailyAvgRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -887,8 +863,6 @@ function spDb (fastify, options, next) {
                             const [area, building, room, spending] = record.data
                             return {area, building, room, spending: spending / 100}
                         })
-                    if (roomSpendingDailyAvgRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: roomSpendingDailyAvgRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -934,8 +908,6 @@ function spDb (fastify, options, next) {
                             const [area, building, room, spending] = record.data
                             return {area, building, room, spending: spending / 100}
                         })
-                    if (roomSpendingDailyAvgRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: roomSpendingDailyAvgRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -983,8 +955,6 @@ function spDb (fastify, options, next) {
                             const [area, building, room, spending] = record.data
                             return {area, building, room, spending: spending / 100}
                         })
-                    if (roomSpendingDailyAvgRankInDuring.length === 0)
-                        throw new fastify.spError('非法输入', 101, `have no data from ${from} to ${to}`)
                     return {code: 1, data: roomSpendingDailyAvgRankInDuring}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)

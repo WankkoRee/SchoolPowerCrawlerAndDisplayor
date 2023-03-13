@@ -570,7 +570,6 @@ async function api (fastify, options) {
                             power: {type: 'number'},
                         },
                     },
-                    default: []
                 }),
             },
         },
@@ -618,7 +617,6 @@ async function api (fastify, options) {
                             spending: {type: 'number'},
                         },
                     },
-                    default: []
                 }),
             },
         },
@@ -666,7 +664,6 @@ async function api (fastify, options) {
                             spending: {type: 'number'},
                         },
                     },
-                    default: []
                 }),
             },
         },
@@ -717,7 +714,6 @@ async function api (fastify, options) {
                             room: {type: 'string', nullable: true},
                             spending: {type: 'number'},
                         },
-                        default: []
                     },
                 }),
             },
@@ -807,7 +803,6 @@ async function api (fastify, options) {
                             room: {type: 'string', nullable: true},
                             spending: {type: 'number'},
                         },
-                        default: []
                     },
                 }),
             },
