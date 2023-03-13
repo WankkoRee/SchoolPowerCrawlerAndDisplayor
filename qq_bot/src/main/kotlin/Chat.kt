@@ -31,13 +31,13 @@ suspend fun Bot.registerChatEvent() {
                     return@subscribeAlways
                 }).content
 
-                subject.sendMessage("请在 30 秒内发送：你的电宝密码\n\n" +
+                subject.sendMessage("请在 60 秒内发送：你的电宝密码\n\n" +
                         "密码默认为手机号后六位，或姓名小写全拼，取决于随行校园是否绑定已手机号")
-                val password = (nextMessageOrNull(30_000, EventPriority.HIGHEST) {
+                val password = (nextMessageOrNull(60_000, EventPriority.HIGHEST) {
                     intercept()
                     true
                 } ?: run {
-                    subject.sendMessage("已超过 30 秒\n\n" +
+                    subject.sendMessage("已超过 60 秒\n\n" +
                             "本次绑定服务结束")
                     return@subscribeAlways
                 }).content
