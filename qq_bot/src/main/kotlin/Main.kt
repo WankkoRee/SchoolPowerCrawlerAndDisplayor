@@ -31,6 +31,6 @@ object Main {
 
         bot.registerChatEvent()
         bot.login()
-        Redis.register(bot)
+        Push.register(bot)
     }
 }

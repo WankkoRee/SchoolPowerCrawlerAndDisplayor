@@ -11,7 +11,7 @@ import java.lang.System.getenv
 import java.time.Instant
 import java.time.ZoneId
 
-object Redis {
+object Push {
     suspend fun register(bot: Bot) = runBlocking {
         val ep = Endpoint(getenv("SP_REDIS_HOST"), getenv("SP_REDIS_PORT").toInt())
         Subscriber.bot = bot
@@ -157,7 +157,7 @@ object Redis {
                                 "你的宿舍为 $room\n" +
                                 "当前剩余电量 ${lastPower.format()} kWh\n" +
                                 "过去 30 天平均每日用电 ${last30DaySpending.format()} kWh\n" +
-                                "预计可用 ${last30DaySpending.format()} 天，已不足 ${subscriber.app.subscribe.low} 天\n" +
+                                "预计可用 ${(lastPower / last30DaySpending).format()} 天，已不足 ${subscriber.app.subscribe.low} 天\n" +
                                 "请及时充值")
                         client.sadd("low_$ts", subscriber.app.qq)
                         return@forEach
