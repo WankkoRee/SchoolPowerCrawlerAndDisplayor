@@ -6,6 +6,7 @@
 
 /db/tdengine/
 /db/mongo/
+/db/redis/
 
 /mirai/
 !/mirai/config.json

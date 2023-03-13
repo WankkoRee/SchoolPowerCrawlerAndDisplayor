@@ -47,7 +47,7 @@ def password_encode(password: str, salt: str) -> str:
     return base64.b64encode(cipher.encrypt(pkcs7padding(aes_random_generate(64)+password).encode())).decode()
 
 
-def prepare() -> tuple[str, int, str, bytes, bytes, str, str, str, str, int, str, str, str, str, int, str, str, str, bool]:
+def prepare() -> tuple[str, int, str, bytes, bytes, str, str, str, str, int, str, str, str, str, int, str, str, str, str, int, int, bool]:
     """一次性读取所有需要的环境变量"""
     return (
         os.getenv('SP_HOST'),
@@ -72,6 +72,10 @@ def prepare() -> tuple[str, int, str, bytes, bytes, str, str, str, str, int, str
         os.getenv('SP_MONGO_USER'),
         os.getenv('SP_MONGO_PASS'),
         os.getenv('SP_MONGO_NAME'),
+
+        os.getenv('SP_REDIS_HOST'),
+        int(os.getenv('SP_REDIS_PORT')),
+        int(os.getenv('SP_REDIS_DB')),
 
         os.getenv('SP_DEBUG') == "1",
     )

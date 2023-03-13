@@ -7,3 +7,4 @@ ddddocr~=1.4.7
 APScheduler~=3.10.0
 pypinyin~=0.48.0
 tenacity~=8.2.2
+redis~=4.5.1

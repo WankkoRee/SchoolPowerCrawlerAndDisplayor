@@ -36,6 +36,9 @@ class Student:
             self.__sp_mongo_user,
             self.__sp_mongo_pass,
             self.__sp_mongo_name,
+            self.__sp_redis_host,
+            self.__sp_redis_port,
+            self.__sp_redis_db,
             self.__sp_debug
         ) = self.__sp_env = prepare()
         self.__logger = logging.getLogger("学生")

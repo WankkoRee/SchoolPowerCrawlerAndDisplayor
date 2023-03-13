@@ -95,6 +95,9 @@ services:
       SP_MONGO_USER: "root"
       SP_MONGO_PASS: "123456"
       SP_MONGO_NAME: "school_power"
+      SP_REDIS_HOST: "school_power_redis"
+      SP_REDIS_PORT: 6379
+      SP_REDIS_DB: 0
       SP_DEBUG: 0
     restart: unless-stopped
     logging:
@@ -125,6 +128,23 @@ services:
     networks:
       school_power_net:
         ipv4_address: 192.168.1.5
+
+  school_power_redis:
+    container_name: school_power_redis
+    image: "redis:7.0.9-bullseye"
+    expose:
+      - "6379"
+    volumes:
+      - ./db/redis/:/data/
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 1
+    networks:
+      school_power_net:
+        ipv4_address: 192.168.1.6
 
 #  school_power_mirai:
 #    container_name: school_power_mirai

@@ -3,6 +3,7 @@ import time
 from typing import Iterator
 from decimal import Decimal
 
+import redis
 import taos
 import tenacity
 
@@ -32,6 +33,9 @@ class Power:
             self.__sp_mongo_user,
             self.__sp_mongo_pass,
             self.__sp_mongo_name,
+            self.__sp_redis_host,
+            self.__sp_redis_port,
+            self.__sp_redis_db,
             self.__sp_debug
         ) = self.__sp_env = prepare()
         self.__logger = logging.getLogger("电量")
@@ -41,6 +45,7 @@ class Power:
         self.__session = session
         self.__cache_last_powers = {}
         self.__tdengine: taos.TaosConnection | None = None
+        self.__redis: redis.StrictRedis | None = None
 
     def __del__(self):
         if self.__tdengine is not None:
@@ -69,9 +74,19 @@ class Power:
                 database=self.__sp_db_name,
                 timezone="Asia/Shanghai",
             )
-            self.__saver(self.__crawler())
-            self.__tdengine.close()
-            self.__tdengine = None
+            self.__redis = redis.StrictRedis(
+                host=self.__sp_redis_host,
+                port=self.__sp_redis_port,
+                db=self.__sp_redis_db,
+            )
+            try:
+                self.__saver(self.__crawler())
+                self.__redis.publish('power_task', int(time.time() * 1000))
+            finally:
+                self.__tdengine.close()
+                self.__redis.close()
+                self.__tdengine = None
+                self.__redis = None
         self.__logger.info("任务结束")
 
     def __crawler(self) -> Iterator[tuple[str, str, str, int, float]]:
