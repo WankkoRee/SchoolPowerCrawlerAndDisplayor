@@ -65,12 +65,12 @@ const loginFormValue = ref({
 const loginFormRule = {
   username: {
     required: true,
-    message: "请输入账号",
+    message: "请输入账号，就是你的学号",
     trigger: "blur",
   },
   password: {
     required: true,
-    message: "请输入密码",
+    message: "请输入密码，默认为手机号后六位，或姓名小写全拼，取决于随行校园是否绑定已手机号",
     trigger: "blur",
   },
 };
