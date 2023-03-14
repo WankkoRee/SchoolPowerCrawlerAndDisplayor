@@ -51,6 +51,22 @@ function spDb (fastify, options, next) {
                     return fastify.sp_error.ApiErrorReturn(error)
                 }
             },
+            setUserBind: async function (id, platform, account) {
+                try {
+                    const setUserBindResult = await mongo.updateOne({
+                        '_id': id,
+                    }, {
+                        '$set': {
+                            [`app.${platform}`]: account,
+                        }
+                    })
+                    if (setUserBindResult.modifiedCount !== 1)
+                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${platform}, ${account}`)
+                    return {code: 1, data: null}
+                } catch (error) {
+                    return fastify.sp_error.ApiErrorReturn(error)
+                }
+            },
             setUserSubscribeAbnormal: async function (id, abnormal) {
                 try {
                     const setUserSubscribeAbnormalResult = await mongo.updateOne({
@@ -61,7 +77,7 @@ function spDb (fastify, options, next) {
                         }
                     })
                     if (setUserSubscribeAbnormalResult.modifiedCount !== 1)
-                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${password}`)
+                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${abnormal}`)
                     return {code: 1, data: null}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -77,7 +93,7 @@ function spDb (fastify, options, next) {
                         }
                     })
                     if (setUserSubscribeLowResult.modifiedCount !== 1)
-                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${password}`)
+                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${low}`)
                     return {code: 1, data: null}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)
@@ -93,7 +109,7 @@ function spDb (fastify, options, next) {
                         }
                     })
                     if (setUserSubscribeReportResult.modifiedCount !== 1)
-                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${password}`)
+                        throw new fastify.spError('修改失败', 106, `需要联系管理员，${id}, ${during}, ${enable}`)
                     return {code: 1, data: null}
                 } catch (error) {
                     return fastify.sp_error.ApiErrorReturn(error)

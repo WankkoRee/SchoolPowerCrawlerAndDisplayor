@@ -95,6 +95,29 @@ async function api (fastify, options) {
     })
 
     /*
+    解绑
+     */
+    fastify.post('/user/unbind/:platform', {
+        schema: {
+            params: {
+                platform: { type: 'string', enum: ["qq", "qq_group", "dingtalk"] },
+            },
+            response: {
+                200: fastify.sp_util.getApiSchema({
+                    type: 'null',
+                }),
+            },
+        },
+    }, async (request, reply) => {
+        if (!request.session.user)
+            return fastify.sp_error.ApiErrorReturn(new fastify.spError('未登录', 104, '就是未登录'))
+        const {
+            platform: platform,
+        } = request.params
+        return await fastify.sp_db.setUserBind(request.session.user._id, platform, null)
+    })
+
+    /*
     修改异常耗电的订阅
      */
     fastify.post('/user/subscribe/abnormal', {
