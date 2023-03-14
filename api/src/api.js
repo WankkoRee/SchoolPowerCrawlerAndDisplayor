@@ -223,6 +223,7 @@ async function api (fastify, options) {
                             type: 'object',
                             properties: {
                                 'qq': { type: 'string', nullable: true },
+                                'qq_group': { type: 'string', nullable: true },
                                 'dingtalk': { type: 'string', nullable: true },
                                 'subscribe': {
                                     type: 'object',
