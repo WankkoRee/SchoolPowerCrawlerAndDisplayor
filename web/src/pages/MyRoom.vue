@@ -177,13 +177,13 @@
                 </n-popover>
               </n-space>
               <n-divider
-                v-if="canBeShow"
+                v-if="roomCanBeShow"
                 vertical
                 dashed
                 style="height: 240px; border-width: 0 0 0 3px; border-style: dashed; border-color: var(--n-color); background-color: unset"
               />
               <RoomInfoCard
-                v-if="canBeShow"
+                v-if="roomCanBeShow"
                 ref="roomInfoPC"
                 style="width: min(var(--container-width), 500px)"
                 :room="{ area, building, room }"
@@ -485,10 +485,10 @@
       <RoomInfoCard v-if="roomInfoMobile" style="width: min(var(--container-width), 1200px)" :room="{ area, building, room }" refresh compare />
     </n-space>
     <n-space align="center" justify="center">
-      <RoomChart style="width: min(var(--container-width), 600px)" v-if="canBeShow" type="电量" :room="{ area, building, room }" />
-      <RoomChart style="width: min(var(--container-width), 600px)" v-if="canBeShow" type="用电量" :room="{ area, building, room }" />
-      <RoomChart style="width: min(var(--container-width), 600px)" v-if="canBeShow" type="日用电量" :room="{ area, building, room }" />
-      <RoomChart style="width: min(var(--container-width), 900px)" v-if="canBeShow" type="每日用电量" :room="{ area, building, room }" />
+      <RoomChart style="width: min(var(--container-width), 600px)" v-if="roomCanBeShow" type="电量" :room="{ area, building, room }" />
+      <RoomChart style="width: min(var(--container-width), 600px)" v-if="roomCanBeShow" type="用电量" :room="{ area, building, room }" />
+      <RoomChart style="width: min(var(--container-width), 600px)" v-if="roomCanBeShow" type="日用电量" :room="{ area, building, room }" />
+      <RoomChart style="width: min(var(--container-width), 900px)" v-if="roomCanBeShow" type="每日用电量" :room="{ area, building, room }" />
     </n-space>
   </n-space>
   <n-modal v-model:show="qqBindShow">
@@ -650,10 +650,14 @@ const reload = inject<ReloadFunc>("f_reload")!;
 
 const loading = ref(true);
 
+const roomCanBeShow = ref(false);
 const roomInfoPC = ref<typeof RoomInfoCard>();
 const roomInfoMobile = ref(false);
 watch(roomInfoPC, (newState) => {
-  roomInfoMobile.value = !newState && canBeShow.value;
+  roomInfoMobile.value = !newState && roomCanBeShow.value;
+});
+watch(roomCanBeShow, (newState) => {
+  roomInfoMobile.value = !roomInfoPC.value && newState;
 });
 
 const qqBindShow = ref(false);
@@ -849,7 +853,6 @@ const building = ref("");
 const room = ref("");
 const bed = ref("");
 const mates = ref("");
-const canBeShow = ref(false);
 
 onMounted(async () => {
   await refreshUserInfo(route, router);
@@ -864,15 +867,15 @@ onMounted(async () => {
       area.value = userInfo.value.position.custom.area ?? userInfo.value.position.area ?? "存在问题";
       building.value = userInfo.value.position.custom.building ?? userInfo.value.position.building ?? "存在问题";
       room.value = userInfo.value.position.custom.room ?? userInfo.value.position.room ?? "存在问题";
-      canBeShow.value = area.value !== "存在问题" && building.value !== "存在问题" && room.value !== "存在问题";
+      roomCanBeShow.value = area.value !== "存在问题" && building.value !== "存在问题" && room.value !== "存在问题";
     } else {
       area.value = userInfo.value.position.area ?? "无";
       building.value = userInfo.value.position.building ?? "无";
       room.value = userInfo.value.position.room ?? "无";
-      canBeShow.value = area.value !== "无" && building.value !== "无" && room.value !== "无";
+      roomCanBeShow.value = area.value !== "无" && building.value !== "无" && room.value !== "无";
     }
     bed.value = (userInfo.value.position.bed ? String(userInfo.value.position.bed) : "🤔") + "号床";
-    if (canBeShow.value) {
+    if (roomCanBeShow.value) {
       const roomInfo = await getRoomInfo(area.value, building.value, room.value);
       mates.value = String(roomInfo.nums) + "人寝";
     } else {
