@@ -497,7 +497,7 @@
         <n-step title="添加QQ机器人为好友">
           <n-text>QQ: 2536960066</n-text>
           <br />
-          <n-button tag="a" href="http://wpa.qq.com/msgrd?v=3&uin=2536960066&site=qq&menu=yes" target="_blank">跳转添加</n-button>
+          <n-button tag="a" href="http://wpa.qq.com/msgrd?v=3&uin=2536960066&site=qq&menu=yes" target="_blank">跳转添加(手机可能无法跳转)</n-button>
           <br />
           <n-collapse>
             <n-collapse-item title="扫码添加" name="1">
