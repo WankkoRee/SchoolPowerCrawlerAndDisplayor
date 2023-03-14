@@ -227,7 +227,13 @@ class Student:
                     'position.custom.room': None,
                     'app.password': student_phone[-6:] if student_phone is not None and len(student_phone) >= 6 else "".join(pypinyin.lazy_pinyin(student_name, pypinyin.Style.NORMAL)),
                     'app.qq': None,
+                    'app.qq_group': None,
                     'app.dingtalk': None,
+                    'app.subscribe.abnormal': 0,
+                    'app.subscribe.low': 0,
+                    'app.subscribe.report.day': False,
+                    'app.subscribe.report.week': False,
+                    'app.subscribe.report.month': False,
                 },
             }, projection={
                 'position.custom.state': 1,
