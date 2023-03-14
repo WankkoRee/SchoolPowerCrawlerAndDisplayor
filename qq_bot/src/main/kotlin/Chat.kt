@@ -356,7 +356,7 @@ suspend fun MessageEvent.cmdUnknown(quote: Boolean = false, at: Boolean = false)
 })
 
 suspend fun FriendAddEvent.cmdUnknown() = friend.sendMessage(buildMessageChain {
-    +"抱歉，我还不能理解你的意思。当前我明白的指令有：\n"
+    +"你好，欢迎使用电宝。当前我明白的指令有：\n"
     +"\n"
     +"[绑定]:\n"
     +"私聊发送，则是将你的QQ关联至电宝账号，是各种查询服务、订阅服务正常使用的前提\n"
