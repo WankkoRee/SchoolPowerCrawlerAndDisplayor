@@ -492,7 +492,30 @@
     </n-space>
   </n-space>
   <n-modal v-model:show="qqBindShow">
-    <n-card style="width: min(80vw, 600px)" title="绑定QQ" role="dialog"> </n-card>
+    <n-card style="width: min(80vw, 600px)" title="绑定QQ" role="dialog">
+      <n-steps vertical v-model:current="qqBindStep">
+        <n-step title="添加QQ机器人为好友">
+          <n-text>QQ: 2536960066</n-text>
+          <br />
+          <n-button tag="a" href="http://wpa.qq.com/msgrd?v=3&uin=2536960066&site=qq&menu=yes" target="_blank">跳转添加</n-button>
+          <br />
+          <n-collapse>
+            <n-collapse-item title="扫码添加" name="1">
+              <img src="@/assets/images/qq.jpg" alt="QQ二维码" style="width: 100%" />
+            </n-collapse-item>
+          </n-collapse>
+        </n-step>
+        <n-step title="发送绑定指令">
+          <n-text>就是发送“绑定”两个字</n-text>
+        </n-step>
+        <n-step title="根据提示完成绑定引导">
+          <n-text>别看我，看机器人</n-text>
+        </n-step>
+        <n-step title="刷新页面">
+          <n-button @click="reload">点我刷新</n-button>
+        </n-step>
+      </n-steps>
+    </n-card>
   </n-modal>
   <n-modal
     v-model:show="qqUnbindShow"
@@ -505,7 +528,25 @@
     @positive-click="qqUnbind"
   />
   <n-modal v-model:show="qqGroupBindShow">
-    <n-card style="width: min(80vw, 600px)" title="绑定QQ群" role="dialog"> </n-card>
+    <n-card style="width: min(80vw, 600px)" title="绑定QQ群" role="dialog">
+      <n-steps vertical v-model:current="qqGroupBindStep">
+        <n-step title="完成绑定QQ机器人">
+          <n-text>怎么绑？请在页面中点击绑定QQ</n-text>
+        </n-step>
+        <n-step title="将机器人拉入QQ群">
+          <n-text>建议为寝室群，因为QQ群绑定之后只会用于订阅消息的推送</n-text>
+        </n-step>
+        <n-step title="在群中@机器人并发送绑定指令">
+          <n-text>就是“@电宝 Bot”并且发送“绑定”两个字</n-text>
+        </n-step>
+        <n-step title="根据提示完成绑定引导">
+          <n-text>别看我，看机器人</n-text>
+        </n-step>
+        <n-step title="刷新页面">
+          <n-button @click="reload">点我刷新</n-button>
+        </n-step>
+      </n-steps>
+    </n-card>
   </n-modal>
   <n-modal
     v-model:show="qqGroupUnbindShow"
@@ -590,6 +631,10 @@ import {
   NGridItem,
   NInputNumber,
   NSwitch,
+  NSteps,
+  NStep,
+  NCollapse,
+  NCollapseItem,
 } from "naive-ui";
 import { CloudDownloadOutline } from "@vicons/ionicons5";
 import { AlertOff24Regular, AlertOn24Regular } from "@vicons/fluent";
@@ -612,6 +657,7 @@ watch(roomInfoPC, (newState) => {
 });
 
 const qqBindShow = ref(false);
+const qqBindStep = ref(1);
 
 const qqUnbindShow = ref(false);
 const qqUnbinding = ref(false);
@@ -628,6 +674,7 @@ async function qqUnbind() {
 }
 
 const qqGroupBindShow = ref(false);
+const qqGroupBindStep = ref(1);
 
 const qqGroupUnbindShow = ref(false);
 const qqGroupUnbinding = ref(false);
@@ -644,6 +691,7 @@ async function qqGroupUnbind() {
 }
 
 const dingtalkBindShow = ref(false);
+const dingtalkBindStep = ref(1);
 
 const dingtalkUnbindShow = ref(false);
 const dingtalkUnbinding = ref(false);
