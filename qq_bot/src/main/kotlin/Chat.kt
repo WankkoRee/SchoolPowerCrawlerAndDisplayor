@@ -56,7 +56,7 @@ suspend fun UserMessageEvent.cmdBind() {
 
     subject.sendMessage(buildMessageChain {
         val user = Mongo.login(username, password) ?: run {
-            +"账号或密码错误\n"
+            +"账号或密码错误，如果不知道密码可联系开发者QQ：${System.getenv("SP_ADMIN")}\n"
             +"\n"
             +"本次[个人绑定]服务结束"
             return@buildMessageChain
