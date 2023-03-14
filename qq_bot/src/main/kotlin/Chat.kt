@@ -355,7 +355,7 @@ suspend fun MessageEvent.cmdUnknown(quote: Boolean = false, at: Boolean = false)
     +"就是记不住网站的时候方便一键跳转\n"
 })
 
-suspend fun FriendAddEvent.cmdUnknown() = friend.sendMessage(buildMessageChain {
+suspend fun FriendAddEvent.cmdWelcome() = friend.sendMessage(buildMessageChain {
     +"你好，欢迎使用电宝。当前我明白的指令有：\n"
     +"\n"
     +"[绑定]:\n"
@@ -434,13 +434,15 @@ suspend fun Bot.registerChatEvent() {
     eventChannel
         .subscribeAlways<NewFriendRequestEvent>(priority=EventPriority.LOWEST) {
             accept()
+            logger.info("同意好友请求")
         }
     eventChannel
         .subscribeAlways<FriendAddEvent>(priority=EventPriority.LOWEST) {
-            cmdUnknown()
+            cmdWelcome()
         }
     eventChannel
         .subscribeAlways<BotInvitedJoinGroupRequestEvent>(priority=EventPriority.LOWEST) {
             accept()
+            logger.info("同意拉群请求")
         }
 }
