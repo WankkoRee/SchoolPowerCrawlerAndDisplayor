@@ -55,6 +55,7 @@ type UserInfo = {
   };
   app: {
     qq?: string;
+    qq_group?: string;
     dingtalk?: string;
     subscribe: {
       abnormal: number;
@@ -93,6 +94,7 @@ type GetUserInfoResult = UserInfo;
 type LoginResult = null;
 type LogoutResult = null;
 type ChangePasswordResult = null;
+type UnbindResult = null;
 type SubscribeAbnormalResult = null;
 type SubscribeLowResult = null;
 type SubscribeReportResult = null;

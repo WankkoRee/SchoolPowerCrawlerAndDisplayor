@@ -9,18 +9,30 @@
         <n-grid item-responsive :cols="1">
           <n-grid-item span="0 800:1">
             <n-space align="center" justify="space-around">
-              <n-space vertical align="start" justify="center">
+              <n-space vertical align="start" justify="center" item-style="width: 100%">
                 <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
                     <n-space align="center" justify="start" :size="0">
                       <n-text>QQ</n-text>
                       <n-divider vertical />
                       <n-skeleton v-if="loading" text :width="100" round />
-                      <n-text v-else-if="userInfo?.app.qq">{{ userInfo?.app.qq }}</n-text>
-                      <n-button v-else text>未绑定，点击绑定</n-button>
+                      <n-button v-else-if="userInfo?.app.qq" text @click="qqUnbindShow = true">{{ userInfo?.app.qq }}</n-button>
+                      <n-button v-else text @click="qqBindShow = true">未绑定，点击绑定</n-button>
                     </n-space>
                   </template>
-                  <n-text>用于发送各类订阅的消息通知</n-text>
+                  <n-text>用于<b>查余额</b>、<b>查用量</b>、<b>推送订阅消息</b><br />点击可<b>绑定</b>或<b>解绑</b></n-text>
+                </n-popover>
+                <n-popover placement="right" trigger="hover" width="trigger">
+                  <template #trigger>
+                    <n-space align="center" justify="start" :size="0">
+                      <n-text>QQ群</n-text>
+                      <n-divider vertical />
+                      <n-skeleton v-if="loading" text :width="100" round />
+                      <n-button v-else-if="userInfo?.app.qq_group" text @click="qqGroupUnbindShow = true">{{ userInfo?.app.qq_group }}</n-button>
+                      <n-button v-else text @click="qqGroupBindShow = true">未绑定，点击绑定</n-button>
+                    </n-space>
+                  </template>
+                  <n-text>用于<b>推送订阅消息</b><br />点击可<b>绑定</b>或<b>解绑</b></n-text>
                 </n-popover>
                 <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
@@ -28,11 +40,11 @@
                       <n-text>钉钉</n-text>
                       <n-divider vertical />
                       <n-skeleton v-if="loading" text :width="120" round />
-                      <n-text v-else-if="userInfo?.app.dingtalk">{{ userInfo?.app.dingtalk }} </n-text>
-                      <n-button v-else text>未绑定，点击绑定</n-button>
+                      <n-text v-else-if="userInfo?.app.dingtalk" @click="dingtalkUnbindShow = true">{{ userInfo?.app.dingtalk }} </n-text>
+                      <n-button v-else text @click="dingtalkBindShow = true">未绑定，点击绑定</n-button>
                     </n-space>
                   </template>
-                  <n-text>用于发送各类订阅的消息通知</n-text>
+                  <n-text>用于<b>查余额</b>、<b>查用量</b>、<b>推送订阅消息</b><br />点击可<b>绑定</b>或<b>解绑</b></n-text>
                 </n-popover>
                 <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
@@ -57,7 +69,7 @@
                       />
                     </n-space>
                   </template>
-                  <n-text>开启订阅后，在当天用电量超过设定范围时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
+                  <n-text>在当天用电量超过设定范围时，会向绑定的<b>QQ</b>/<b>QQ群</b>/<b>钉钉</b>发送提醒</n-text>
                 </n-popover>
                 <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
@@ -82,7 +94,7 @@
                       />
                     </n-space>
                   </template>
-                  <n-text>开启订阅后，在剩余电量预计可用天数不足设定天数时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
+                  <n-text>在剩余电量预计可用天数不足设定天数时，会向绑定的<b>QQ</b>/<b>QQ群</b>/<b>钉钉</b>发送提醒</n-text>
                 </n-popover>
                 <n-popover placement="right" trigger="hover" width="trigger">
                   <template #trigger>
@@ -160,7 +172,7 @@
                     </n-space>
                   </template>
                   <n-text
-                    >开启订阅后，在<b>每天</b>/<b>每周一</b>/<b>每月1号</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送<b>昨日</b>/<b>上周</b>/<b>上月</b>用电报告</n-text
+                    >在<b>每天</b>/<b>每周一</b>/<b>每月1号</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>QQ群</b>/<b>钉钉</b>推送<b>昨日</b>/<b>上周</b>/<b>上月</b>用电报告</n-text
                   >
                 </n-popover>
               </n-space>
@@ -181,18 +193,30 @@
             </n-space>
           </n-grid-item>
           <n-grid-item span="1 800:0">
-            <n-space vertical align="start" justify="center">
+            <n-space vertical align="start" justify="center" item-style="width: 100%">
               <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
                   <n-space align="center" justify="start" :size="0">
                     <n-text>QQ</n-text>
                     <n-divider vertical />
                     <n-skeleton v-if="loading" text :width="100" round />
-                    <n-text v-else-if="userInfo?.app.qq">{{ userInfo?.app.qq }}</n-text>
-                    <n-button v-else text>未绑定，点击绑定</n-button>
+                    <n-button v-else-if="userInfo?.app.qq" text @click="qqUnbindShow = true">{{ userInfo?.app.qq }}</n-button>
+                    <n-button v-else text @click="qqBindShow = true">未绑定，点击绑定</n-button>
                   </n-space>
                 </template>
-                <n-text>用于发送各类订阅的消息通知</n-text>
+                <n-text>用于<b>查余额</b>、<b>查用量</b>、<b>推送订阅消息</b><br />点击可<b>绑定</b>或<b>解绑</b></n-text>
+              </n-popover>
+              <n-popover placement="top" trigger="hover" width="trigger">
+                <template #trigger>
+                  <n-space align="center" justify="start" :size="0">
+                    <n-text>QQ群</n-text>
+                    <n-divider vertical />
+                    <n-skeleton v-if="loading" text :width="100" round />
+                    <n-button v-else-if="userInfo?.app.qq_group" text @click="qqGroupUnbindShow = true">{{ userInfo?.app.qq_group }}</n-button>
+                    <n-button v-else text @click="qqGroupBindShow = true">未绑定，点击绑定</n-button>
+                  </n-space>
+                </template>
+                <n-text>用于<b>推送订阅消息</b><br />点击可<b>绑定</b>或<b>解绑</b></n-text>
               </n-popover>
               <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
@@ -200,11 +224,11 @@
                     <n-text>钉钉</n-text>
                     <n-divider vertical />
                     <n-skeleton v-if="loading" text :width="120" round />
-                    <n-text v-else-if="userInfo?.app.dingtalk">{{ userInfo?.app.dingtalk }} </n-text>
-                    <n-button v-else text>未绑定，点击绑定</n-button>
+                    <n-text v-else-if="userInfo?.app.dingtalk" @click="dingtalkUnbindShow = true">{{ userInfo?.app.dingtalk }} </n-text>
+                    <n-button v-else text @click="dingtalkBindShow = true">未绑定，点击绑定</n-button>
                   </n-space>
                 </template>
-                <n-text>用于发送各类订阅的消息通知</n-text>
+                <n-text>用于<b>查余额</b>、<b>查用量</b>、<b>推送订阅消息</b><br />点击可<b>绑定</b>或<b>解绑</b></n-text>
               </n-popover>
               <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
@@ -229,7 +253,7 @@
                     />
                   </n-space>
                 </template>
-                <n-text>开启订阅后，在当天用电量超过设定范围时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
+                <n-text>在当天用电量超过设定范围时，会向绑定的<b>QQ</b>/<b>QQ群</b>/<b>钉钉</b>发送提醒</n-text>
               </n-popover>
               <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
@@ -254,7 +278,7 @@
                     />
                   </n-space>
                 </template>
-                <n-text>开启订阅后，在剩余电量预计可用天数不足设定天数时，会向绑定的<b>QQ</b>/<b>钉钉</b>发送提醒</n-text>
+                <n-text>在剩余电量预计可用天数不足设定天数时，会向绑定的<b>QQ</b>/<b>QQ群</b>/<b>钉钉</b>发送提醒</n-text>
               </n-popover>
               <n-popover placement="top" trigger="hover" width="trigger">
                 <template #trigger>
@@ -332,7 +356,7 @@
                   </n-space>
                 </template>
                 <n-text
-                  >开启订阅后，在<b>每天</b>/<b>每周一</b>/<b>每月1号</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>钉钉</b>推送<b>昨日</b>/<b>上周</b>/<b>上月</b>用电报告</n-text
+                  >在<b>每天</b>/<b>每周一</b>/<b>每月1号</b>的<b>早晨7点</b>，会向绑定的<b>QQ</b>/<b>QQ群</b>/<b>钉钉</b>推送<b>昨日</b>/<b>上周</b>/<b>上月</b>用电报告</n-text
                 >
               </n-popover>
             </n-space>
@@ -467,6 +491,45 @@
       <RoomChart style="width: min(var(--container-width), 900px)" v-if="canBeShow" type="每日用电量" :room="{ area, building, room }" />
     </n-space>
   </n-space>
+  <n-modal v-model:show="qqBindShow">
+    <n-card style="width: min(80vw, 600px)" title="绑定QQ" role="dialog"> </n-card>
+  </n-modal>
+  <n-modal
+    v-model:show="qqUnbindShow"
+    preset="dialog"
+    title="解绑QQ"
+    content="确认要解绑吗？"
+    positive-text="确认"
+    negative-text="算了"
+    :loading="qqUnbinding"
+    @positive-click="qqUnbind"
+  />
+  <n-modal v-model:show="qqGroupBindShow">
+    <n-card style="width: min(80vw, 600px)" title="绑定QQ群" role="dialog"> </n-card>
+  </n-modal>
+  <n-modal
+    v-model:show="qqGroupUnbindShow"
+    preset="dialog"
+    title="解绑QQ群"
+    content="确认要解绑吗？"
+    positive-text="确认"
+    negative-text="算了"
+    :loading="qqGroupUnbinding"
+    @positive-click="qqGroupUnbind"
+  />
+  <n-modal v-model:show="dingtalkBindShow">
+    <n-card style="width: min(80vw, 600px)" title="绑定钉钉" role="dialog"> </n-card>
+  </n-modal>
+  <n-modal
+    v-model:show="dingtalkUnbindShow"
+    preset="dialog"
+    title="解绑钉钉"
+    content="确认要解绑吗？"
+    positive-text="确认"
+    negative-text="算了"
+    :loading="dingtalkUnbinding"
+    @positive-click="dingtalkUnbind"
+  />
   <n-modal v-model:show="passwordChangeShow">
     <n-card style="width: min(80vw, 600px)" title="修改密码" role="dialog">
       <n-space vertical align="center" justify="center" item-style="width: min(var(--container-width), 600px)">
@@ -498,7 +561,7 @@ export default {
   name: "MyRoom",
 };
 
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, inject } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { FormInst, FormItemRule } from "naive-ui";
 
@@ -534,9 +597,11 @@ import { AlertOff24Regular, AlertOn24Regular } from "@vicons/fluent";
 import { parseInputInt, userInfo } from "@/utils";
 import RoomInfoCard from "@/components/RoomInfoCard.vue";
 import RoomChart from "@/components/RoomChart.vue";
+import { unbind } from "@/api";
 
 const route = useRoute();
 const router = useRouter();
+const reload = inject<ReloadFunc>("f_reload")!;
 
 const loading = ref(true);
 
@@ -545,6 +610,54 @@ const roomInfoMobile = ref(false);
 watch(roomInfoPC, (newState) => {
   roomInfoMobile.value = !newState && canBeShow.value;
 });
+
+const qqBindShow = ref(false);
+
+const qqUnbindShow = ref(false);
+const qqUnbinding = ref(false);
+async function qqUnbind() {
+  qqUnbinding.value = true;
+  const unbindResult = await unbind("qq");
+  if (typeof unbindResult === "string") {
+    messageApi.value?.error(unbindResult);
+  } else {
+    messageApi.value?.success("解绑成功");
+    await reload();
+  }
+  qqUnbinding.value = false;
+}
+
+const qqGroupBindShow = ref(false);
+
+const qqGroupUnbindShow = ref(false);
+const qqGroupUnbinding = ref(false);
+async function qqGroupUnbind() {
+  qqGroupUnbinding.value = true;
+  const unbindResult = await unbind("qq_group");
+  if (typeof unbindResult === "string") {
+    messageApi.value?.error(unbindResult);
+  } else {
+    messageApi.value?.success("解绑成功");
+    await reload();
+  }
+  qqGroupUnbinding.value = false;
+}
+
+const dingtalkBindShow = ref(false);
+
+const dingtalkUnbindShow = ref(false);
+const dingtalkUnbinding = ref(false);
+async function dingtalkUnbind() {
+  dingtalkUnbinding.value = true;
+  const unbindResult = await unbind("dingtalk");
+  if (typeof unbindResult === "string") {
+    messageApi.value?.error(unbindResult);
+  } else {
+    messageApi.value?.success("解绑成功");
+    await reload();
+  }
+  dingtalkUnbinding.value = false;
+}
 
 const abnormalThreshold = ref(0);
 const abnormalThresholdSubscribing = ref(false);

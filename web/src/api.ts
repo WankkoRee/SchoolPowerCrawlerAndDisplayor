@@ -240,6 +240,16 @@ export async function changePassword(password: string, new_password: string): Pr
   }
 }
 
+export async function unbind(platform: "qq" | "qq_group" | "dingtalk"): Promise<UnbindResult | string> {
+  const unbindRequest = axios.post<AppResponse<UnbindResult>>(`./api/user/unbind/${platform}`);
+  const result = await checkRequest(unbindRequest, true);
+  if (result.code === 1) {
+    return result.data!;
+  } else {
+    return result.error!;
+  }
+}
+
 export async function subscribeAbnormal(abnormal: number): Promise<SubscribeAbnormalResult | string> {
   const subscribeAbnormalRequest = axios.post<AppResponse<SubscribeAbnormalResult>>("./api/user/subscribe/abnormal", {
     abnormal,
