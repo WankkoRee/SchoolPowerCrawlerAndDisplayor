@@ -106,6 +106,7 @@ object Push {
         private suspend fun pushAbnormalByQQ(ts: ULong, next: ULong) {
             Mongo.getSubscribedAbnormalUsersByQQ().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ ${subscriber.app.qq} 已经无法找到")
                         Mongo.unbindByQQ(subscriber._id)
@@ -167,6 +168,7 @@ object Push {
         private suspend fun pushAbnormalByQQGroup(ts: ULong, next: ULong) {
             Mongo.getSubscribedAbnormalUsersByQQGroup().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ群 ${subscriber.app.qq_group} 已经无法找到")
                         Mongo.unbindByQQGroup(subscriber._id)
@@ -228,6 +230,7 @@ object Push {
         private suspend fun pushLowByQQ(ts: ULong, next: ULong) {
             Mongo.getSubscribedLowUsersByQQ().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ ${subscriber.app.qq} 已经无法找到")
                         Mongo.unbindByQQ(subscriber._id)
@@ -292,6 +295,7 @@ object Push {
         private suspend fun pushLowByQQGroup(ts: ULong, next: ULong) {
             Mongo.getSubscribedLowUsersByQQGroup().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ群 ${subscriber.app.qq_group} 已经无法找到")
                         Mongo.unbindByQQGroup(subscriber._id)
@@ -358,6 +362,7 @@ object Push {
                 return
             Mongo.getSubscribedReportDayUsersByQQ().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ ${subscriber.app.qq} 已经无法找到")
                         Mongo.unbindByQQ(subscriber._id)
@@ -416,6 +421,7 @@ object Push {
                 return
             Mongo.getSubscribedReportDayUsersByQQGroup().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ群 ${subscriber.app.qq_group} 已经无法找到")
                         Mongo.unbindByQQGroup(subscriber._id)
@@ -474,6 +480,7 @@ object Push {
                 return
             Mongo.getSubscribedReportWeekUsersByQQ().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ ${subscriber.app.qq} 已经无法找到")
                         Mongo.unbindByQQ(subscriber._id)
@@ -533,6 +540,7 @@ object Push {
                 return
             Mongo.getSubscribedReportWeekUsersByQQGroup().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ群 ${subscriber.app.qq_group} 已经无法找到")
                         Mongo.unbindByQQGroup(subscriber._id)
@@ -592,6 +600,7 @@ object Push {
                 return
             Mongo.getSubscribedReportMonthUsersByQQ().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ ${subscriber.app.qq} 已经无法找到")
                         Mongo.unbindByQQ(subscriber._id)
@@ -651,6 +660,7 @@ object Push {
                 return
             Mongo.getSubscribedReportMonthUsersByQQGroup().forEach { subscriber ->
                 try {
+                    if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
                         bot.logger.warning("${subscriber.info.name}[${subscriber.info.number}] 绑定的QQ群 ${subscriber.app.qq_group} 已经无法找到")
                         Mongo.unbindByQQGroup(subscriber._id)
