@@ -245,14 +245,9 @@ class Student:
                 'position.custom.building': 1,
                 'position.custom.room': 1,
             }, upsert=True, return_document=pymongo.ReturnDocument.AFTER)
-            if mongo_result['position']['custom']['state']:
-                mongo_result_area = mongo_result['position']['custom']['area']
-                mongo_result_building = mongo_result['position']['custom']['building']
-                mongo_result_room = mongo_result['position']['custom']['room']
-            else:
-                mongo_result_area = mongo_result['position']['area']
-                mongo_result_building = mongo_result['position']['building']
-                mongo_result_room = mongo_result['position']['room']
+            mongo_result_area = mongo_result['position']['custom']['area'] if mongo_result['position']['custom']['state'] and mongo_result['position']['custom']['area'] is not None else mongo_result['position']['area']
+            mongo_result_building = mongo_result['position']['custom']['building'] if mongo_result['position']['custom']['state'] and mongo_result['position']['custom']['building'] is not None else mongo_result['position']['building']
+            mongo_result_room = mongo_result['position']['custom']['room'] if mongo_result['position']['custom']['state'] and mongo_result['position']['custom']['room'] is not None else mongo_result['position']['room']
             mongo_result_bed = mongo_result['position']['bed']
             if mongo_result_building in self.__cache_rooms.keys():
                 if mongo_result_room in self.__cache_rooms[mongo_result_building].keys():

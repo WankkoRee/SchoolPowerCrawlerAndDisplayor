@@ -69,6 +69,7 @@ services:
     depends_on:
       - school_power_db
       - school_power_mongo
+      - school_power_redis
     build:
       context: ./crawler/
       dockerfile: Dockerfile
@@ -148,6 +149,10 @@ services:
 
   school_power_bot_qq:
     container_name: school_power_bot_qq
+    depends_on:
+      - school_power_mongo
+      - school_power_redis
+      - school_power_api
     image: "openjdk:11.0.16-jre-bullseye"
     volumes:
       - ./qq_bot/atifact/:/home/school_power_bot_qq/bin/
