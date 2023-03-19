@@ -147,6 +147,7 @@ async function refresh() {
     });
     const seriesName = [...DaysSpendings.keys()].map((day) => moment(day).format("YYYY年MM月DD日 ddd"));
     (options.legend as LegendComponentOption).data = seriesName;
+    (options.tooltip as TooltipComponentOption).trigger = "item";
     options.xAxis = [...DaysSpendings.keys()].map((day) => ({
       show: false,
       type: "time",
