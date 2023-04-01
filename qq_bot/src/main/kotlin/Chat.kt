@@ -379,24 +379,12 @@ suspend fun Bot.registerChatEvent() {
     eventChannel
         .subscribeAlways<UserMessageEvent>(priority=EventPriority.LOWEST) {
             when (message.content.trim().trim('[', ']')) {
-                "绑定" -> {
-                    cmdBind()
-                }
-                "解绑" -> {
-                    cmdUnbind()
-                }
-                "查余额" -> {
-                    cmdQueryPower()
-                }
-                "查用电" -> {
-                    cmdQuerySpending()
-                }
-                "官网" -> {
-                    cmdWebsite()
-                }
-                else -> {
-                    cmdUnknown()
-                }
+                "绑定" -> cmdBind()
+                "解绑" -> cmdUnbind()
+                "查余额" -> cmdQueryPower()
+                "查用电" -> cmdQuerySpending()
+                "官网" -> cmdWebsite()
+                else -> cmdUnknown()
             }
         }
     eventChannel
@@ -404,24 +392,12 @@ suspend fun Bot.registerChatEvent() {
         .filter { event -> event.message.filterIsInstance<At>().any { at -> at.target == id } }
         .subscribeAlways<GroupMessageEvent> {
             when (message.filterIsInstance<PlainText>().joinToString { it.content.trim() }.trim('[', ']')) {
-                "绑定" -> {
-                    cmdBind()
-                }
-                "解绑" -> {
-                    cmdUnbind()
-                }
-                "查余额" -> {
-                    cmdQueryPower(quote = true)
-                }
-                "查用电" -> {
-                    cmdQuerySpending(quote = true)
-                }
-                "官网" -> {
-                    cmdWebsite(quote = true)
-                }
-                else -> {
-                    cmdUnknown(quote = true)
-                }
+                "绑定" -> cmdBind()
+                "解绑" -> cmdUnbind()
+                "查余额" -> cmdQueryPower(quote = true)
+                "查用电" -> cmdQuerySpending(quote = true)
+                "官网" -> cmdWebsite(quote = true)
+                else -> cmdUnknown(quote = true)
             }
         }
     eventChannel

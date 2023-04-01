@@ -20,7 +20,6 @@ object Push {
             select(getenv("SP_REDIS_DB").toULong())
         }
         newSubscriberClient(ep, Subscriber).apply {
-//            select(getenv("SP_REDIS_DB").toULong())
             subscribe("power_task")
         }
     }
