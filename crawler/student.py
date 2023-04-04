@@ -9,6 +9,7 @@ import taos
 import pymongo
 import pymongo.database
 import tenacity
+import timeout_decorator
 
 from session import Session
 from util import prepare
@@ -90,6 +91,7 @@ class Student:
 
         self.__logger.debug("销毁")
 
+    @timeout_decorator.timeout(60 * 60 * 2, use_signals=False)
     def run(self):
         self.__logger.info("任务开始")
 

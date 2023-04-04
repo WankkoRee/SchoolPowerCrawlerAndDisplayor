@@ -6,6 +6,7 @@ from decimal import Decimal
 import redis
 import taos
 import tenacity
+import timeout_decorator
 
 from session import Session
 from util import prepare
@@ -56,6 +57,7 @@ class Power:
 
         self.__logger.debug("销毁")
 
+    @timeout_decorator.timeout(60 * 60, use_signals=False)
     def run(self):
         self.__logger.info("任务开始")
 
