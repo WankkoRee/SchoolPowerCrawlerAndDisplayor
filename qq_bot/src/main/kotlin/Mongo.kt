@@ -81,31 +81,46 @@ object Mongo {
     }
 
     suspend fun getUserByQQ(qq: Long): Student? {
-        return client.findOne(Student::app / Student.App::qq eq qq.toString())
+        return client.findOne(
+            Student::app / Student.App::qq eq qq.toString(),
+        )
     }
 
     suspend fun getUserByQQGroup(group: Long): Student? {
-        return client.findOne(Student::app / Student.App::qq_group eq group.toString())
+        return client.findOne(
+            Student::app / Student.App::qq_group eq group.toString(),
+        )
     }
 
     suspend fun login(username: String, password: String): Student? {
-        return client.findOne(Student::info / Student.Info::number eq username, Student::app / Student.App::password eq password)
+        return client.findOne(
+            Student::info / Student.Info::number eq username,
+            Student::app / Student.App::password eq password,
+        )
     }
 
     suspend fun bindByQQ(id: String, qq: Long): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::qq setTo qq.toString()))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::qq setTo qq.toString(),
+        ))
     }
 
     suspend fun bindByQQGroup(id: String, group: Long): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::qq_group setTo group.toString()))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::qq_group setTo group.toString(),
+        ))
     }
 
     suspend fun unbindByQQ(id: String): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::qq setTo null))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::qq setTo null,
+        ))
     }
 
     suspend fun unbindByQQGroup(id: String): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::qq_group setTo null))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::qq_group setTo null,
+        ))
     }
 
     suspend fun getSubscribeAbnormalState(id: String): Int {
@@ -113,7 +128,9 @@ object Mongo {
     }
 
     suspend fun setSubscribeAbnormalState(id: String, subscribeAbnormal: Int): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::abnormal setTo subscribeAbnormal))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::subscribe / Student.App.Subscribe::abnormal setTo subscribeAbnormal,
+        ))
     }
 
     suspend fun getSubscribeLowState(id: String): Int {
@@ -121,7 +138,9 @@ object Mongo {
     }
 
     suspend fun setSubscribeLowState(id: String, subscribeLow: Int): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::low setTo subscribeLow))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::subscribe / Student.App.Subscribe::low setTo subscribeLow,
+        ))
     }
 
     suspend fun getSubscribeReportDayState(id: String): Boolean {
@@ -129,7 +148,9 @@ object Mongo {
     }
 
     suspend fun setSubscribeReportDayState(id: String, subscribeReportDay: Boolean): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::day setTo subscribeReportDay))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::day setTo subscribeReportDay,
+        ))
     }
 
     suspend fun getSubscribeReportWeekState(id: String): Boolean {
@@ -137,7 +158,9 @@ object Mongo {
     }
 
     suspend fun setSubscribeReportWeekState(id: String, subscribeReportWeek: Boolean): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::week setTo subscribeReportWeek))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::week setTo subscribeReportWeek,
+        ))
     }
 
     suspend fun getSubscribeReportMonthState(id: String): Boolean {
@@ -145,7 +168,9 @@ object Mongo {
     }
 
     suspend fun setSubscribeReportMonthState(id: String, subscribeReportMonth: Boolean): UpdateResult {
-        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::month setTo subscribeReportMonth))
+        return client.updateOneById(id, set(
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::month setTo subscribeReportMonth,
+        ))
     }
 
     suspend fun unsubscribeAll(id: String): UpdateResult {
@@ -159,42 +184,72 @@ object Mongo {
     }
 
     suspend fun getSubscribedAbnormalUsersByQQ(): List<Student> {
-        return client.find(Student::app / Student.App::qq ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::abnormal gt 0).toList()
+        return client.find(
+            Student::app / Student.App::qq ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::abnormal gt 0,
+        ).toList()
     }
 
     suspend fun getSubscribedAbnormalUsersByQQGroup(): List<Student> {
-        return client.find(Student::app / Student.App::qq_group ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::abnormal gt 0).toList()
+        return client.find(
+            Student::app / Student.App::qq_group ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::abnormal gt 0,
+        ).toList()
     }
 
     suspend fun getSubscribedLowUsersByQQ(): List<Student> {
-        return client.find(Student::app / Student.App::qq ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::low gt 0).toList()
+        return client.find(
+            Student::app / Student.App::qq ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::low gt 0,
+        ).toList()
     }
 
     suspend fun getSubscribedLowUsersByQQGroup(): List<Student> {
-        return client.find(Student::app / Student.App::qq_group ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::low gt 0).toList()
+        return client.find(
+            Student::app / Student.App::qq_group ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::low gt 0,
+        ).toList()
     }
 
     suspend fun getSubscribedReportDayUsersByQQ(): List<Student> {
-        return client.find(Student::app / Student.App::qq ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::day eq true).toList()
+        return client.find(
+            Student::app / Student.App::qq ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::day eq true,
+        ).toList()
     }
 
     suspend fun getSubscribedReportDayUsersByQQGroup(): List<Student> {
-        return client.find(Student::app / Student.App::qq_group ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::day eq true).toList()
+        return client.find(
+            Student::app / Student.App::qq_group ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::day eq true,
+        ).toList()
     }
 
     suspend fun getSubscribedReportWeekUsersByQQ(): List<Student> {
-        return client.find(Student::app / Student.App::qq ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::week eq true).toList()
+        return client.find(
+            Student::app / Student.App::qq ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::week eq true,
+        ).toList()
     }
 
     suspend fun getSubscribedReportWeekUsersByQQGroup(): List<Student> {
-        return client.find(Student::app / Student.App::qq_group ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::week eq true).toList()
+        return client.find(
+            Student::app / Student.App::qq_group ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::week eq true,
+        ).toList()
     }
 
     suspend fun getSubscribedReportMonthUsersByQQ(): List<Student> {
-        return client.find(Student::app / Student.App::qq ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::month eq true).toList()
+        return client.find(
+            Student::app / Student.App::qq ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::month eq true,
+        ).toList()
     }
 
     suspend fun getSubscribedReportMonthUsersByQQGroup(): List<Student> {
-        return client.find(Student::app / Student.App::qq_group ne null, Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::month eq true).toList()
+        return client.find(
+            Student::app / Student.App::qq_group ne null,
+            Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::month eq true,
+        ).toList()
     }
 }
