@@ -81,6 +81,9 @@ object Push {
                         GlobalScope.launch {
                             pushReportWeekByQQGroup(from, next)
                         }
+                        GlobalScope.launch {
+                            pushRemindByQQ(from, next)
+                        }
                     }
 
                     today.minusDays(today.dayOfMonth - 1L).let {Pair(
@@ -100,6 +103,31 @@ object Push {
 
         override fun onException(ex: Throwable) {
             bot.logger.error("获取数据更新订阅失败", ex)
+        }
+
+        private suspend fun pushRemindByQQ(from: ULong, next: ULong) {
+            if (client.exists("remind_qq_$from") == 1L)
+                return
+            (bot.friends.map { it.id }.toSet() - Mongo.getBindedByQQ().map { it.toLong() }.toSet()).forEach { unbinder ->
+                try {
+                    if (!bot.isOnline) return@forEach
+                    val unbinderQQ = bot.getFriend(unbinder) ?: return@forEach
+                    unbinderQQ.sendMessage(buildMessageChain {
+                        +"Hi, 这是一条自动提醒~\n"
+                        +"我发现你还没有绑定电宝账号，只是添加好友的话，没有任何意义哦\n"
+                        +"快来向我发送[绑定]吧"
+                    })
+                    return@forEach
+                } catch (e: Exception) {
+                    bot.logger.error("推送[未绑定提醒]QQ订阅消息失败", e)
+                    return@forEach
+                }
+            }
+            client.set(
+                "remind_qq_$from",
+                Instant.now().toEpochMilli().toString(),
+                SetOption.Builder().exatTimestamp(next).build(),
+            )
         }
 
         private suspend fun pushAbnormalByQQ(ts: ULong, next: ULong) {

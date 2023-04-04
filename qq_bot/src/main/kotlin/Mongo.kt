@@ -183,6 +183,12 @@ object Mongo {
         ))
     }
 
+    suspend fun getBindedByQQ(): List<String> {
+        return client.find(
+            Student::app / Student.App::qq ne null,
+        ).toList().map { it.app.qq!! }
+    }
+
     suspend fun getSubscribedAbnormalUsersByQQ(): List<Student> {
         return client.find(
             Student::app / Student.App::qq ne null,
