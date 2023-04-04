@@ -12,9 +12,8 @@ RUN wget -c https://www.tdengine.com/assets-download/3.0/TDengine-client-${TDENG
     cd ../ && \
     rm -rf TDengine-client-${TDENGINE_VERSION}-Linux-x64.tar.gz TDengine-client-${TDENGINE_VERSION}
 
-COPY ./ /home/school_power_crawler/
+RUN mkdir /home/school_power_crawler/
 WORKDIR /home/school_power_crawler/
 
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
-    pip install --no-cache-dir -r requirements.txt
-CMD python -u main.py
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+CMD pip install --no-cache-dir -r requirements.txt && python -u main.py

@@ -75,8 +75,7 @@ services:
       dockerfile: Dockerfile
     image: wankkoree/school_power_crawler:3.10.10-slim-bullseye
     volumes:
-      - "./crawler/logs/:/home/school_power_crawler/logs/"
-      - "./crawler/data/:/home/school_power_crawler/data/"
+      - "./crawler/:/home/school_power_crawler/"
     environment:
       SP_HOST: "https://dk.nynu.edu.cn"
       SP_SCHOOL_ID: 4
