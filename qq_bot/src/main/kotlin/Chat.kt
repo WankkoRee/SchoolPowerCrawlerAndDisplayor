@@ -510,9 +510,9 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
                         if (Mongo.getSubscribeReportDayState(user._id)) {
-                            +"你未开启[用电报告推送-日报]\n"
-                        } else {
                             +"你已开启[用电报告推送-日报]\n"
+                        } else {
+                            +"你未开启[用电报告推送-日报]\n"
                         }
                         +"请发送{1、0、开、关、开启、关闭}之间的文本\n"
                         +"{0、关、关闭}为关闭日报推送，{1、开、开启}为开启日报推送\n"
@@ -568,9 +568,9 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
                         if (Mongo.getSubscribeReportWeekState(user._id)) {
-                            +"你未开启[用电报告推送-周报]\n"
-                        } else {
                             +"你已开启[用电报告推送-周报]\n"
+                        } else {
+                            +"你未开启[用电报告推送-周报]\n"
                         }
                         +"请发送{1、0、开、关、开启、关闭}之间的文本\n"
                         +"{0、关、关闭}为关闭周报推送，{1、开、开启}为开启周报推送\n"
@@ -626,9 +626,9 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
                         if (Mongo.getSubscribeReportMonthState(user._id)) {
-                            +"你未开启[用电报告推送-月报]\n"
-                        } else {
                             +"你已开启[用电报告推送-月报]\n"
+                        } else {
+                            +"你未开启[用电报告推送-月报]\n"
                         }
                         +"请发送{1、0、开、关、开启、关闭}之间的文本\n"
                         +"{0、关、关闭}为关闭月报推送，{1、开、开启}为开启月报推送\n"
