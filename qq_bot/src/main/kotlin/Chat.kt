@@ -385,10 +385,11 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
 
     when (subscribeType) {
         "1", "异常耗电提醒", "异常耗电" -> {
+            val subscribeAbnormalState = Mongo.getSubscribeAbnormalState(user._id)
             subject.sendMessage(buildMessageChain {
                 if (quote) +QuoteReply(message)
                 if (at) +At(sender)
-                when (val subscribeAbnormalState = Mongo.getSubscribeAbnormalState(user._id)) {
+                when (subscribeAbnormalState) {
                     0 -> +"你未开启[异常耗电提醒]\n"
                     else -> +"你已设置[异常耗电提醒]阈值为 $subscribeAbnormalState kWh\n"
                 }
@@ -413,6 +414,11 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                 if (quote) +QuoteReply(message)
                 if (at) +At(sender)
                 when (subscribeAbnormal) {
+                    subscribeAbnormalState -> {
+                        +"世界线没有发生变动哦\n"
+                        +"\n"
+                        +"本次[订阅管理]服务结束"
+                    }
                     in 0..20 -> {
                         val result = Mongo.setSubscribeAbnormalState(user._id, subscribeAbnormal!!)
                         if (result.modifiedCount != 1L) {
@@ -432,10 +438,11 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
             })
         }
         "2", "电量过低提醒", "电量过低" -> {
+            val subscribeLowState = Mongo.getSubscribeLowState(user._id)
             subject.sendMessage(buildMessageChain {
                 if (quote) +QuoteReply(message)
                 if (at) +At(sender)
-                when (val subscribeLowState = Mongo.getSubscribeLowState(user._id)) {
+                when (subscribeLowState) {
                     0 -> +"你未开启[电量过低提醒]\n"
                     else -> +"你已设置[电量过低提醒]阈值为 $subscribeLowState 天\n"
                 }
@@ -460,6 +467,11 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                 if (quote) +QuoteReply(message)
                 if (at) +At(sender)
                 when (subscribeLow) {
+                    subscribeLowState -> {
+                        +"世界线没有发生变动哦\n"
+                        +"\n"
+                        +"本次[订阅管理]服务结束"
+                    }
                     in 0..7 -> {
                         val result = Mongo.setSubscribeLowState(user._id, subscribeLow!!)
                         if (result.modifiedCount != 1L) {
@@ -506,10 +518,11 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
 
             when (subscribeReportType) {
                 "1", "日报" -> {
+                    val subscribeReportDayState = Mongo.getSubscribeReportDayState(user._id)
                     subject.sendMessage(buildMessageChain {
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
-                        if (Mongo.getSubscribeReportDayState(user._id)) {
+                        if (subscribeReportDayState) {
                             +"你已开启[用电报告推送-日报]\n"
                         } else {
                             +"你未开启[用电报告推送-日报]\n"
@@ -518,7 +531,7 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                         +"{0、关、关闭}为关闭日报推送，{1、开、开启}为开启日报推送\n"
                         +"开启后，在每天的早晨7点，会向绑定的QQ/QQ群/钉钉推送昨日用电报告\n"
                     })
-                    val subscribeReportDay = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                    val subscribeReportDay = when ((nextMessageOrNull(20_000, EventPriority.HIGHEST) {
                         intercept()
                         true
                     } ?: run {
@@ -530,23 +543,22 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                             +"本次[订阅管理]服务结束"
                         })
                         return
-                    }).content.trim()
+                    }).content.trim()) {
+                        "0", "关", "关闭" -> false
+                        "1", "开", "开启" -> true
+                        else -> null
+                    }
                     subject.sendMessage(buildMessageChain {
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
                         when (subscribeReportDay) {
-                            "0", "关", "关闭" -> {
-                                val result = Mongo.setSubscribeReportDayState(user._id, false)
-                                if (result.modifiedCount != 1L) {
-                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
-                                    +"\n"
-                                    +"本次[订阅管理]服务结束"
-                                    return@buildMessageChain
-                                }
-                                +"设置成功"
+                            subscribeReportDayState -> {
+                                +"世界线没有发生变动哦\n"
+                                +"\n"
+                                +"本次[订阅管理]服务结束"
                             }
-                            "1", "开", "开启" -> {
-                                val result = Mongo.setSubscribeReportDayState(user._id, true)
+                            is Boolean -> {
+                                val result = Mongo.setSubscribeReportDayState(user._id, subscribeReportDay)
                                 if (result.modifiedCount != 1L) {
                                     +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
                                     +"\n"
@@ -564,10 +576,11 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                     })
                 }
                 "2", "周报" -> {
+                    val subscribeReportWeekState = Mongo.getSubscribeReportWeekState(user._id)
                     subject.sendMessage(buildMessageChain {
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
-                        if (Mongo.getSubscribeReportWeekState(user._id)) {
+                        if (subscribeReportWeekState) {
                             +"你已开启[用电报告推送-周报]\n"
                         } else {
                             +"你未开启[用电报告推送-周报]\n"
@@ -576,7 +589,7 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                         +"{0、关、关闭}为关闭周报推送，{1、开、开启}为开启周报推送\n"
                         +"开启后，在每周一的早晨7点，会向绑定的QQ/QQ群/钉钉推送上周用电报告\n"
                     })
-                    val subscribeReportWeek = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                    val subscribeReportWeek = when ((nextMessageOrNull(20_000, EventPriority.HIGHEST) {
                         intercept()
                         true
                     } ?: run {
@@ -588,23 +601,22 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                             +"本次[订阅管理]服务结束"
                         })
                         return
-                    }).content.trim()
+                    }).content.trim()) {
+                        "0", "关", "关闭" -> false
+                        "1", "开", "开启" -> true
+                        else -> null
+                    }
                     subject.sendMessage(buildMessageChain {
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
                         when (subscribeReportWeek) {
-                            "0", "关", "关闭" -> {
-                                val result = Mongo.setSubscribeReportWeekState(user._id, false)
-                                if (result.modifiedCount != 1L) {
-                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
-                                    +"\n"
-                                    +"本次[订阅管理]服务结束"
-                                    return@buildMessageChain
-                                }
-                                +"设置成功"
+                            subscribeReportWeekState -> {
+                                +"世界线没有发生变动哦\n"
+                                +"\n"
+                                +"本次[订阅管理]服务结束"
                             }
-                            "1", "开", "开启" -> {
-                                val result = Mongo.setSubscribeReportWeekState(user._id, true)
+                            is Boolean -> {
+                                val result = Mongo.setSubscribeReportWeekState(user._id, subscribeReportWeek)
                                 if (result.modifiedCount != 1L) {
                                     +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
                                     +"\n"
@@ -622,10 +634,11 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                     })
                 }
                 "3", "月报" -> {
+                    val subscribeReportMonthState = Mongo.getSubscribeReportMonthState(user._id)
                     subject.sendMessage(buildMessageChain {
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
-                        if (Mongo.getSubscribeReportMonthState(user._id)) {
+                        if (subscribeReportMonthState) {
                             +"你已开启[用电报告推送-月报]\n"
                         } else {
                             +"你未开启[用电报告推送-月报]\n"
@@ -634,7 +647,7 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                         +"{0、关、关闭}为关闭月报推送，{1、开、开启}为开启月报推送\n"
                         +"开启后，在每月1号的早晨7点，会向绑定的QQ/QQ群/钉钉推送上月用电报告\n"
                     })
-                    val subscribeReportMonth = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                    val subscribeReportMonth = when ((nextMessageOrNull(20_000, EventPriority.HIGHEST) {
                         intercept()
                         true
                     } ?: run {
@@ -646,23 +659,22 @@ suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = fals
                             +"本次[订阅管理]服务结束"
                         })
                         return
-                    }).content.trim()
+                    }).content.trim()) {
+                        "0", "关", "关闭" -> false
+                        "1", "开", "开启" -> true
+                        else -> null
+                    }
                     subject.sendMessage(buildMessageChain {
                         if (quote) +QuoteReply(message)
                         if (at) +At(sender)
                         when (subscribeReportMonth) {
-                            "0", "关", "关闭" -> {
-                                val result = Mongo.setSubscribeReportMonthState(user._id, false)
-                                if (result.modifiedCount != 1L) {
-                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
-                                    +"\n"
-                                    +"本次[订阅管理]服务结束"
-                                    return@buildMessageChain
-                                }
-                                +"设置成功"
+                            subscribeReportMonthState -> {
+                                +"世界线没有发生变动哦\n"
+                                +"\n"
+                                +"本次[订阅管理]服务结束"
                             }
-                            "1", "开", "开启" -> {
-                                val result = Mongo.setSubscribeReportMonthState(user._id, true)
+                            is Boolean -> {
+                                val result = Mongo.setSubscribeReportMonthState(user._id, subscribeReportMonth)
                                 if (result.modifiedCount != 1L) {
                                     +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
                                     +"\n"
