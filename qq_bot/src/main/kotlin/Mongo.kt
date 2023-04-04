@@ -108,6 +108,46 @@ object Mongo {
         return client.updateOneById(id, set(Student::app / Student.App::qq_group setTo null))
     }
 
+    suspend fun getSubscribeAbnormalState(id: String): Int {
+        return client.findOneById(id)!!.app.subscribe.abnormal
+    }
+
+    suspend fun setSubscribeAbnormalState(id: String, subscribeAbnormal: Int): UpdateResult {
+        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::abnormal setTo subscribeAbnormal))
+    }
+
+    suspend fun getSubscribeLowState(id: String): Int {
+        return client.findOneById(id)!!.app.subscribe.low
+    }
+
+    suspend fun setSubscribeLowState(id: String, subscribeLow: Int): UpdateResult {
+        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::low setTo subscribeLow))
+    }
+
+    suspend fun getSubscribeReportDayState(id: String): Boolean {
+        return client.findOneById(id)!!.app.subscribe.report.day
+    }
+
+    suspend fun setSubscribeReportDayState(id: String, subscribeReportDay: Boolean): UpdateResult {
+        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::day setTo subscribeReportDay))
+    }
+
+    suspend fun getSubscribeReportWeekState(id: String): Boolean {
+        return client.findOneById(id)!!.app.subscribe.report.week
+    }
+
+    suspend fun setSubscribeReportWeekState(id: String, subscribeReportWeek: Boolean): UpdateResult {
+        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::week setTo subscribeReportWeek))
+    }
+
+    suspend fun getSubscribeReportMonthState(id: String): Boolean {
+        return client.findOneById(id)!!.app.subscribe.report.month
+    }
+
+    suspend fun setSubscribeReportMonthState(id: String, subscribeReportMonth: Boolean): UpdateResult {
+        return client.updateOneById(id, set(Student::app / Student.App::subscribe / Student.App.Subscribe::report / Student.App.Subscribe.Report::month setTo subscribeReportMonth))
+    }
+
     suspend fun unsubscribeAll(id: String): UpdateResult {
         return client.updateOneById(id, set(
             Student::app / Student.App::subscribe / Student.App.Subscribe::abnormal setTo 0,

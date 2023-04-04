@@ -1,12 +1,34 @@
 package cn.wankkoree.sp.bot.qq
 
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.nextMessageOrNull
 
+
+fun  MessageChainBuilder.commandsList () {
+    +"当前我明白的指令有：\n"
+    +"\n"
+    +"[绑定]:\n"
+    +"私聊发送，则是将你的QQ关联至电宝账号，是各种查询服务、订阅服务正常使用的前提\n"
+    +"群聊发送，则是将QQ群关联至你的电宝账号，是各种订阅服务正常使用的前提\n"
+    +"\n"
+    +"[解绑]:\n"
+    +"就是上面的反向操作\n"
+    +"\n"
+    +"[查余额]:\n"
+    +"看看还剩多少、能用多久\n"
+    +"\n"
+    +"[查用电]:\n"
+    +"看看用了多少\n"
+    +"\n"
+    +"[订阅管理]:\n"
+    +"设置关于异常耗电、电量过低、用电报告的订阅\n"
+    +"\n"
+    +"[官网]:\n"
+    +"功能比机器人更加全面，欢迎使用\n"
+}
 
 suspend fun UserMessageEvent.cmdBind() {
     Mongo.getUserByQQ(sender.id).let {
@@ -324,6 +346,358 @@ suspend fun MessageEvent.cmdQuerySpending(quote: Boolean = false, at: Boolean = 
     +"数据更新于 ${roomLastTs.format(TimeFormat.Time)}"
 })
 
+suspend fun MessageEvent.cmdSubscribe(quote: Boolean = false, at: Boolean = false) {
+    val user = Mongo.getUserByQQ(sender.id) ?: run {
+        subject.sendMessage(buildMessageChain {
+            if (quote) +QuoteReply(message)
+            if (at) +At(sender)
+            +"你还未绑定电宝账号，无法使用[订阅管理]功能\n"
+            +"\n"
+            +"本次[订阅管理]服务结束"
+        })
+        return
+    }
+
+    subject.sendMessage(buildMessageChain {
+        if (quote) +QuoteReply(message)
+        if (at) +At(sender)
+        +"当前可管理的订阅功能有：\n"
+        +"\n"
+        +"1. 异常耗电提醒\n"
+        +"2. 电量过低提醒\n"
+        +"3. 用电报告推送\n"
+        +"\n"
+        +"请发送你需要管理的订阅功能相应编号或名称，如：1 或 异常耗电提醒"
+    })
+    val subscribeType = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+        intercept()
+        true
+    } ?: run {
+        subject.sendMessage(buildMessageChain {
+            if (quote) +QuoteReply(message)
+            if (at) +At(sender)
+            +"已超过 20 秒\n"
+            +"\n"
+            +"本次[订阅管理]服务结束"
+        })
+        return
+    }).content.trim()
+
+    when (subscribeType) {
+        "1", "异常耗电提醒", "异常耗电" -> {
+            subject.sendMessage(buildMessageChain {
+                if (quote) +QuoteReply(message)
+                if (at) +At(sender)
+                when (val subscribeAbnormalState = Mongo.getSubscribeAbnormalState(user._id)) {
+                    0 -> +"你未开启[异常耗电提醒]\n"
+                    else -> +"你已设置[异常耗电提醒]阈值为 $subscribeAbnormalState kWh\n"
+                }
+                +"请发送0~20之间的整数\n"
+                +"0为关闭，其他为开启并设置耗电阈值\n"
+                +"开启后，若某日用电量超过阈值，则会发送提醒\n"
+            })
+            val subscribeAbnormal = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                intercept()
+                true
+            } ?: run {
+                subject.sendMessage(buildMessageChain {
+                    if (quote) +QuoteReply(message)
+                    if (at) +At(sender)
+                    +"已超过 20 秒\n"
+                    +"\n"
+                    +"本次[订阅管理]服务结束"
+                })
+                return
+            }).content.trim().toIntOrNull()
+            subject.sendMessage(buildMessageChain {
+                if (quote) +QuoteReply(message)
+                if (at) +At(sender)
+                when (subscribeAbnormal) {
+                    in 0..20 -> {
+                        val result = Mongo.setSubscribeAbnormalState(user._id, subscribeAbnormal!!)
+                        if (result.modifiedCount != 1L) {
+                            +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
+                            +"\n"
+                            +"本次[订阅管理]服务结束"
+                            return@buildMessageChain
+                        }
+                        +"设置成功"
+                    }
+                    else -> {
+                        +"抱歉，无法理解你发送的[异常耗电提醒]阈值\n"
+                        +"\n"
+                        +"本次[订阅管理]服务结束"
+                    }
+                }
+            })
+        }
+        "2", "电量过低提醒", "电量过低" -> {
+            subject.sendMessage(buildMessageChain {
+                if (quote) +QuoteReply(message)
+                if (at) +At(sender)
+                when (val subscribeLowState = Mongo.getSubscribeLowState(user._id)) {
+                    0 -> +"你未开启[电量过低提醒]\n"
+                    else -> +"你已设置[电量过低提醒]阈值为 $subscribeLowState 天\n"
+                }
+                +"请发送0~7之间的整数\n"
+                +"0为关闭，其他为开启并设置剩余电量预计可用天数阈值\n"
+                +"开启后，若剩余电量预计可用天数不足阈值，则会发送提醒\n"
+            })
+            val subscribeLow = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                intercept()
+                true
+            } ?: run {
+                subject.sendMessage(buildMessageChain {
+                    if (quote) +QuoteReply(message)
+                    if (at) +At(sender)
+                    +"已超过 20 秒\n"
+                    +"\n"
+                    +"本次[订阅管理]服务结束"
+                })
+                return
+            }).content.trim().toIntOrNull()
+            subject.sendMessage(buildMessageChain {
+                if (quote) +QuoteReply(message)
+                if (at) +At(sender)
+                when (subscribeLow) {
+                    in 0..7 -> {
+                        val result = Mongo.setSubscribeLowState(user._id, subscribeLow!!)
+                        if (result.modifiedCount != 1L) {
+                            +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
+                            +"\n"
+                            +"本次[订阅管理]服务结束"
+                            return@buildMessageChain
+                        }
+                        +"设置成功"
+                    }
+                    else -> {
+                        +"抱歉，无法理解你发送的[电量过低提醒]阈值\n"
+                        +"\n"
+                        +"本次[订阅管理]服务结束"
+                    }
+                }
+            })
+        }
+        "3", "用电报告推送", "用电报告" -> {
+            subject.sendMessage(buildMessageChain {
+                if (quote) +QuoteReply(message)
+                if (at) +At(sender)
+                +"当前可管理的用电报告有：\n"
+                +"\n"
+                +"1. 日报\n"
+                +"2. 周报\n"
+                +"3. 月报\n"
+                +"\n"
+                +"请发送你需要管理的用电报告相应编号或名称，如：1 或 日报"
+            })
+            val subscribeReportType = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                intercept()
+                true
+            } ?: run {
+                subject.sendMessage(buildMessageChain {
+                    if (quote) +QuoteReply(message)
+                    if (at) +At(sender)
+                    +"已超过 20 秒\n"
+                    +"\n"
+                    +"本次[订阅管理]服务结束"
+                })
+                return
+            }).content.trim()
+
+            when (subscribeReportType) {
+                "1", "日报" -> {
+                    subject.sendMessage(buildMessageChain {
+                        if (quote) +QuoteReply(message)
+                        if (at) +At(sender)
+                        if (Mongo.getSubscribeReportDayState(user._id)) {
+                            +"你未开启[用电报告推送-日报]\n"
+                        } else {
+                            +"你已开启[用电报告推送-日报]\n"
+                        }
+                        +"请发送{1、0、开、关、开启、关闭}之间的文本\n"
+                        +"{0、关、关闭}为关闭日报推送，{1、开、开启}为开启日报推送\n"
+                        +"开启后，在每天的早晨7点，会向绑定的QQ/QQ群/钉钉推送昨日用电报告\n"
+                    })
+                    val subscribeReportDay = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                        intercept()
+                        true
+                    } ?: run {
+                        subject.sendMessage(buildMessageChain {
+                            if (quote) +QuoteReply(message)
+                            if (at) +At(sender)
+                            +"已超过 20 秒\n"
+                            +"\n"
+                            +"本次[订阅管理]服务结束"
+                        })
+                        return
+                    }).content.trim()
+                    subject.sendMessage(buildMessageChain {
+                        if (quote) +QuoteReply(message)
+                        if (at) +At(sender)
+                        when (subscribeReportDay) {
+                            "0", "关", "关闭" -> {
+                                val result = Mongo.setSubscribeReportDayState(user._id, false)
+                                if (result.modifiedCount != 1L) {
+                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
+                                    +"\n"
+                                    +"本次[订阅管理]服务结束"
+                                    return@buildMessageChain
+                                }
+                                +"设置成功"
+                            }
+                            "1", "开", "开启" -> {
+                                val result = Mongo.setSubscribeReportDayState(user._id, true)
+                                if (result.modifiedCount != 1L) {
+                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
+                                    +"\n"
+                                    +"本次[订阅管理]服务结束"
+                                    return@buildMessageChain
+                                }
+                                +"设置成功"
+                            }
+                            else -> {
+                                +"抱歉，无法理解你发送的[用电报告推送-日报]状态\n"
+                                +"\n"
+                                +"本次[订阅管理]服务结束"
+                            }
+                        }
+                    })
+                }
+                "2", "周报" -> {
+                    subject.sendMessage(buildMessageChain {
+                        if (quote) +QuoteReply(message)
+                        if (at) +At(sender)
+                        if (Mongo.getSubscribeReportWeekState(user._id)) {
+                            +"你未开启[用电报告推送-周报]\n"
+                        } else {
+                            +"你已开启[用电报告推送-周报]\n"
+                        }
+                        +"请发送{1、0、开、关、开启、关闭}之间的文本\n"
+                        +"{0、关、关闭}为关闭周报推送，{1、开、开启}为开启周报推送\n"
+                        +"开启后，在每周一的早晨7点，会向绑定的QQ/QQ群/钉钉推送上周用电报告\n"
+                    })
+                    val subscribeReportWeek = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                        intercept()
+                        true
+                    } ?: run {
+                        subject.sendMessage(buildMessageChain {
+                            if (quote) +QuoteReply(message)
+                            if (at) +At(sender)
+                            +"已超过 20 秒\n"
+                            +"\n"
+                            +"本次[订阅管理]服务结束"
+                        })
+                        return
+                    }).content.trim()
+                    subject.sendMessage(buildMessageChain {
+                        if (quote) +QuoteReply(message)
+                        if (at) +At(sender)
+                        when (subscribeReportWeek) {
+                            "0", "关", "关闭" -> {
+                                val result = Mongo.setSubscribeReportWeekState(user._id, false)
+                                if (result.modifiedCount != 1L) {
+                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
+                                    +"\n"
+                                    +"本次[订阅管理]服务结束"
+                                    return@buildMessageChain
+                                }
+                                +"设置成功"
+                            }
+                            "1", "开", "开启" -> {
+                                val result = Mongo.setSubscribeReportWeekState(user._id, true)
+                                if (result.modifiedCount != 1L) {
+                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
+                                    +"\n"
+                                    +"本次[订阅管理]服务结束"
+                                    return@buildMessageChain
+                                }
+                                +"设置成功"
+                            }
+                            else -> {
+                                +"抱歉，无法理解你发送的[用电报告推送-周报]状态\n"
+                                +"\n"
+                                +"本次[订阅管理]服务结束"
+                            }
+                        }
+                    })
+                }
+                "3", "月报" -> {
+                    subject.sendMessage(buildMessageChain {
+                        if (quote) +QuoteReply(message)
+                        if (at) +At(sender)
+                        if (Mongo.getSubscribeReportMonthState(user._id)) {
+                            +"你未开启[用电报告推送-月报]\n"
+                        } else {
+                            +"你已开启[用电报告推送-月报]\n"
+                        }
+                        +"请发送{1、0、开、关、开启、关闭}之间的文本\n"
+                        +"{0、关、关闭}为关闭月报推送，{1、开、开启}为开启月报推送\n"
+                        +"开启后，在每月1号的早晨7点，会向绑定的QQ/QQ群/钉钉推送上月用电报告\n"
+                    })
+                    val subscribeReportMonth = (nextMessageOrNull(20_000, EventPriority.HIGHEST) {
+                        intercept()
+                        true
+                    } ?: run {
+                        subject.sendMessage(buildMessageChain {
+                            if (quote) +QuoteReply(message)
+                            if (at) +At(sender)
+                            +"已超过 20 秒\n"
+                            +"\n"
+                            +"本次[订阅管理]服务结束"
+                        })
+                        return
+                    }).content.trim()
+                    subject.sendMessage(buildMessageChain {
+                        if (quote) +QuoteReply(message)
+                        if (at) +At(sender)
+                        when (subscribeReportMonth) {
+                            "0", "关", "关闭" -> {
+                                val result = Mongo.setSubscribeReportMonthState(user._id, false)
+                                if (result.modifiedCount != 1L) {
+                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
+                                    +"\n"
+                                    +"本次[订阅管理]服务结束"
+                                    return@buildMessageChain
+                                }
+                                +"设置成功"
+                            }
+                            "1", "开", "开启" -> {
+                                val result = Mongo.setSubscribeReportMonthState(user._id, true)
+                                if (result.modifiedCount != 1L) {
+                                    +"设置失败，请联系开发者QQ：${System.getenv("SP_ADMIN")}，code: 101, debug: ${result.matchedCount}|${result.modifiedCount}\n"
+                                    +"\n"
+                                    +"本次[订阅管理]服务结束"
+                                    return@buildMessageChain
+                                }
+                                +"设置成功"
+                            }
+                            else -> {
+                                +"抱歉，无法理解你发送的[用电报告推送-月报]状态\n"
+                                +"\n"
+                                +"本次[订阅管理]服务结束"
+                            }
+                        }
+                    })
+                }
+                else -> subject.sendMessage(buildMessageChain {
+                    if (quote) +QuoteReply(message)
+                    if (at) +At(sender)
+                    +"抱歉，无法理解你发送的用电报告相应编号或名称\n"
+                    +"\n"
+                    +"本次[订阅管理]服务结束"
+                })
+            }
+        }
+        else -> subject.sendMessage(buildMessageChain {
+            if (quote) +QuoteReply(message)
+            if (at) +At(sender)
+            +"抱歉，无法理解你发送的订阅功能相应编号或名称\n"
+            +"\n"
+            +"本次[订阅管理]服务结束"
+        })
+    }
+}
+
 suspend fun MessageEvent.cmdWebsite(quote: Boolean = false, at: Boolean = false) = subject.sendMessage(buildMessageChain {
     if (quote) +QuoteReply(message)
     if (at) +At(sender)
@@ -336,43 +710,13 @@ suspend fun MessageEvent.cmdWebsite(quote: Boolean = false, at: Boolean = false)
 suspend fun MessageEvent.cmdUnknown(quote: Boolean = false, at: Boolean = false) = subject.sendMessage(buildMessageChain {
     if (quote) +QuoteReply(message)
     if (at) +At(sender)
-    +"抱歉，我还不能理解你的意思。当前我明白的指令有：\n"
-    +"\n"
-    +"[绑定]:\n"
-    +"私聊发送，则是将你的QQ关联至电宝账号，是各种查询服务、订阅服务正常使用的前提\n"
-    +"群聊发送，则是将QQ群关联至你的电宝账号，是各种订阅服务正常使用的前提\n"
-    +"\n"
-    +"[解绑]:\n"
-    +"就是上面的反向操作\n"
-    +"\n"
-    +"[查余额]:\n"
-    +"看看还剩多少、能用多久\n"
-    +"\n"
-    +"[查用电]:\n"
-    +"看看用了多少\n"
-    +"\n"
-    +"[官网]:\n"
-    +"就是记不住网站的时候方便一键跳转\n"
+    +"抱歉，我还不能理解你的意思。"
+    commandsList()
 })
 
 suspend fun FriendAddEvent.cmdWelcome() = friend.sendMessage(buildMessageChain {
-    +"你好，欢迎使用电宝。当前我明白的指令有：\n"
-    +"\n"
-    +"[绑定]:\n"
-    +"私聊发送，则是将你的QQ关联至电宝账号，是各种查询服务、订阅服务正常使用的前提\n"
-    +"群聊发送，则是将QQ群关联至你的电宝账号，是各种订阅服务正常使用的前提\n"
-    +"\n"
-    +"[解绑]:\n"
-    +"就是上面的反向操作\n"
-    +"\n"
-    +"[查余额]:\n"
-    +"看看还剩多少、能用多久\n"
-    +"\n"
-    +"[查用电]:\n"
-    +"看看用了多少\n"
-    +"\n"
-    +"[官网]:\n"
-    +"就是记不住网站的时候方便一键跳转\n"
+    +"你好，欢迎使用电宝。"
+    commandsList()
 })
 
 suspend fun Bot.registerChatEvent() {
@@ -383,6 +727,7 @@ suspend fun Bot.registerChatEvent() {
                 "解绑" -> cmdUnbind()
                 "查余额" -> cmdQueryPower()
                 "查用电" -> cmdQuerySpending()
+                "订阅管理" -> cmdSubscribe()
                 "官网" -> cmdWebsite()
                 else -> cmdUnknown()
             }
@@ -396,6 +741,7 @@ suspend fun Bot.registerChatEvent() {
                 "解绑" -> cmdUnbind()
                 "查余额" -> cmdQueryPower(quote = true)
                 "查用电" -> cmdQuerySpending(quote = true)
+                "订阅管理" -> cmdSubscribe(quote = true)
                 "官网" -> cmdWebsite(quote = true)
                 else -> cmdUnknown(quote = true)
             }
