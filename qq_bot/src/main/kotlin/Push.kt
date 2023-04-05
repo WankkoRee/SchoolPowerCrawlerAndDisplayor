@@ -109,7 +109,7 @@ object Push {
         private suspend fun pushRemindByQQ(from: ULong, next: ULong) {
             if (client.exists("remind_qq_$from") == 1L)
                 return
-            (bot.friends.map { it.id }.toSet() - Mongo.getBindedByQQ().map { it.toLong() }.toSet()).forEach { unbinder ->
+            (bot.friends.map { it.id }.toSet() - Mongo.getBindedByQQ().map { it.toLong() }.toSet() - setOf(getenv("SP_QQ").toLong())).forEach { unbinder ->
                 delay(60_000L) // 1分钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach

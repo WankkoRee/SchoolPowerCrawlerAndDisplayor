@@ -5,6 +5,7 @@ import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.nextMessageOrNull
+import java.lang.System.getenv
 
 
 fun  MessageChainBuilder.commandsList () {
@@ -734,6 +735,7 @@ suspend fun FriendAddEvent.cmdWelcome() = friend.sendMessage(buildMessageChain {
 suspend fun Bot.registerChatEvent() {
     eventChannel
         .subscribeAlways<UserMessageEvent>(priority=EventPriority.LOWEST) {
+            if (sender.id == getenv("SP_QQ").toLong()) return@subscribeAlways
             when (message.content.trim().trim('[', ']')) {
                 "绑定" -> cmdBind()
                 "解绑" -> cmdUnbind()
@@ -748,6 +750,7 @@ suspend fun Bot.registerChatEvent() {
         .filterIsInstance<GroupMessageEvent>()
         .filter { event -> event.message.filterIsInstance<At>().any { at -> at.target == id } }
         .subscribeAlways<GroupMessageEvent> {
+            if (sender.id == getenv("SP_QQ").toLong()) return@subscribeAlways
             when (message.filterIsInstance<PlainText>().joinToString { it.content.trim() }.trim('[', ']')) {
                 "绑定" -> cmdBind()
                 "解绑" -> cmdUnbind()
