@@ -4,6 +4,7 @@ import io.github.crackthecodeabhi.kreds.args.SetOption
 import io.github.crackthecodeabhi.kreds.connection.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
@@ -109,6 +110,7 @@ object Push {
             if (client.exists("remind_qq_$from") == 1L)
                 return
             (bot.friends.map { it.id }.toSet() - Mongo.getBindedByQQ().map { it.toLong() }.toSet()).forEach { unbinder ->
+                delay(60_000L) // 1分钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val unbinderQQ = bot.getFriend(unbinder) ?: return@forEach
@@ -132,6 +134,7 @@ object Push {
 
         private suspend fun pushAbnormalByQQ(ts: ULong, next: ULong) {
             Mongo.getSubscribedAbnormalUsersByQQ().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
@@ -194,6 +197,7 @@ object Push {
 
         private suspend fun pushAbnormalByQQGroup(ts: ULong, next: ULong) {
             Mongo.getSubscribedAbnormalUsersByQQGroup().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
@@ -256,6 +260,7 @@ object Push {
 
         private suspend fun pushLowByQQ(ts: ULong, next: ULong) {
             Mongo.getSubscribedLowUsersByQQ().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
@@ -321,6 +326,7 @@ object Push {
 
         private suspend fun pushLowByQQGroup(ts: ULong, next: ULong) {
             Mongo.getSubscribedLowUsersByQQGroup().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
@@ -388,6 +394,7 @@ object Push {
             if (client.exists("report_day_qq_$from") == 1L)
                 return
             Mongo.getSubscribedReportDayUsersByQQ().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
@@ -447,6 +454,7 @@ object Push {
             if (client.exists("report_day_qq_group_$from") == 1L)
                 return
             Mongo.getSubscribedReportDayUsersByQQGroup().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
@@ -506,6 +514,7 @@ object Push {
             if (client.exists("report_week_qq_$from") == 1L)
                 return
             Mongo.getSubscribedReportWeekUsersByQQ().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
@@ -566,6 +575,7 @@ object Push {
             if (client.exists("report_week_qq_group_$from") == 1L)
                 return
             Mongo.getSubscribedReportWeekUsersByQQGroup().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
@@ -626,6 +636,7 @@ object Push {
             if (client.exists("report_month_qq_$from") == 1L)
                 return
             Mongo.getSubscribedReportMonthUsersByQQ().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQ = bot.getFriend(subscriber.app.qq!!.toLong()) ?: run {
@@ -686,6 +697,7 @@ object Push {
             if (client.exists("report_month_qq_group_$from") == 1L)
                 return
             Mongo.getSubscribedReportMonthUsersByQQGroup().forEach { subscriber ->
+                delay(10_000L) // 10秒钟发送一个
                 try {
                     if (!bot.isOnline) return@forEach
                     val subscriberQQGroup = bot.getGroup(subscriber.app.qq_group!!.toLong()) ?: run {
